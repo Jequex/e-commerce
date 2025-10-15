@@ -1,0 +1,26 @@
+{
+  "name": "Home",
+  "slug": "(tabs)",
+  "screens": {
+    "index": {
+      "title": "Home",
+      "headerShown": false
+    },
+    "categories": {
+      "title": "Categories",
+      "headerShown": false
+    },
+    "search": {
+      "title": "Search",
+      "headerShown": false
+    },
+    "cart": {
+      "title": "Cart",
+      "headerShown": false
+    },
+    "profile": {
+      "title": "Profile",
+      "headerShown": false
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "E-commerce Admin Dashboard",
+  "short_name": "Admin",
+  "description": "Admin dashboard for e-commerce management",
+  "start_url": "/",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}

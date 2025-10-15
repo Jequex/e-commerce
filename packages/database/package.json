@@ -1,0 +1,33 @@
+{
+  "name": "@ecommerce/database",
+  "version": "1.0.0",
+  "description": "Database schemas and migrations for the e-commerce monorepo",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit",
+    "db:generate": "drizzle-kit generate:pg",
+    "db:push": "drizzle-kit push:pg",
+    "db:migrate": "tsx src/migrate.ts",
+    "db:seed": "tsx src/seed.ts"
+  },
+  "dependencies": {
+    "@ecommerce/config": "*",
+    "@ecommerce/types": "*",
+    "drizzle-orm": "^0.28.6",
+    "postgres": "^3.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/pg": "^8.10.7",
+    "drizzle-kit": "^0.19.13",
+    "tsx": "^3.14.0",
+    "typescript": "^5.2.2"
+  },
+  "files": [
+    "dist"
+  ]
+}
