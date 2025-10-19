@@ -60,3 +60,6 @@ infrastructure/kubernetes/secrets/
 # Temporary files
 tmp/
 temp/
+
+# Turbo cookies
+.turbo/cookies
