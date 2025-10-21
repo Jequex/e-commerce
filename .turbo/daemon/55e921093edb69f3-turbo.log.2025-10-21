@@ -1,0 +1,92 @@
+2025-10-21T20:08:05.822414Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/tsup.config.bundled_l4qkp6ofhpl.mjs")}
+2025-10-21T20:08:05.822431Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-10-21T20:08:16.322623Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/tsup.config.bundled_a3h8j328wx.mjs")}
+2025-10-21T20:08:16.322632Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-10-21T20:08:16.322648Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-21T20:08:23.622292Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/src/index.ts")}
+2025-10-21T20:08:23.622301Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-10-21T20:08:23.722101Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/src/index.ts")}
+2025-10-21T20:08:23.722110Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-10-21T20:08:37.421238Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/src/components/index.ts")}
+2025-10-21T20:08:37.421247Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-10-21T20:08:37.521863Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/src/components/index.ts")}
+2025-10-21T20:08:37.521872Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-10-21T20:08:37.521883Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-21T20:09:23.121462Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/tsup.config.bundled_20ycp0ipfyh.mjs")}
+2025-10-21T20:09:23.121472Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-10-21T20:09:23.187999Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-21T20:09:23.822342Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/admin/next-env.d.ts")}
+2025-10-21T20:09:23.822351Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/admin"), path: AnchoredSystemPathBuf("apps/admin") }}))
+2025-10-21T20:09:25.921902Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("tsconfig.tsbuildinfo")}
+2025-10-21T20:09:25.921911Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-10-21T20:13:32.643178Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/next.config.js")}
+2025-10-21T20:13:32.643188Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:14:33.943062Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/i18n/request.ts")}
+2025-10-21T20:14:33.943070Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:15:22.642535Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/[locale]/layout.tsx")}
+2025-10-21T20:15:22.642554Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:15:49.142489Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/[locale]/page.tsx"), AnchoredSystemPathBuf("apps/web/next.config.js")}
+2025-10-21T20:15:49.142496Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:15:49.213167Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-21T20:15:49.243425Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/i18n/request.ts"), AnchoredSystemPathBuf("packages/ui/src/index.ts"), AnchoredSystemPathBuf("apps/web/src/app/[locale]/page.tsx"), AnchoredSystemPathBuf("packages/ui/src/components/index.ts")}
+2025-10-21T20:15:49.243434Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }, WorkspacePackage { name: Other("@ecommerce/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-10-21T20:15:49.243454Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-21T20:15:49.259755Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-21T20:15:49.343730Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/[locale]/layout.tsx")}
+2025-10-21T20:15:49.343738Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:15:49.343757Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-21T20:17:47.343892Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:17:47.343902Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:17:58.242639Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:17:58.242647Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:18:12.244494Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:18:12.244506Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:18:28.743623Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:18:28.743633Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:19:29.343866Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:19:29.343876Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:19:29.343894Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-10-21T20:19:39.244852Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-10-21T20:19:39.244861Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-10-21T20:19:39.345427Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-10-21T20:19:39.345436Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-10-21T20:22:03.744904Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:22:03.744912Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:22:31.444719Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:22:31.444729Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:27:50.207759Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:27:50.207767Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:28:09.807266Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:28:09.807274Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:29:19.207915Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:29:19.207924Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:29:58.308832Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:29:58.308842Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:30:44.509516Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:30:44.509524Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:32:17.411299Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/common/LanguageSelector.tsx")}
+2025-10-21T20:32:17.411310Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:32:51.610960Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/layout/Navbar.tsx")}
+2025-10-21T20:32:51.610970Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:34:51.512327Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/[locale]/page.tsx")}
+2025-10-21T20:34:51.512337Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:36:10.713114Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/app/[locale]/page.tsx")}
+2025-10-21T20:36:10.713123Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:36:52.413271Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/layout/Navbar.tsx")}
+2025-10-21T20:36:52.413281Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:37:06.213571Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/components/layout/Navbar.tsx")}
+2025-10-21T20:37:06.213593Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:37:27.213303Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/messages/en.json")}
+2025-10-21T20:37:27.213313Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:37:38.413860Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/locales/en.json")}
+2025-10-21T20:37:38.413870Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:37:46.313590Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/locales/en.json")}
+2025-10-21T20:37:46.313599Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:37:50.513391Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/locales/en.json")}
+2025-10-21T20:37:50.513399Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:37:52.514584Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/messages")}
+2025-10-21T20:37:52.514595Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:38:06.013291Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/locales/es.json")}
+2025-10-21T20:38:06.013299Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))
+2025-10-21T20:38:10.913651Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/web/src/locales/fr.json")}
+2025-10-21T20:38:10.913659Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/web"), path: AnchoredSystemPathBuf("apps/web") }}))

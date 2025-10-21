@@ -2,10 +2,10 @@
 
 import Link from 'next/link';
 import { Navbar } from '@/components/layout';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useTranslations } from 'next-intl';
 
 export default function ProductsPage() {
-  const { t } = useTranslation();
+  const t = useTranslations('products');
   
   const products = [
     { id: 1, nameKey: 'wirelessHeadphones', price: 299, originalPrice: 399, image: '🎧', categoryKey: 'electronics' },
@@ -23,13 +23,13 @@ export default function ProductsPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-16 animate-fade-in-up">
           <h1 className="text-5xl md:text-6xl font-bold text-gray-900 mb-6">
-            {t.products.title}
+            {t('title')}
             <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent block">
-              {t.products.subtitle}
+              {t('subtitle')}
             </span>
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            {t.products.description}
+            {t('description')}
           </p>
         </div>
 
@@ -48,16 +48,16 @@ export default function ProductsPage() {
               <div className="p-6">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                    {t.products.categories[product.categoryKey as keyof typeof t.products.categories]}
+                    {t(`categories.${product.categoryKey}`)}
                   </span>
                 </div>
                 
                 <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-                  {t.products.productNames[product.nameKey as keyof typeof t.products.productNames]}
+                  {t(`productNames.${product.nameKey}`)}
                 </h3>
                 
                 <p className="text-gray-600 mb-4 leading-relaxed">
-                  {t.products.productDescription}
+                  {t('productDescription')}
                 </p>
                 
                 <div className="flex items-center justify-between">
@@ -66,7 +66,7 @@ export default function ProductsPage() {
                     <span className="text-lg text-gray-500 line-through">${product.originalPrice}</span>
                   </div>
                   <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 transform hover:scale-105 flex items-center">
-                    {t.products.addToCart}
+                    {t('addToCart')}
                   </button>
                 </div>
               </div>
@@ -76,7 +76,7 @@ export default function ProductsPage() {
 
         <div className="text-center mt-16">
           <button className="bg-white/70 backdrop-blur-sm text-gray-900 px-8 py-4 rounded-2xl text-lg font-semibold border-2 border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 transform hover:scale-105">
-            {t.products.loadMore}
+            {t('loadMore')}
           </button>
         </div>
 
@@ -85,7 +85,7 @@ export default function ProductsPage() {
             href="/" 
             className="inline-flex items-center text-blue-600 hover:text-blue-700 font-medium transition-colors"
           >
-            {t.products.backToHome}
+            {t('backToHome')}
           </Link>
         </div>
       </div>

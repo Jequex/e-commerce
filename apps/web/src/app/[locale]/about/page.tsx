@@ -3,10 +3,10 @@
 import Link from 'next/link';
 import type { Metadata } from 'next';
 import { Navbar } from '@/components/layout';
-import { useTranslation } from '@/contexts/TranslationContext';
+import { useTranslations } from 'next-intl';
 
 export default function AboutPage() {
-  const { t } = useTranslation();
+  const t = useTranslations('about');
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -17,22 +17,22 @@ export default function AboutPage() {
         {/* Hero Section */}
         <div className="text-center mb-16">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-6">
-            {t.about.title}
+            {t('title')}
           </h1>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
-            {t.about.subtitle}
+            {t('subtitle')}
           </p>
         </div>
 
         {/* Mission Section */}
         <div className="grid md:grid-cols-2 gap-12 items-center mb-20">
           <div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">{t.about.mission}</h2>
+            <h2 className="text-3xl font-bold text-gray-900 mb-6">{t('mission')}</h2>
             <p className="text-gray-600 text-lg leading-relaxed mb-6">
-              {t.about.missionDescription}
+              {t('missionDescription')}
             </p>
             <p className="text-gray-600 text-lg leading-relaxed">
-              {t.about.missionSecondary}
+              {t('missionSecondary')}
             </p>
           </div>
           <div className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100">
@@ -42,8 +42,8 @@ export default function AboutPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t.home.fastShipping}</h3>
-              <p className="text-gray-600">{t.home.fastShippingDescription}</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-4">{t('fastShipping')}</h3>
+              <p className="text-gray-600">{t('fastShippingDescription')}</p>
             </div>
           </div>
         </div>

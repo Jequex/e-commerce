@@ -17,6 +17,7 @@
     "originalPrice": "Precio Original"
   },
   "nav": {
+    "title": "ShopHub",
     "products": "Productos",
     "cart": "Carrito",
     "about": "Acerca de",
