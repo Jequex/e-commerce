@@ -1,0 +1,23 @@
+# Development Dockerfile for Admin App
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy configuration files
+COPY next.config.js ./
+COPY tailwind.config.js ./
+COPY tsconfig.json ./
+
+# Copy source code
+COPY src ./src
+COPY public ./public
+
+# Expose port
+EXPOSE 3000
+
+# Start development server
+CMD ["npm", "run", "dev"]

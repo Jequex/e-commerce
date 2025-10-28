@@ -11,6 +11,6 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/simple-index.ts"],
-  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "src/app.ts", "src/index.ts", "src/controllers/**/*", "src/routes/**/*", "src/middleware/**/*", "src/schema/**/*", "src/services/**/*", "src/config/**/*"]
+  "include": ["src/app.ts"],
+  "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.spec.ts", "src/controllers/**/*", "src/routes/**/*", "src/middleware/**/*", "src/schema/**/*", "src/services/**/*", "src/config/**/*"]
 }

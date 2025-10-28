@@ -1,0 +1,243 @@
+services:
+  # Databases
+  postgres:
+    image: postgres:15-alpine
+    container_name: ecommerce-postgres
+    environment:
+      POSTGRES_USER: ecommerce
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: ecommerce
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/docker/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - ecommerce-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ecommerce-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - ecommerce-network
+
+  # Message Queue
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: ecommerce-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks:
+      - ecommerce-network
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: ecommerce-kafka
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    networks:
+      - ecommerce-network
+
+  # Search Engine
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.10.0
+    container_name: ecommerce-elasticsearch
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    networks:
+      - ecommerce-network
+
+  # Microservices
+  auth-service:
+    build:
+      context: ./services/auth-service
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-auth-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - DATABASE_URL=postgresql://ecommerce:password@postgres:5432/ecommerce_auth
+      - REDIS_URL=redis://redis:6379
+      - JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-random
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./services/auth-service/src:/app/src
+      - ./services/auth-service/package.json:/app/package.json
+      - ./services/auth-service/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - ecommerce-network
+    command: npm run dev
+
+  product-service:
+    build:
+      context: ./services/product-service
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-product-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3002
+      - DATABASE_URL=postgresql://ecommerce:password@postgres:5432/ecommerce_products
+      - REDIS_URL=redis://redis:6379
+      - ELASTICSEARCH_URL=http://elasticsearch:9200
+    ports:
+      - "3002:3002"
+    volumes:
+      - ./services/product-service/src:/app/src
+      - ./services/product-service/package.json:/app/package.json
+      - ./services/product-service/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - redis
+      - elasticsearch
+    networks:
+      - ecommerce-network
+    command: npm run dev
+
+  order-service:
+    build:
+      context: ./services/order-service
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-order-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3003
+      - DATABASE_URL=postgresql://ecommerce:password@postgres:5432/ecommerce_orders
+      - REDIS_URL=redis://redis:6379
+      - KAFKA_BROKER=kafka:9092
+    ports:
+      - "3003:3003"
+    volumes:
+      - ./services/order-service/src:/app/src
+      - ./services/order-service/package.json:/app/package.json
+      - ./services/order-service/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - redis
+      - kafka
+    networks:
+      - ecommerce-network
+    command: npm run dev
+
+  payment-service:
+    build:
+      context: ./services/payment-service
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-payment-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3004
+      - DATABASE_URL=postgresql://ecommerce:password@postgres:5432/ecommerce_payments
+      - REDIS_URL=redis://redis:6379
+      - STRIPE_SECRET_KEY=sk_test_your_stripe_key_here
+      - PAYPAL_CLIENT_ID=your_paypal_client_id
+      - PAYPAL_CLIENT_SECRET=your_paypal_client_secret
+    ports:
+      - "3004:3004"
+    volumes:
+      - ./services/payment-service/src:/app/src
+      - ./services/payment-service/package.json:/app/package.json
+      - ./services/payment-service/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - ecommerce-network
+    command: npm run dev
+
+  # Frontend Applications
+  web:
+    build:
+      context: ./apps/web
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-web
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./apps/web/src:/app/src
+      - ./apps/web/public:/app/public
+      - ./apps/web/package.json:/app/package.json
+      - ./apps/web/next.config.js:/app/next.config.js
+      - ./apps/web/tailwind.config.js:/app/tailwind.config.js
+      - ./apps/web/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - ecommerce-network
+    command: npm run dev
+
+  admin:
+    build:
+      context: ./apps/admin
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-admin
+    environment:
+      - NODE_ENV=development
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+    ports:
+      - "3005:3000"
+    volumes:
+      - ./apps/admin/src:/app/src
+      - ./apps/admin/public:/app/public
+      - ./apps/admin/package.json:/app/package.json
+      - ./apps/admin/next.config.js:/app/next.config.js
+      - ./apps/admin/tailwind.config.js:/app/tailwind.config.js
+      - ./apps/admin/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - ecommerce-network
+    command: npm run dev
+
+  # API Gateway
+  nginx:
+    image: nginx:alpine
+    container_name: ecommerce-nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./infrastructure/docker/nginx/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - auth-service
+      - product-service
+      - order-service
+      - payment-service
+    networks:
+      - ecommerce-network
+
+volumes:
+  postgres_data:
+  redis_data:
+  elasticsearch_data:
+
+networks:
+  ecommerce-network:
+    driver: bridge

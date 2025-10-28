@@ -1,0 +1,18 @@
+# Development Dockerfile for Payment Service
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install --legacy-peer-deps
+
+# Copy source code
+COPY src ./src
+COPY tsconfig.json ./
+
+# Expose port
+EXPOSE 3004
+
+# Start development server with hot reload
+CMD ["npm", "run", "dev"]

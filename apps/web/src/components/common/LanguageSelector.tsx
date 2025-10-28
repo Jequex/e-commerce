@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
+import React, { useState, useTransition, useEffect, useRef } from 'react';
 import { useLocale } from 'next-intl';
 import { useRouter, usePathname } from '@/i18n/navigation';
 import { routing } from '@/i18n/routing';
@@ -21,6 +21,32 @@ export default function LanguageSelector({ className = '' }: LanguageSelectorPro
   const pathname = usePathname();
   const [isPending, startTransition] = useTransition();
   const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside or pressing escape
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+
+    const handleEscapeKey = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscapeKey);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleEscapeKey);
+    };
+  }, [isOpen]);
 
   const toggleDropdown = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -41,10 +67,10 @@ export default function LanguageSelector({ className = '' }: LanguageSelectorPro
   };
 
   return (
-    <div className={`relative ${className}`} style={{ pointerEvents: 'auto' }}>
+    <div ref={dropdownRef} className={`relative z-50 ${className}`} style={{ pointerEvents: 'auto' }}>
       <button
         onClick={toggleDropdown}
-        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors cursor-pointer relative z-20 bg-transparent border-0"
+        className="flex items-center space-x-2 px-3 py-2 text-sm font-medium text-gray-700 hover:text-blue-600 transition-colors cursor-pointer relative z-50 bg-transparent border-0"
         aria-label="Select language"
         type="button"
         style={{ pointerEvents: 'auto' }}
@@ -68,25 +94,20 @@ export default function LanguageSelector({ className = '' }: LanguageSelectorPro
 
       {isOpen && (
         <>
-          {/* Backdrop */}
-          {/* <div
-            className="fixed inset-0 z-20"
-            onClick={() => setIsOpen(false)}
-          /> */}
-          
           {/* Dropdown */}
-          <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-[60]">
+          <div className="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-[100]" style={{ pointerEvents: 'auto' }}>
             <div className="py-1">
               {routing.locales.map((supportedLocale) => (
                 <button
                   key={supportedLocale}
                   onClick={() => handleLocaleChange(supportedLocale)}
-                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors ${
+                  className={`w-full text-left px-4 py-2 text-sm hover:bg-gray-100 transition-colors cursor-pointer ${
                     locale === supportedLocale
                       ? 'bg-blue-50 text-blue-600 font-medium'
                       : 'text-gray-700'
                   }`}
                   disabled={isPending}
+                  style={{ pointerEvents: 'auto' }}
                 >
                   <div className="flex items-center space-x-3">
                     <span className="text-lg">

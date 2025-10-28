@@ -108,18 +108,21 @@ export const apiKeys = pgTable('api_keys', {
 });
 
 // Zod schemas for validation
-export const insertUserSchema = createInsertSchema(users, {
-  email: z.string().email().min(1).max(255),
+export const insertUserSchema = z.object({
+  email: z.string().email(),
   username: z.string().min(3).max(100).optional(),
+  password: z.string().min(8).max(100),
   firstName: z.string().min(1).max(100).optional(),
   lastName: z.string().min(1).max(100).optional(),
   phone: z.string().min(10).max(20).optional(),
-  role: z.enum(['customer', 'admin', 'moderator']).default('customer'),
-}).omit({
-  id: true,
-  passwordHash: true,
-  createdAt: true,
-  updatedAt: true,
+  dateOfBirth: z.string().optional(),
+  role: z.enum(['customer', 'admin', 'vendor']).default('customer'),
+  isActive: z.boolean().default(true),
+  isEmailVerified: z.boolean().default(false),
+  isTwoFactorEnabled: z.boolean().default(false),
+  timezone: z.string().default('UTC'),
+  language: z.string().default('en'),
+  metadata: z.record(z.any()).optional(),
 });
 
 export const selectUserSchema = createSelectSchema(users).omit({

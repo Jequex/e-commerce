@@ -1,12 +1,16 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router } from 'express';
 import { z } from 'zod';
-import { auth, id, schemas, errors } from '@ecommerce/utils';
-import { User, UserRole } from '@ecommerce/types';
-import { AuthService } from '../services/auth-service';
+import { AuthController } from '../controllers/authController';
 import { validateRequest } from '../middleware/validate-request';
 
+// Define schemas locally since @ecommerce/utils is not available
+const schemas = {
+  email: z.string().email(),
+  password: z.string().min(8).max(100),
+};
+
 const router = Router();
-const authService = new AuthService();
+const authController = new AuthController();
 
 // Validation schemas
 const registerSchema = z.object({
@@ -49,166 +53,44 @@ const verifyEmailSchema = z.object({
 router.post(
   '/register',
   validateRequest(registerSchema),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email, password, firstName, lastName, phone } = req.body;
-      
-      const result = await authService.register({
-        email,
-        password,
-        firstName,
-        lastName,
-        phone,
-      });
-
-      res.status(201).json({
-        success: true,
-        data: result,
-        message: 'Registration successful. Please check your email for verification.',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+  authController.register.bind(authController)
 );
 
 // Login
 router.post(
   '/login',
   validateRequest(loginSchema),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email, password } = req.body;
-      
-      const result = await authService.login(email, password);
-
-      res.json({
-        success: true,
-        data: result,
-        message: 'Login successful',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+  authController.login.bind(authController)
 );
 
 // Logout
-router.post('/logout', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const refreshToken = req.body.refreshToken;
-    
-    if (refreshToken) {
-      await authService.logout(refreshToken);
-    }
-
-    res.json({
-      success: true,
-      message: 'Logout successful',
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+router.post('/logout', authController.logout.bind(authController));
 
 // Refresh token
-router.post('/refresh', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { refreshToken } = req.body;
-    
-    if (!refreshToken) {
-      throw errors.createError('Refresh token is required', 'MISSING_REFRESH_TOKEN', 400);
-    }
-
-    const result = await authService.refreshToken(refreshToken);
-
-    res.json({
-      success: true,
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+router.post('/refresh', authController.refreshToken.bind(authController));
 
 // Forgot password
 router.post(
   '/forgot-password',
   validateRequest(forgotPasswordSchema),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { email } = req.body;
-      
-      await authService.forgotPassword(email);
-
-      res.json({
-        success: true,
-        message: 'Password reset email sent',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+  authController.requestPasswordReset.bind(authController)
 );
 
 // Reset password
 router.post(
   '/reset-password',
   validateRequest(resetPasswordSchema),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { token, password } = req.body;
-      
-      await authService.resetPassword(token, password);
-
-      res.json({
-        success: true,
-        message: 'Password reset successful',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+  authController.resetPassword.bind(authController)
 );
 
 // Verify email
 router.post(
   '/verify-email',
   validateRequest(verifyEmailSchema),
-  async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const { token } = req.body;
-      
-      await authService.verifyEmail(token);
-
-      res.json({
-        success: true,
-        message: 'Email verified successfully',
-      });
-    } catch (error) {
-      next(error);
-    }
-  }
+  authController.verifyEmail.bind(authController)
 );
 
 // Resend verification email
-router.post('/resend-verification', async (req: Request, res: Response, next: NextFunction) => {
-  try {
-    const { email } = req.body;
-    
-    if (!email) {
-      throw errors.createError('Email is required', 'MISSING_EMAIL', 400);
-    }
-
-    await authService.resendVerificationEmail(email);
-
-    res.json({
-      success: true,
-      message: 'Verification email sent',
-    });
-  } catch (error) {
-    next(error);
-  }
-});
+router.post('/resend-verification', authController.resendVerificationEmail.bind(authController));
 
 export { router as authRoutes };

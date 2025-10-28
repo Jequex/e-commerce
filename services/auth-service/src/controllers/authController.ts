@@ -6,21 +6,20 @@ import {
   passwordResets, 
   emailVerifications, 
   userActivities,
-  type User,
-  type UserSession,
   insertUserSchema,
-  loginUserSchema,
+  loginSchema,
   resetPasswordSchema,
   changePasswordSchema
 } from '../schema/auth';
 import { eq, and, desc } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
 import { AuthenticatedRequest } from '../middleware/auth';
 
 export class AuthController {
+  emailService: any;
   // Register new user
   async register(req: Request, res: Response) {
     try {
@@ -49,6 +48,7 @@ export class AuthController {
         firstName: validatedData.firstName,
         lastName: validatedData.lastName,
         role: validatedData.role || 'customer',
+        phone: validatedData.phone || null,
         status: 'active',
         createdAt: new Date(),
         updatedAt: new Date()
@@ -67,11 +67,10 @@ export class AuthController {
       const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
       await db.insert(emailVerifications).values({
-        id: uuidv4(),
+        email: newUser.email,
         userId: newUser.id,
         token: verificationToken,
-        expiresAt: verificationExpiry,
-        createdAt: new Date()
+        expiresAt: verificationExpiry
       });
 
       // Log activity
@@ -107,7 +106,7 @@ export class AuthController {
   // User login
   async login(req: Request, res: Response) {
     try {
-      const validatedData = loginUserSchema.parse(req.body);
+      const validatedData = loginSchema.parse(req.body);
 
       // Find user by email
       const user = await db.query.users.findFirst({
@@ -214,8 +213,7 @@ export class AuthController {
       await db
         .update(userSessions)
         .set({ 
-          isActive: false,
-          updatedAt: new Date()
+          isActive: false
         })
         .where(eq(userSessions.id, req.session.id));
 
@@ -338,7 +336,7 @@ export class AuthController {
       const resetRecord = await db.query.passwordResets.findFirst({
         where: and(
           eq(passwordResets.token, validatedData.token),
-          eq(passwordResets.isUsed, false)
+          eq(passwordResets.used, false)
         )
       });
 
@@ -373,8 +371,7 @@ export class AuthController {
       await db
         .update(passwordResets)
         .set({ 
-          isUsed: true,
-          usedAt: new Date()
+          used: true
         })
         .where(eq(passwordResets.id, resetRecord.id));
 
@@ -536,8 +533,7 @@ export class AuthController {
       const result = await db
         .update(userSessions)
         .set({ 
-          isActive: false,
-          updatedAt: new Date()
+          isActive: false
         })
         .where(
           and(
@@ -559,6 +555,186 @@ export class AuthController {
     }
   }
 
+  // verify email
+  async verifyEmail(req: Request, res: Response) {
+    try {
+      const { token } = req.body;
+
+      if (!token) {
+        return res.status(400).json({
+          error: 'Verification token is required',
+          code: 'TOKEN_REQUIRED'
+        });
+      }
+
+      const record = await db.query.emailVerifications.findFirst({
+        where: eq(emailVerifications.token, token)
+      });
+
+      if (!record) {
+        return res.status(400).json({
+          error: 'Invalid verification token',
+          code: 'INVALID_TOKEN'
+        });
+      }
+
+      if (new Date() > record.expiresAt) {
+        return res.status(400).json({
+          error: 'Verification token has expired',
+          code: 'TOKEN_EXPIRED'
+        });
+      }
+
+      // Update user emailVerified status
+      await db
+        .update(users)
+        .set({ emailVerified: true, updatedAt: new Date() })
+        .where(eq(users.id, record.userId));
+
+      // Log activity
+      await this.logUserActivity(record.userId, 'email_verified', req);
+
+      res.json({
+        message: 'Email verified successfully'
+      });
+
+    } catch (error) {
+      console.error('Email verification error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Send verification email
+  private async sendVerificationEmail(email: string, token: string) {
+    const verificationLink = `https://your-app.com/verify-email?token=${token}`;
+    const emailContent = `
+      <h1>Email Verification</h1>
+      <p>Please click the link below to verify your email address:</p>
+      <a href="${verificationLink}">${verificationLink}</a>
+    `;
+
+    await this.emailService.sendEmail({
+      to: email,
+      subject: 'Email Verification',
+      html: emailContent
+    });
+  }
+
+  // Resend verification email
+  async resendVerificationEmail(req: Request, res: Response) {
+    try {
+      const { email } = req.body;
+
+      if (!email) {
+        return res.status(400).json({
+          error: 'Email is required',
+          code: 'EMAIL_REQUIRED'
+        });
+      }
+
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, email)
+      });
+
+      if (!user) {
+        return res.status(404).json({
+          error: 'User not found',
+          code: 'USER_NOT_FOUND'
+        });
+      }
+
+      if (user.emailVerified) {
+        return res.status(400).json({
+          error: 'Email is already verified',
+          code: 'EMAIL_ALREADY_VERIFIED'
+        });
+      }
+
+      // Generate new verification token
+      const verificationToken = crypto.randomBytes(32).toString('hex');
+      const verificationExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+
+      await db.insert(emailVerifications).values({
+        email: user.email,
+        userId: user.id,
+        token: verificationToken,
+        expiresAt: verificationExpiry
+      });
+      await this.sendVerificationEmail(user.email, verificationToken);
+      // Log activity
+      await this.logUserActivity(user.id, 'verification_email_resent', req);
+
+      res.json({
+        message: 'Verification email resent successfully'
+      });
+
+    } catch (error) {
+      console.error('Resend verification email error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Refresh token
+  async refreshToken(req: Request, res: Response) {
+    try {
+      const { refreshToken } = req.body;
+
+      if (!refreshToken) {
+        return res.status(400).json({
+          error: 'Refresh token is required',
+          code: 'TOKEN_REQUIRED'
+        });
+      }
+
+      // Find session by refresh token
+      const session = await db.query.userSessions.findFirst({
+        where: eq(userSessions.refreshToken, refreshToken)
+      });
+
+      if (!session || !session.isActive) {
+        return res.status(401).json({
+          error: 'Invalid or inactive refresh token',
+          code: 'INVALID_TOKEN'
+        });
+      }
+
+      // Generate new JWT token
+      const jwtSecret = process.env.JWT_SECRET || 'your-secret-key';
+      const newToken = jwt.sign(
+        { userId: session.userId },
+        jwtSecret,
+        { expiresIn: '24h' }
+      );
+
+      // Update session with new token
+      await db
+        .update(userSessions)
+        .set({ 
+          token: newToken,
+          lastUsedAt: new Date()
+        })
+        .where(eq(userSessions.id, session.id));
+
+      res.json({
+        message: 'Token refreshed successfully',
+        token: newToken
+      });
+
+    } catch (error) {
+      console.error('Refresh token error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
   // Helper method to log user activities
   private async logUserActivity(
     userId: string, 
@@ -568,12 +744,10 @@ export class AuthController {
   ) {
     try {
       await db.insert(userActivities).values({
-        id: uuidv4(),
         userId,
-        activityType,
+        action: activityType,
         ipAddress: req.ip || 'Unknown',
         userAgent: req.headers['user-agent'] || 'Unknown',
-        metadata: metadata ? JSON.stringify(metadata) : null,
         createdAt: new Date()
       });
     } catch (error) {
