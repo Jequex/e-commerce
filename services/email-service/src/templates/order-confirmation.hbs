@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Order Confirmation</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background-color: #27ae60;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 8px 8px;
+        }
+        .order-details {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .order-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        .order-item:last-child {
+            border-bottom: none;
+            font-weight: bold;
+        }
+        .button {
+            display: inline-block;
+            background-color: #27ae60;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .shipping-info {
+            background-color: #e8f5e8;
+            border-radius: 5px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Order Confirmed!</h1>
+        <p>Thank you for your purchase</p>
+    </div>
+    <div class="content">
+        <h2>Hello {{firstName}}!</h2>
+        <p>Your order has been confirmed and is being processed. Here are the details:</p>
+        
+        <div class="order-details">
+            <h3>Order #{{orderNumber}}</h3>
+            <p><strong>Order Date:</strong> {{formatDate orderDate 'medium'}}</p>
+            
+            <h4>Items Ordered:</h4>
+            {{#each items}}
+            <div class="order-item">
+                <span>{{name}} (x{{quantity}})</span>
+                <span>{{formatCurrency price currency}}</span>
+            </div>
+            {{/each}}
+            
+            <div class="order-item">
+                <span>Subtotal:</span>
+                <span>{{formatCurrency subtotal currency}}</span>
+            </div>
+            <div class="order-item">
+                <span>Shipping:</span>
+                <span>{{formatCurrency shipping currency}}</span>
+            </div>
+            <div class="order-item">
+                <span>Tax:</span>
+                <span>{{formatCurrency tax currency}}</span>
+            </div>
+            <div class="order-item">
+                <span>Total:</span>
+                <span>{{formatCurrency total currency}}</span>
+            </div>
+        </div>
+        
+        {{#if shippingAddress}}
+        <div class="shipping-info">
+            <h4>Shipping Address:</h4>
+            <p>
+                {{shippingAddress.name}}<br>
+                {{shippingAddress.street}}<br>
+                {{shippingAddress.city}}, {{shippingAddress.state}} {{shippingAddress.zip}}<br>
+                {{shippingAddress.country}}
+            </p>
+            <p><strong>Estimated Delivery:</strong> {{formatDate estimatedDelivery 'medium'}}</p>
+        </div>
+        {{/if}}
+        
+        <p>You can track your order status by clicking the button below:</p>
+        
+        <a href="{{trackingUrl}}" class="button">Track Your Order</a>
+        
+        <p>If you have any questions about your order, please don't hesitate to contact our customer support team.</p>
+        
+        <p>Thank you for choosing {{companyName}}!</p>
+        
+        <p>Best regards,<br>The {{companyName}} Team</p>
+    </div>
+    <div class="footer">
+        <p>&copy; {{currentYear}} {{companyName}}. All rights reserved.</p>
+        <p>This confirmation was sent to {{email}}</p>
+    </div>
+</body>
+</html>

@@ -170,6 +170,41 @@ services:
       - ecommerce-network
     command: npm run dev
 
+  email-service:
+    build:
+      context: ./services/email-service
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-email-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3005
+      - CORS_ORIGIN=http://localhost:3000
+      - EMAIL_PROVIDER=smtp
+      - SMTP_HOST=smtp.gmail.com
+      - SMTP_PORT=587
+      - SMTP_SECURE=false
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASS=${SMTP_PASS}
+      - EMAIL_FROM_NAME=Jequex E-commerce
+      - EMAIL_FROM_ADDRESS=${EMAIL_FROM_ADDRESS}
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - REDIS_DB=1
+      - RATE_LIMIT_WINDOW_MS=900000
+      - RATE_LIMIT_MAX_REQUESTS=100
+    ports:
+      - "3005:3005"
+    volumes:
+      - ./services/email-service/src:/app/src
+      - ./services/email-service/package.json:/app/package.json
+      - ./services/email-service/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+    depends_on:
+      - redis
+    networks:
+      - ecommerce-network
+    command: npm run dev
+
   # Frontend Applications
   web:
     build:
@@ -203,7 +238,7 @@ services:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://localhost:8080
     ports:
-      - "3005:3000"
+      - "3006:3000"
     volumes:
       - ./apps/admin/src:/app/src
       - ./apps/admin/public:/app/public
@@ -230,6 +265,7 @@ services:
       - product-service
       - order-service
       - payment-service
+      - email-service
     networks:
       - ecommerce-network
 
