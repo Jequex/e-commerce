@@ -41,6 +41,7 @@ A comprehensive email microservice for the Jequex e-commerce platform, built wit
 
 ### System
 - `GET /health` - Health check
+- `GET /api/v1/email/verify-connection` - Verify email provider connection
 - `GET /` - Service information
 
 ## Quick Start

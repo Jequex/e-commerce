@@ -44,5 +44,8 @@ export const createEmailRoutes = (emailController: EmailController): Router => {
   // Health check
   router.get('/health', emailController.healthCheck);
 
+  // Verify email provider connection
+  router.get('/verify-connection', emailController.verifyConnection);
+
   return router;
 };

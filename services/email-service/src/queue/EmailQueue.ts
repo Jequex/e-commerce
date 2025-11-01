@@ -330,6 +330,10 @@ export class EmailQueue {
     await this.queue.clean(grace);
   }
 
+  async verifyConnection(): Promise<boolean> {
+    return this.emailProvider.verifyConnection();
+  }
+
   async close(): Promise<void> {
     await this.queue.close();
   }

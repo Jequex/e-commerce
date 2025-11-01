@@ -227,6 +227,26 @@ export class EmailController {
     }
   };
 
+  // Verify email provider connection
+  verifyConnection = async (req: Request, res: Response): Promise<void> => {
+    try {
+      const isConnected = await this.emailQueue.verifyConnection();
+      
+      res.json({
+        success: true,
+        connection: isConnected ? 'verified' : 'failed',
+        timestamp: new Date().toISOString(),
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        connection: 'error',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
+
   private handleError(error: unknown, res: Response): void {
     console.error('Email controller error:', error);
     
