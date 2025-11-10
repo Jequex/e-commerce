@@ -77,6 +77,8 @@ services:
       - DATABASE_URL=postgresql://ecommerce:password@postgres:5432/ecommerce_auth
       - REDIS_URL=redis://redis:6379
       - JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-random
+      - EMAIL_SERVICE_URL=http://email-service:3005
+      - FRONTEND_URL=http://localhost:3000
     ports:
       - "3001:3001"
     volumes:
@@ -87,6 +89,7 @@ services:
     depends_on:
       - postgres
       - redis
+      - email-service
     networks:
       - ecommerce-network
     command: npm run dev

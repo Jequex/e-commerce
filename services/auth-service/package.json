@@ -20,7 +20,7 @@
     "db:status": "ts-node src/migrations/check-tables.ts"
   },
   "dependencies": {
-    "@ecommerce/utils": "workspace:*",
+    "axios": "^1.13.2",
     "bcryptjs": "^2.4.3",
     "compression": "^1.7.4",
     "cors": "^2.8.5",

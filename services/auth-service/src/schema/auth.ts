@@ -63,6 +63,7 @@ export const emailVerifications = pgTable('email_verifications', {
   expiresAt: timestamp('expires_at').notNull(),
   verified: boolean('verified').default(false),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
 });
 
 // User activities/audit log table

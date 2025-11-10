@@ -16,10 +16,17 @@ import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import crypto from 'crypto';
+import axios from 'axios';
 import { AuthenticatedRequest } from '../middleware/auth';
 
 export class AuthController {
-  emailService: any;
+  private emailServiceUrl: string;
+
+  constructor() {
+    // Use docker service name for inter-service communication
+    this.emailServiceUrl = process.env.EMAIL_SERVICE_URL || 'http://email-service:3005';
+  }
+
   // Register new user
   async register(req: Request, res: Response) {
     try {
@@ -77,7 +84,7 @@ export class AuthController {
       await this.logUserActivity(newUser.id, 'user_registered', req);
 
       // TODO: Send verification email
-      // await emailService.sendVerificationEmail(newUser.email, verificationToken);
+      await this.sendWelcomeEmail(newUser.email, newUser.firstName, verificationToken);
 
       res.status(201).json({
         message: 'User registered successfully',
@@ -311,8 +318,8 @@ export class AuthController {
       // Log activity
       await this.logUserActivity(user.id, 'password_reset_requested', req);
 
-      // TODO: Send reset email
-      // await emailService.sendPasswordResetEmail(user.email, resetToken);
+      // Send reset email
+      await this.sendPasswordResetEmail(user.email, resetToken);
 
       res.json({
         message: 'If the email exists, a password reset link has been sent'
@@ -591,6 +598,10 @@ export class AuthController {
         .set({ emailVerified: true, updatedAt: new Date() })
         .where(eq(users.id, record.userId));
 
+      await db
+        .update(emailVerifications)
+        .set({ verified: true, updatedAt: new Date() })
+        .where(eq(emailVerifications.token, token));
       // Log activity
       await this.logUserActivity(record.userId, 'email_verified', req);
 
@@ -607,20 +618,98 @@ export class AuthController {
     }
   }
 
-  // Send verification email
-  private async sendVerificationEmail(email: string, token: string) {
-    const verificationLink = `https://your-app.com/verify-email?token=${token}`;
-    const emailContent = `
-      <h1>Email Verification</h1>
-      <p>Please click the link below to verify your email address:</p>
-      <a href="${verificationLink}">${verificationLink}</a>
-    `;
+  // Send welcome email
+  private async sendWelcomeEmail(email: string, name: string, token: string) {
+    try {
+      const verificationUrl = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+      const emailPayload = {
+        to: [{ email, name }],
+        subject: 'Welcome to Jequex Stores!',
+        template: 'welcome',
+        templateData: {
+          verificationUrl,
+          companyName: 'Jequex Stores',
+          subject: 'We are excited to have you onboard!',
+          firstName: name,
+          currentYear: new Date().getFullYear()
+        }
+      };
 
-    await this.emailService.sendEmail({
-      to: email,
-      subject: 'Email Verification',
-      html: emailContent
-    });
+      await axios.post(`${this.emailServiceUrl}/api/v1/email/send`, emailPayload, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000 // 10 seconds timeout
+      });
+
+      console.log(`Welcome email sent to: ${email}`);
+    } catch (error) {
+      console.error('Failed to send welcome email:', error);
+      // Don't throw the error to prevent blocking user registration
+      // Log the error for monitoring purposes
+    }
+  }
+
+  // Send verification email
+  private async sendVerificationEmail(email: string, name: string, token: string) {
+    try {
+      const verificationLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/verify-email?token=${token}`;
+      
+      const emailPayload = {
+        to: [{ email, name }],
+        subject: 'Verify Your Email Address - Jequex E-commerce',
+        template: 'verification',
+        templateData: {
+          verificationLink,
+          token,
+          companyName: 'Jequex E-commerce'
+        }
+      };
+
+      await axios.post(`${this.emailServiceUrl}/api/v1/email/send`, emailPayload, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000 // 10 seconds timeout
+      });
+
+      console.log(`Verification email sent to: ${email}`);
+    } catch (error) {
+      console.error('Failed to send verification email:', error);
+      // Don't throw the error to prevent blocking user registration
+      // Log the error for monitoring purposes
+    }
+  }
+
+  // Send password reset email
+  private async sendPasswordResetEmail(email: string, token: string) {
+    try {
+      const resetLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/reset-password?token=${token}`;
+      
+      const emailPayload = {
+        to: [{ email, name: '' }],
+        subject: 'Password Reset Request - Jequex E-commerce',
+        template: 'password-reset',
+        templateData: {
+          resetLink,
+          token,
+          companyName: 'Jequex E-commerce'
+        }
+      };
+
+      await axios.post(`${this.emailServiceUrl}/api/v1/email/send`, emailPayload, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000 // 10 seconds timeout
+      });
+
+      console.log(`Password reset email sent to: ${email}`);
+    } catch (error) {
+      console.error('Failed to send password reset email:', error);
+      // Don't throw the error to prevent blocking the password reset flow
+      // Log the error for monitoring purposes
+    }
   }
 
   // Resend verification email
@@ -663,7 +752,7 @@ export class AuthController {
         token: verificationToken,
         expiresAt: verificationExpiry
       });
-      await this.sendVerificationEmail(user.email, verificationToken);
+      await this.sendVerificationEmail(user.email, user.firstName, verificationToken);
       // Log activity
       await this.logUserActivity(user.id, 'verification_email_resent', req);
 
