@@ -104,7 +104,7 @@ docker-compose up -d redis email-service
 ### SMTP (Default)
 ```env
 EMAIL_PROVIDER=smtp
-SMTP_HOST=smtp.gmail.com
+SMTP_HOST=smtp.hostinger.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASS=your-app-password

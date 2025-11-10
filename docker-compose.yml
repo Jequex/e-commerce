@@ -154,7 +154,7 @@ services:
       - PORT=3005
       - CORS_ORIGIN=http://localhost:3000
       - EMAIL_PROVIDER=smtp
-      - SMTP_HOST=smtp.gmail.com
+      - SMTP_HOST=smtp.hostinger.com
       - SMTP_PORT=587
       - SMTP_SECURE=false
       - SMTP_USER=${SMTP_USER}

@@ -1,6 +1,5 @@
 import nodemailer, { Transporter, SentMessageInfo } from 'nodemailer';
 import { EmailProvider, EmailResult } from './EmailProvider';
-import { MailtrapTransport } from "mailtrap"
 import { SendEmailRequest } from '../schema';
 import { config } from '../config';
 
@@ -8,20 +7,15 @@ export class SMTPProvider implements EmailProvider {
   private transporter: Transporter;
 
   constructor() {
-    console.log(config, config.email.smtp?.auth);
-
-
-      // host: config.email.smtp?.host,
-      // port: config.email.smtp?.port,
-      // secure: config.email.smtp?.secure,
-      // auth: {
-      //   user: config.email.smtp?.auth.user,
-      //   pass: config.email.smtp?.auth.pass,
-      // },
-    
-    this.transporter = nodemailer.createTransport(MailtrapTransport({
-      token: config.email.smtp?.auth.token || '',
-    }));
+    this.transporter = nodemailer.createTransport({
+      host: config.email.smtp?.host,
+      port: config.email.smtp?.port,
+      secure: config.email.smtp?.secure,
+      auth: {
+        user: config.email.smtp?.auth.user,
+        pass: config.email.smtp?.auth.pass,
+      },
+    });
   }
 
   async sendEmail(request: SendEmailRequest): Promise<EmailResult> {
