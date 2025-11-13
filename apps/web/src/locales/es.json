@@ -178,6 +178,30 @@
   "footer": {
     "description": "Tu destino definitivo de comercio electrónico"
   },
+  "auth": {
+    "signIn": "Iniciar Sesión",
+    "signUp": "Registrarse",
+    "signInSubtitle": "¡Bienvenido de nuevo! Por favor, inicia sesión en tu cuenta.",
+    "signUpSubtitle": "Crea tu cuenta para comenzar.",
+    "email": "Dirección de Email",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "fullName": "Nombre Completo",
+    "emailPlaceholder": "Introduce tu dirección de email",
+    "passwordPlaceholder": "Introduce tu contraseña",
+    "confirmPasswordPlaceholder": "Confirma tu contraseña",
+    "fullNamePlaceholder": "Introduce tu nombre completo",
+    "signInButton": "Iniciar Sesión",
+    "signUpButton": "Crear Cuenta",
+    "processing": "Procesando...",
+    "orContinueWith": "O continúa con",
+    "noAccount": "¿No tienes una cuenta?",
+    "haveAccount": "¿Ya tienes una cuenta?",
+    "createAccount": "Crea una",
+    "signInLink": "Inicia sesión aquí",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "resetPassword": "Restablécela aquí"
+  },
   "metadata": {
     "homeTitle": "Tienda de Comercio Electrónico",
     "homeDescription": "Plataforma de comercio electrónico moderna y escalable construida con Next.js",

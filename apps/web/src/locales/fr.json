@@ -175,6 +175,30 @@
     "browseProducts": "Parcourir les Produits",
     "learnMore": "En Savoir Plus Sur Nous"
   },
+  "auth": {
+    "signIn": "Se Connecter",
+    "signUp": "S'inscrire",
+    "signInSubtitle": "Bon retour ! Veuillez vous connecter à votre compte.",
+    "signUpSubtitle": "Créez votre compte pour commencer.",
+    "email": "Adresse Email",
+    "password": "Mot de Passe",
+    "confirmPassword": "Confirmer le Mot de Passe",
+    "fullName": "Nom Complet",
+    "emailPlaceholder": "Entrez votre adresse email",
+    "passwordPlaceholder": "Entrez votre mot de passe",
+    "confirmPasswordPlaceholder": "Confirmez votre mot de passe",
+    "fullNamePlaceholder": "Entrez votre nom complet",
+    "signInButton": "Se Connecter",
+    "signUpButton": "Créer un Compte",
+    "processing": "Traitement...",
+    "orContinueWith": "Ou continuer avec",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "haveAccount": "Vous avez déjà un compte ?",
+    "createAccount": "Créer un",
+    "signInLink": "Se connecter ici",
+    "forgotPassword": "Mot de passe oublié ?",
+    "resetPassword": "Le réinitialiser ici"
+  },
   "footer": {
     "description": "Votre destination ultime de commerce électronique"
   },
