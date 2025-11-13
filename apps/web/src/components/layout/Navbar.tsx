@@ -4,6 +4,7 @@ import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { LanguageSelector } from '@/components/common';
 import { useState } from 'react';
+import { useAuth } from '@/providers';
 
 interface NavbarProps {
   activeRoute?: string;
@@ -13,6 +14,7 @@ export default function Navbar({ activeRoute }: NavbarProps) {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const [searchQuery, setSearchQuery] = useState('');
+  const { openAuthModal } = useAuth();
   const isActive = (route: string) => activeRoute === route;
 
   const handleSearch = (e: React.FormEvent) => {
@@ -77,7 +79,7 @@ export default function Navbar({ activeRoute }: NavbarProps) {
                     : 'text-gray-700 hover:text-blue-600'
                 }`}
               >
-                Categories
+                {t('categories')}
               </Link>
               <Link 
                 href="/cart" 
@@ -110,7 +112,10 @@ export default function Navbar({ activeRoute }: NavbarProps) {
                 {t('contact')}
               </Link>
               <LanguageSelector />
-              <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+              <button 
+                onClick={() => openAuthModal()}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+              >
                 {t('signIn')}
               </button>
             </div>

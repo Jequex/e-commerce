@@ -2,3 +2,4 @@
 // Export common components here when they are created
 
 export { default as LanguageSelector } from './LanguageSelector';
+export { default as AuthModal } from './AuthModal';

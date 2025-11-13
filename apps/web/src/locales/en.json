@@ -178,6 +178,30 @@
   "footer": {
     "description": "Your ultimate e-commerce destination"
   },
+  "auth": {
+    "signIn": "Sign In",
+    "signUp": "Sign Up",
+    "signInSubtitle": "Welcome back! Please sign in to your account.",
+    "signUpSubtitle": "Create your account to get started.",
+    "email": "Email Address",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "fullName": "Full Name",
+    "emailPlaceholder": "Enter your email address",
+    "passwordPlaceholder": "Enter your password",
+    "confirmPasswordPlaceholder": "Confirm your password",
+    "fullNamePlaceholder": "Enter your full name",
+    "signInButton": "Sign In",
+    "signUpButton": "Create Account",
+    "processing": "Processing...",
+    "orContinueWith": "Or continue with",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?",
+    "createAccount": "Create one",
+    "signInLink": "Sign in here",
+    "forgotPassword": "Forgot your password?",
+    "resetPassword": "Reset it here"
+  },
   "metadata": {
     "homeTitle": "Ecommerce Store",
     "homeDescription": "Modern, scalable e-commerce platform built with Next.js",
