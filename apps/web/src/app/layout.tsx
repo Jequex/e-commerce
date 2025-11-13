@@ -12,32 +12,32 @@ const lato = Lato({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Ecommerce Store',
-    template: '%s | Ecommerce Store',
+    default: 'Jequex Store',
+    template: '%s | Jequex Store',
   },
   description: 'Modern, scalable e-commerce platform built with Next.js',
   keywords: ['ecommerce', 'shopping', 'online store', 'retail'],
-  authors: [{ name: 'Ecommerce Team' }],
-  creator: 'Ecommerce Team',
+  authors: [{ name: 'Jequex Team' }],
+  creator: 'Jequex Team',
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://ecommerce-store.com',
-    siteName: 'Ecommerce Store',
-    title: 'Ecommerce Store',
+    url: 'https://store.jequex.com',
+    siteName: 'Jequex Store',
+    title: 'Jequex Store',
     description: 'Modern, scalable e-commerce platform built with Next.js',
     images: [
       {
         url: '/og-image.jpg',
         width: 1200,
         height: 630,
-        alt: 'Ecommerce Store',
+        alt: 'Jequex Store',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Ecommerce Store',
+    title: 'Jequex Store',
     description: 'Modern, scalable e-commerce platform built with Next.js',
     images: ['/og-image.jpg'],
     creator: '@ecommerce',
