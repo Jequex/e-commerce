@@ -75,7 +75,7 @@ export default function CategoriesPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <Navbar activeRoute="/products" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
@@ -83,15 +83,15 @@ export default function CategoriesPage() {
         <div className="text-center mb-16 relative">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl"></div>
           <div className="relative z-10 py-16 px-8">
-            <h1 className="text-6xl md:text-8xl font-black text-white mb-6 animate-bounce">
+            <h1 className="text-6xl md:text-8xl font-black text-blue-900 mb-6 animate-bounce">
               🛍️ Categories
             </h1>
-            <p className="text-xl md:text-2xl text-white/90 max-w-3xl mx-auto mb-8 leading-relaxed">
+            <p className="text-xl md:text-2xl text-blue-900/90 max-w-3xl mx-auto mb-8 leading-relaxed">
               Explore our amazing collection of products across different categories
             </p>
             <div className="flex justify-center">
               <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full">
-                <span className="text-white font-semibold">
+                <span className="text-blue-900 font-semibold">
                   {categories.reduce((total, cat) => total + cat.productCount, 0)}+ Products Available
                 </span>
               </div>
@@ -104,7 +104,7 @@ export default function CategoriesPage() {
           {categories.map((category) => (
             <Link
               key={category.id}
-              href={`/products?category=${category.nameKey}`}
+              href={`/?category=${category.nameKey}`}
               className="group"
             >
               <div className="relative overflow-hidden rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-rotate-1">
@@ -145,65 +145,6 @@ export default function CategoriesPage() {
               </div>
             </Link>
           ))}
-        </div>
-
-        {/* Featured Categories Section */}
-        <div className="bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 mb-16">
-          <div className="text-center mb-8">
-            <h2 className="text-4xl font-bold text-white mb-4">🌟 Featured Categories</h2>
-            <p className="text-white/80 text-lg">Most popular categories this month</p>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {categories.slice(0, 3).map((category, index) => (
-              <div key={category.id} className="relative">
-                <div className="bg-white/20 backdrop-blur-sm rounded-2xl p-6 hover:bg-white/30 transition-all duration-300 transform hover:scale-105">
-                  <div className="text-center">
-                    <div className="text-4xl mb-4">{category.icon}</div>
-                    <h3 className="text-xl font-bold text-white mb-2 capitalize">{category.nameKey}</h3>
-                    <p className="text-white/70 text-sm mb-4">{category.description}</p>
-                    <div className="bg-white/20 px-4 py-2 rounded-full">
-                      <span className="text-white font-semibold">{category.productCount} products</span>
-                    </div>
-                  </div>
-                </div>
-                {index === 0 && (
-                  <div className="absolute -top-2 -right-2 bg-yellow-400 text-black px-3 py-1 rounded-full text-sm font-bold">
-                    #1
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Call to Action */}
-        <div className="text-center">
-          <div className="bg-white/10 backdrop-blur-lg rounded-3xl p-8 mb-8">
-            <h3 className="text-3xl font-bold text-white mb-4">Can't find what you're looking for? 🔍</h3>
-            <p className="text-white/80 mb-6">Use our search feature or browse all products</p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
-                href="/search" 
-                className="bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-white px-8 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:rotate-1"
-              >
-                🔍 Search Products
-              </Link>
-              <Link 
-                href="/products/all" 
-                className="bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 text-white px-8 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-rotate-1"
-              >
-                📦 View All Products
-              </Link>
-            </div>
-          </div>
-          
-          <Link 
-            href="/" 
-            className="inline-flex items-center text-white hover:text-yellow-300 font-medium transition-colors text-lg"
-          >
-            ← Back to Home
-          </Link>
         </div>
       </div>
       

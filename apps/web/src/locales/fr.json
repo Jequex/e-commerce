@@ -1,9 +1,9 @@
 {
   "common": {
-    "shophub": "ShopHub",
+    "title": "Jequex",
     "signIn": "Se Connecter",
     "home": "Accueil",
-    "products": "Produits",
+    "categories": "Catégories",
     "cart": "Panier",
     "about": "À Propos",
     "contact": "Contact",
@@ -17,8 +17,7 @@
     "originalPrice": "Prix Original"
   },
   "nav": {
-    "title": "ShopHub",
-    "products": "Produits",
+    "categories": "Catégories",
     "cart": "Panier",
     "about": "À Propos",
     "contact": "Contact",

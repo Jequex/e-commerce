@@ -1,7 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
-import { Navbar } from '@/components/layout';
+import { Navbar, Footer } from '@/components/layout';
 import { useTranslations } from 'next-intl';
 
 export default function CartPage() {
@@ -74,6 +74,8 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+      
+      <Footer activeRoute="/cart" />
     </div>
   );
 }

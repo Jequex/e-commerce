@@ -1,7 +1,7 @@
 'use client';
 
 import { Link } from '@/i18n/navigation';
-import { Navbar } from '@/components/layout';
+import { Navbar, Footer } from '@/components/layout';
 import { useTranslations } from 'next-intl';
 
 export default function ContactPage() {
@@ -224,23 +224,7 @@ export default function ContactPage() {
         </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-gray-900 text-white mt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <div className="text-center">
-            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
-              ShopHub
-            </h3>
-            <p className="text-gray-400 mb-6">Your ultimate e-commerce destination</p>
-            <div className="flex justify-center space-x-6">
-              <Link href="/products" className="text-gray-400 hover:text-white transition-colors">Products</Link>
-              <Link href="/cart" className="text-gray-400 hover:text-white transition-colors">Cart</Link>
-              <Link href="/about" className="text-gray-400 hover:text-white transition-colors">About</Link>
-              <Link href="/contact" className="text-white font-medium">Contact</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer activeRoute="/contact" />
     </div>
   );
 }
