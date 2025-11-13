@@ -4,6 +4,11 @@
 
 /* Force Tailwind CSS compilation */
 
+/* Ensure Lato font is applied */
+* {
+  font-family: var(--font-lato), sans-serif;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;

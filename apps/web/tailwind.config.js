@@ -50,7 +50,7 @@ module.exports = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)'],
+        sans: ['var(--font-lato)', 'sans-serif'],
       },
       animation: {
         blob: 'blob 7s infinite',
