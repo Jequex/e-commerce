@@ -10,6 +10,7 @@ RUN npm install
 # Copy configuration files
 COPY next.config.js ./
 COPY tailwind.config.js ./
+COPY postcss.config.js ./
 COPY tsconfig.json ./
 
 # Copy source code

@@ -12,40 +12,40 @@ export default function HomePage() {
   
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+    <main className="min-h-screen bg-gradient-to-br from-purple-400 via-pink-500 to-red-500">
       <Navbar activeRoute="/" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
-        <div className="relative overflow-hidden">
+        <div className="relative overflow-hidden bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl p-8 mb-12">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32">
             <div className="text-center">
-              <div className="animate-fade-in-up">
-                <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
+              <div className="animate-bounce">
+                <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 drop-shadow-2xl">
                   {t('title')}
                 </h1>
-                <p className="text-xl md:text-2xl text-gray-600 max-w-4xl mx-auto mb-12 leading-relaxed">
+                <p className="text-xl md:text-2xl text-white/90 max-w-4xl mx-auto mb-12 leading-relaxed drop-shadow-lg">
                   {t('subtitle')}
                 </p>
                 <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
                   <Link 
                     href="/products" 
-                    className="group bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-4 rounded-2xl text-lg font-semibold hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-translate-y-1"
+                    className="group bg-gradient-to-r from-yellow-400 via-orange-500 to-red-500 text-white px-8 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:rotate-1 animate-pulse"
                   >
                     <span className="flex items-center">
-                      {t('exploreProducts')}
-                      <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {t('exploreProducts')} 🛍️
+                      <svg className="w-5 h-5 ml-2 transform group-hover:translate-x-2 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
                       </svg>
                     </span>
                   </Link>
                   <Link 
                     href="/cart" 
-                    className="group bg-white text-gray-900 px-8 py-4 rounded-2xl text-lg font-semibold border-2 border-gray-200 hover:border-blue-300 hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                    className="group bg-gradient-to-r from-green-400 via-blue-500 to-purple-600 text-white px-8 py-4 rounded-full text-lg font-bold hover:shadow-2xl transition-all duration-300 transform hover:scale-110 hover:-rotate-1"
                   >
                     <span className="flex items-center">
-                      {tNav('cart')}
-                      <svg className="w-5 h-5 ml-2 transform group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      {tNav('cart')} 🛒
+                      <svg className="w-5 h-5 ml-2 transform group-hover:rotate-45 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-1.5 9M20 9H8" />
                       </svg>
                     </span>
