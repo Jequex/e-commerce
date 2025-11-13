@@ -9,12 +9,12 @@ export default function ProductsPage() {
   const t = useTranslations('products');
   
   const products = [
-    { id: 1, nameKey: 'wirelessHeadphones', price: 299, originalPrice: 399, image: '🎧', categoryKey: 'electronics' },
-    { id: 2, nameKey: 'smartWatch', price: 199, originalPrice: 249, image: '⌚', categoryKey: 'electronics' },
-    { id: 3, nameKey: 'coffeeMaker', price: 159, originalPrice: 199, image: '☕', categoryKey: 'homeGarden' },
-    { id: 4, nameKey: 'backpack', price: 89, originalPrice: 120, image: '🎒', categoryKey: 'fashion' },
-    { id: 5, nameKey: 'yogaMat', price: 49, originalPrice: 69, image: '🧘', categoryKey: 'sports' },
-    { id: 6, nameKey: 'skincareSet', price: 79, originalPrice: 110, image: '🧴', categoryKey: 'beauty' }
+    { id: 1, nameKey: 'wirelessHeadphones', price: 299, originalPrice: 399, image: '🎧', categoryKey: 'electronics', rating: 4.8, buyersCount: 2847 },
+    { id: 2, nameKey: 'smartWatch', price: 199, originalPrice: 249, image: '⌚', categoryKey: 'electronics', rating: 4.6, buyersCount: 1203 },
+    { id: 3, nameKey: 'coffeeMaker', price: 159, originalPrice: 199, image: '☕', categoryKey: 'homeGarden', rating: 4.9, buyersCount: 892 },
+    { id: 4, nameKey: 'backpack', price: 89, originalPrice: 120, image: '🎒', categoryKey: 'fashion', rating: 4.3, buyersCount: 654 },
+    { id: 5, nameKey: 'yogaMat', price: 49, originalPrice: 69, image: '🧘', categoryKey: 'sports', rating: 4.7, buyersCount: 1456 },
+    { id: 6, nameKey: 'skincareSet', price: 79, originalPrice: 110, image: '🧴', categoryKey: 'beauty', rating: 4.5, buyersCount: 923 }
   ];
 
   return (
