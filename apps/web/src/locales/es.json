@@ -15,7 +15,8 @@
     "phone": "Teléfono",
     "address": "Dirección",
     "price": "Precio",
-    "originalPrice": "Precio Original"
+    "originalPrice": "Precio Original",
+    "allRightsReserved": "Todos los Derechos Reservados"
   },
   "nav": {
     "categories": "Categorías",
@@ -23,7 +24,10 @@
     "about": "Acerca de",
     "contact": "Contacto",
     "faq": "FAQ",
-    "signIn": "Registrarse / Iniciar Sesión"
+    "signIn": "Registrarse / Iniciar Sesión",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos de Servicio",
+    "cookiePolicy": "Política de Cookies"
   },
   "home": {
     "title": "Compra el Futuro",

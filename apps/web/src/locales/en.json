@@ -15,7 +15,8 @@
     "phone": "Phone",
     "address": "Address",
     "price": "Price",
-    "originalPrice": "Original Price"
+    "originalPrice": "Original Price",
+    "allRightsReserved": "All Rights Reserved"
   },
   "nav": {
     "categories": "Categories",
@@ -23,7 +24,10 @@
     "about": "About",
     "contact": "Contact",
     "faq": "FAQ",
-    "signIn": "Sign Up / Sign In"
+    "signIn": "Sign Up / Sign In",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "cookiePolicy": "Cookie Policy"
   },
   "home": {
     "title": "Shop the Future",

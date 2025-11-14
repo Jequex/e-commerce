@@ -15,7 +15,8 @@
     "phone": "Téléphone",
     "address": "Adresse",
     "price": "Prix",
-    "originalPrice": "Prix Original"
+    "originalPrice": "Prix Original",
+    "allRightsReserved": "Tous Droits Réservés"
   },
   "nav": {
     "categories": "Catégories",
@@ -23,7 +24,10 @@
     "about": "À Propos",
     "contact": "Contact",
     "faq": "FAQ",
-    "signIn": "S'inscrire / Se Connecter"
+    "signIn": "S'inscrire / Se Connecter",
+    "privacyPolicy": "Politique de Confidentialité",
+    "termsOfService": "Conditions d'Utilisation",
+    "cookiePolicy": "Politique de Cookies"
   },
   "home": {
     "title": "Achetez l'Avenir",
