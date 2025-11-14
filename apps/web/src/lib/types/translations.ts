@@ -2,7 +2,7 @@ export type SupportedLocale = 'en' | 'es' | 'fr';
 
 export interface TranslationKeys {
   common: {
-    shophub: string;
+    jequex: string;
     signIn: string;
     home: string;
     products: string;
