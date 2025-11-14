@@ -6,20 +6,12 @@ import {
   categories,
   brands,
   productReviews,
-  collections,
-  productCollections,
-  productAttributes,
-  type Product,
-  type NewProduct,
   createProductSchema,
   updateProductSchema,
   createCategorySchema,
-  updateCategorySchema,
-  createBrandSchema,
-  updateBrandSchema,
-  createReviewSchema
+  createBrandSchema
 } from '../schema/products';
-import { eq, and, desc, asc, like, ilike, inArray, sql, or } from 'drizzle-orm';
+import { eq, and, desc, asc, ilike, sql, or } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 
 export class ProductController {
@@ -41,12 +33,18 @@ export class ProductController {
       }
 
       // Create the product
-      const [newProduct] = await db.insert(products).values({
+      const productData = {
         id: uuidv4(),
         ...validatedData,
+        price: validatedData.price.toString(),
+        compareAtPrice: validatedData.compareAtPrice ? validatedData.compareAtPrice.toString() : null,
+        costPrice: validatedData.costPrice ? validatedData.costPrice.toString() : null,
+        weight: validatedData.weight ? validatedData.weight.toString() : null,
         createdAt: new Date(),
         updatedAt: new Date()
-      }).returning();
+      };
+
+      const [newProduct] = await db.insert(products).values(productData).returning();
 
       res.status(201).json({
         message: 'Product created successfully',
@@ -135,8 +133,35 @@ export class ProductController {
       }
 
       // Build order by
-      const orderColumn = products[sortBy as keyof typeof products] || products.createdAt;
-      const orderDirection = sortOrder === 'asc' ? asc : desc;
+      let orderByClause;
+      const sortField = sortBy as string;
+      
+      switch (sortField) {
+        case 'id':
+          orderByClause = sortOrder === 'asc' ? asc(products.id) : desc(products.id);
+          break;
+        case 'name':
+          orderByClause = sortOrder === 'asc' ? asc(products.name) : desc(products.name);
+          break;
+        case 'sku':
+          orderByClause = sortOrder === 'asc' ? asc(products.sku) : desc(products.sku);
+          break;
+        case 'price':
+          orderByClause = sortOrder === 'asc' ? asc(products.price) : desc(products.price);
+          break;
+        case 'updatedAt':
+          orderByClause = sortOrder === 'asc' ? asc(products.updatedAt) : desc(products.updatedAt);
+          break;
+        case 'isActive':
+          orderByClause = sortOrder === 'asc' ? asc(products.isActive) : desc(products.isActive);
+          break;
+        case 'isFeatured':
+          orderByClause = sortOrder === 'asc' ? asc(products.isFeatured) : desc(products.isFeatured);
+          break;
+        default:
+          orderByClause = desc(products.createdAt);
+          break;
+      }
 
       // Get products with relations
       const productList = await db.query.products.findMany({
@@ -149,7 +174,7 @@ export class ProductController {
             limit: 1
           }
         },
-        orderBy: orderDirection(orderColumn),
+        orderBy: orderByClause,
         limit: limitNum,
         offset: offset
       });
@@ -283,13 +308,30 @@ export class ProductController {
         }
       }
 
+      // Prepare update data with proper type conversions
+      const updateData: any = {
+        ...validatedData,
+        updatedAt: new Date()
+      };
+
+      // Convert numeric fields to strings if they exist
+      if (validatedData.price !== undefined) {
+        updateData.price = validatedData.price.toString();
+      }
+      if (validatedData.compareAtPrice !== undefined) {
+        updateData.compareAtPrice = validatedData.compareAtPrice ? validatedData.compareAtPrice.toString() : null;
+      }
+      if (validatedData.costPrice !== undefined) {
+        updateData.costPrice = validatedData.costPrice ? validatedData.costPrice.toString() : null;
+      }
+      if (validatedData.weight !== undefined) {
+        updateData.weight = validatedData.weight ? validatedData.weight.toString() : null;
+      }
+
       // Update the product
       const [updatedProduct] = await db
         .update(products)
-        .set({
-          ...validatedData,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(products.id, id))
         .returning();
 
