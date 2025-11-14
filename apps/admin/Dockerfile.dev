@@ -4,20 +4,22 @@ FROM node:18-alpine
 WORKDIR /app
 
 # Install dependencies
-COPY package*.json ./
+COPY apps/admin/package*.json ./
 RUN npm install
 
 # Copy configuration files
-COPY next.config.js ./
-COPY tailwind.config.js ./
-COPY tsconfig.json ./
+COPY apps/admin/next.config.js ./
+COPY apps/admin/tailwind.config.js ./
+COPY apps/admin/postcss.config.js ./
+COPY apps/admin/tsconfig.json ./
+COPY apps/admin/next-env.d.ts ./
 
 # Copy source code
-COPY src ./src
-COPY public ./public
+COPY apps/admin/src ./src
+COPY apps/admin/public ./public
 
 # Expose port
-EXPOSE 3000
+EXPOSE 3006
 
 # Start development server
 CMD ["npm", "run", "dev"]

@@ -25,6 +25,7 @@ COPY package*.json ./
 COPY next.config.js ./
 COPY tailwind.config.js ./
 COPY tsconfig.json ./
+COPY next-env.d.ts ./
 
 # Install all dependencies (including dev dependencies for building)
 RUN npm install

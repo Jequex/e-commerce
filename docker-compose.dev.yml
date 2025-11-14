@@ -241,7 +241,7 @@ services:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://localhost:8080
     ports:
-      - "3006:3000"
+      - "3006:3006"
     volumes:
       - ./apps/admin/src:/app/src
       - ./apps/admin/public:/app/public
@@ -249,6 +249,7 @@ services:
       - ./apps/admin/next.config.js:/app/next.config.js
       - ./apps/admin/tailwind.config.js:/app/tailwind.config.js
       - ./apps/admin/tsconfig.json:/app/tsconfig.json
+      - ./apps/admin/next-env.d.ts:/app/next-env.d.ts
       - /app/node_modules
       - /app/.next
     networks:

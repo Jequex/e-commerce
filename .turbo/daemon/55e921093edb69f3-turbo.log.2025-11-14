@@ -1,0 +1,42 @@
+2025-11-14T14:01:00.319337Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("packages/ui/tsup.config.bundled_mglaq7rs21b.mjs")}
+2025-11-14T14:01:00.319347Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/ui"), path: AnchoredSystemPathBuf("packages/ui") }}))
+2025-11-14T14:01:04.420542Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("tsconfig.tsbuildinfo")}
+2025-11-14T14:01:04.420571Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:01:15.723752Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("")}
+2025-11-14T14:01:15.723771Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({}))
+2025-11-14T14:01:49.320730Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/admin/README-i18n.md")}
+2025-11-14T14:01:49.320744Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/admin"), path: AnchoredSystemPathBuf("apps/admin") }}))
+2025-11-14T14:01:50.420236Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/admin/README-i18n.md")}
+2025-11-14T14:01:50.420244Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/admin"), path: AnchoredSystemPathBuf("apps/admin") }}))
+2025-11-14T14:02:03.121324Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/admin/README-i18n.md")}
+2025-11-14T14:02:03.121333Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/admin"), path: AnchoredSystemPathBuf("apps/admin") }}))
+2025-11-14T14:02:03.121358Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-14T14:05:35.823551Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/admin/Dockerfile"), AnchoredSystemPathBuf("apps/admin/Dockerfile.dev")}
+2025-11-14T14:05:35.823566Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/admin"), path: AnchoredSystemPathBuf("apps/admin") }}))
+2025-11-14T14:05:50.324887Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("docker-compose.dev.yml"), AnchoredSystemPathBuf("docker-compose.yml")}
+2025-11-14T14:05:50.324895Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:05:56.924043Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("docker-compose.dev.yml"), AnchoredSystemPathBuf("docker-compose.yml"), AnchoredSystemPathBuf("apps/admin/Dockerfile"), AnchoredSystemPathBuf("apps/admin/Dockerfile.dev")}
+2025-11-14T14:05:56.924051Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/admin"), path: AnchoredSystemPathBuf("apps/admin") }, WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:05:56.956280Z  WARN turborepo_lib::package_changes_watcher: hashes are the same, no need to rerun
+2025-11-14T14:09:20.346016Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("docker-compose.dev.yml")}
+2025-11-14T14:09:20.346058Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:09:31.045972Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("docker-compose.dev.yml")}
+2025-11-14T14:09:31.045983Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:11:24.347823Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("docker-compose.dev.yml")}
+2025-11-14T14:11:24.347842Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:11:25.548376Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("docker-compose.dev.yml")}
+2025-11-14T14:11:25.548384Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:11:28.349336Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("docker-compose.dev.yml")}
+2025-11-14T14:11:28.349345Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:12:55.649935Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("apps/admin/package.json")}
+2025-11-14T14:12:55.649958Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Other("@ecommerce/admin"), path: AnchoredSystemPathBuf("apps/admin") }}))
+2025-11-14T14:13:11.050026Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("docker-compose.dev.yml")}
+2025-11-14T14:13:11.050033Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:14:25.751978Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("scripts/admin-docker.sh")}
+2025-11-14T14:14:25.752043Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:14:27.051889Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("scripts/admin-docker.sh")}
+2025-11-14T14:14:27.051904Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:14:34.251902Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("scripts/admin-docker.sh")}
+2025-11-14T14:14:34.251914Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
+2025-11-14T14:14:48.851835Z  WARN turborepo_lib::package_changes_watcher: changed_files: {AnchoredSystemPathBuf("scripts/admin-docker.sh")}
+2025-11-14T14:14:48.851844Z  WARN turborepo_lib::package_changes_watcher: changed_packages: Ok(Some({WorkspacePackage { name: Root, path: AnchoredSystemPathBuf("") }}))
