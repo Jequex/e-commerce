@@ -7,6 +7,7 @@
     "cart": "Panier",
     "about": "À Propos",
     "contact": "Contact",
+    "faq": "FAQ",
     "loading": "Chargement...",
     "error": "Erreur",
     "success": "Succès",
@@ -21,6 +22,7 @@
     "cart": "Panier",
     "about": "À Propos",
     "contact": "Contact",
+    "faq": "FAQ",
     "signIn": "S'inscrire / Se Connecter"
   },
   "home": {
@@ -198,6 +200,105 @@
     "signInLink": "Se connecter ici",
     "forgotPassword": "Mot de passe oublié ?",
     "resetPassword": "Le réinitialiser ici"
+  },
+  "faq": {
+    "title": "Questions",
+    "subtitle": "Fréquemment Posées",
+    "description": "Trouvez des réponses rapides aux questions courantes sur nos produits, expédition, retours et plus encore.",
+    "categories": {
+      "all": "Toutes les Questions",
+      "shipping": "Expédition",
+      "returns": "Retours et Remboursements",
+      "orders": "Commandes",
+      "payment": "Paiement",
+      "account": "Compte"
+    },
+    "shipping": {
+      "howLong": "Combien de temps prend l'expédition ?",
+      "howLongAnswer": "L'expédition standard prend généralement 3-7 jours ouvrables en France métropolitaine. Des options d'expédition express sont disponibles pour une livraison en 1-2 jours ouvrables. L'expédition internationale peut prendre 7-21 jours ouvrables selon la destination.",
+      "cost": "Combien coûte l'expédition ?",
+      "costAnswer": "Nous offrons la livraison standard gratuite sur les commandes de plus de 50€. Pour les commandes inférieures à 50€, l'expédition standard coûte 5,99€. Les tarifs d'expédition express varient selon l'emplacement et la taille du colis, à partir de 14,99€.",
+      "tracking": "Comment puis-je suivre ma commande ?",
+      "trackingAnswer": "Une fois votre commande expédiée, vous recevrez un numéro de suivi par email. Vous pouvez suivre votre colis en utilisant ce numéro sur notre site web ou le site du transporteur. Vous recevrez également des mises à jour sur le statut de votre commande par SMS si vous y avez consenti."
+    },
+    "returns": {
+      "policy": "Quelle est votre politique de retour ?",
+      "policyAnswer": "Nous offrons une politique de retour de 30 jours pour la plupart des articles. Les articles doivent être en état d'origine avec les étiquettes attachées. Certaines restrictions s'appliquent à certaines catégories comme les articles de soins personnels, les produits personnalisés et les articles en solde final.",
+      "howTo": "Comment puis-je retourner un article ?",
+      "howToAnswer": "Pour retourner un article, connectez-vous à votre compte et sélectionnez 'Retourner des Articles' dans votre historique de commandes. Imprimez l'étiquette de retour prépayée et renvoyez-nous l'article. Vous pouvez également initier des retours en contactant notre équipe de service client.",
+      "refund": "Quand recevrai-je mon remboursement ?",
+      "refundAnswer": "Les remboursements sont traités dans les 3-5 jours ouvrables après réception de votre article retourné. Le remboursement sera crédité sur votre méthode de paiement d'origine. Veuillez prévoir 5-10 jours ouvrables pour que le remboursement apparaisse sur votre relevé."
+    },
+    "orders": {
+      "modify": "Puis-je modifier ma commande après l'avoir passée ?",
+      "modifyAnswer": "Les commandes peuvent être modifiées dans l'heure suivant leur passation si elles n'ont pas encore été traitées. Après cela, vous devrez peut-être passer une nouvelle commande et retourner les articles d'origine. Contactez immédiatement notre équipe de service client si vous devez apporter des modifications.",
+      "cancel": "Comment annuler ma commande ?",
+      "cancelAnswer": "Les commandes peuvent être annulées dans l'heure suivant leur passation via votre tableau de bord de compte. Si votre commande a déjà été traitée ou expédiée, vous devrez retourner les articles une fois reçus en suivant notre processus de retour standard.",
+      "status": "Comment vérifier le statut de ma commande ?",
+      "statusAnswer": "Vous pouvez vérifier le statut de votre commande en vous connectant à votre compte et en consultant votre historique de commandes. Vous recevrez également des mises à jour par email à chaque étape : confirmation de commande, traitement, expédié et livré."
+    },
+    "payment": {
+      "methods": "Quelles méthodes de paiement acceptez-vous ?",
+      "methodsAnswer": "Nous acceptons toutes les principales cartes de crédit (Visa, MasterCard, American Express, Discover), PayPal, Apple Pay, Google Pay, et Shop Pay. Nous offrons également des options d'achat maintenant-payer plus tard via Klarna et Afterpay pour les achats qualifiés.",
+      "security": "Mes informations de paiement sont-elles sécurisées ?",
+      "securityAnswer": "Oui, nous utilisons un cryptage SSL standard de l'industrie pour protéger vos informations de paiement. Nous sommes conformes PCI DSS et ne stockons jamais vos informations complètes de carte de crédit sur nos serveurs. Toutes les transactions sont traitées via des processeurs de paiement sécurisés."
+    },
+    "account": {
+      "create": "Ai-je besoin d'un compte pour faire un achat ?",
+      "createAnswer": "Bien que vous puissiez passer commande en tant qu'invité, créer un compte vous permet de suivre les commandes, sauvegarder les adresses, consulter l'historique d'achat, gagner des points de récompense et recevoir des recommandations personnalisées. Cela rend également les commandes futures plus rapides.",
+      "password": "Comment réinitialiser mon mot de passe ?",
+      "passwordAnswer": "Cliquez sur 'Mot de passe oublié' sur la page de connexion et entrez votre adresse email. Nous vous enverrons un lien de réinitialisation de mot de passe. Si vous ne recevez pas l'email dans quelques minutes, vérifiez votre dossier spam ou contactez le service client."
+    },
+    "support": {
+      "title": "Vous avez encore des questions ?",
+      "description": "Vous ne trouvez pas la réponse que vous cherchez ? Notre équipe de support client est là pour vous aider 24h/24 et 7j/7.",
+      "contactUs": "Contacter le Support"
+    }
+  },
+  "productDetails": {
+    "breadcrumb": {
+      "home": "Accueil",
+      "products": "Produits"
+    },
+    "bought": "achetés",
+    "inStock": "En Stock",
+    "outOfStock": "Rupture de Stock",
+    "available": "disponibles",
+    "description": "Description",
+    "size": "Taille",
+    "color": "Couleur",
+    "quantity": "Quantité",
+    "addToCart": "Ajouter au Panier",
+    "addToWishlist": "Ajouter à la Liste de Souhaits",
+    "sku": "SKU",
+    "brand": "Marque",
+    "features": "Caractéristiques",
+    "specifications": "Spécifications",
+    "reviews": "Avis",
+    "colors": {
+      "black": "Noir",
+      "white": "Blanc",
+      "blue": "Bleu",
+      "red": "Rouge"
+    },
+    "descriptions": {
+      "wirelessHeadphonesDesc": "Découvrez une qualité sonore premium avec ces écouteurs sans fil de qualité professionnelle. Dotés d'une technologie avancée de suppression du bruit, d'un confort supérieur et d'une autonomie exceptionnelle, ils sont parfaits pour les mélomanes, les professionnels et tous ceux qui recherchent l'expérience audio ultime."
+    },
+    "featuresList": {
+      "noiseCancellation": "Suppression Active Avancée du Bruit",
+      "bluetoothConnectivity": "Connectivité Sans Fil Bluetooth 5.0",
+      "longBattery": "Autonomie de 30 Heures avec Charge Rapide",
+      "comfortableDesign": "Design Ergonomique avec Coussins en Mousse à Mémoire"
+    },
+    "specLabels": {
+      "brand": "Marque",
+      "weight": "Poids",
+      "batteryLife": "Autonomie de la Batterie",
+      "connectivity": "Connectivité",
+      "frequency": "Réponse en Fréquence",
+      "impedance": "Impédance"
+    },
+    "writeReview": "Écrire un Avis"
   },
   "footer": {
     "description": "Votre destination ultime de commerce électronique"

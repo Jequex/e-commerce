@@ -7,6 +7,7 @@
     "cart": "Carrito",
     "about": "Acerca de",
     "contact": "Contacto",
+    "faq": "FAQ",
     "loading": "Cargando...",
     "error": "Error",
     "success": "Éxito",
@@ -21,6 +22,7 @@
     "cart": "Carrito",
     "about": "Acerca de",
     "contact": "Contacto",
+    "faq": "FAQ",
     "signIn": "Registrarse / Iniciar Sesión"
   },
   "home": {
@@ -178,6 +180,60 @@
   "footer": {
     "description": "Tu destino definitivo de comercio electrónico"
   },
+  "faq": {
+    "title": "Preguntas",
+    "subtitle": "Frecuentes",
+    "description": "Encuentra respuestas rápidas a preguntas comunes sobre nuestros productos, envío, devoluciones y más.",
+    "categories": {
+      "all": "Todas las Preguntas",
+      "shipping": "Envío",
+      "returns": "Devoluciones y Reembolsos",
+      "orders": "Pedidos",
+      "payment": "Pago",
+      "account": "Cuenta"
+    },
+    "shipping": {
+      "howLong": "¿Cuánto tiempo tarda el envío?",
+      "howLongAnswer": "El envío estándar normalmente toma de 3-7 días hábiles dentro de España. Las opciones de envío express están disponibles para entrega en 1-2 días hábiles. El envío internacional puede tomar de 7-21 días hábiles dependiendo del destino.",
+      "cost": "¿Cuánto cuesta el envío?",
+      "costAnswer": "Ofrecemos envío estándar gratuito en pedidos superiores a 50€. Para pedidos menores a 50€, el envío estándar cuesta 5,99€. Las tarifas de envío express varían según la ubicación y el tamaño del paquete, comenzando en 14,99€.",
+      "tracking": "¿Cómo puedo rastrear mi pedido?",
+      "trackingAnswer": "Una vez que tu pedido sea enviado, recibirás un número de seguimiento por correo electrónico. Puedes rastrear tu paquete usando este número en nuestro sitio web o en el sitio web del transportista. También recibirás actualizaciones sobre el estado de tu pedido por SMS si has optado por ello."
+    },
+    "returns": {
+      "policy": "¿Cuál es su política de devoluciones?",
+      "policyAnswer": "Ofrecemos una política de devolución de 30 días para la mayoría de los artículos. Los artículos deben estar en condición original con etiquetas adjuntas. Algunas restricciones se aplican a ciertas categorías como artículos de cuidado personal, productos personalizados y artículos en liquidación final.",
+      "howTo": "¿Cómo devuelvo un artículo?",
+      "howToAnswer": "Para devolver un artículo, inicia sesión en tu cuenta y selecciona 'Devolver Artículos' en tu historial de pedidos. Imprime la etiqueta de devolución prepagada y envíanos el artículo de vuelta. También puedes iniciar devoluciones contactando a nuestro equipo de servicio al cliente.",
+      "refund": "¿Cuándo recibiré mi reembolso?",
+      "refundAnswer": "Los reembolsos se procesan dentro de 3-5 días hábiles después de que recibamos tu artículo devuelto. El reembolso será acreditado a tu método de pago original. Por favor, permite de 5-10 días hábiles para que el reembolso aparezca en tu estado de cuenta."
+    },
+    "orders": {
+      "modify": "¿Puedo modificar mi pedido después de realizarlo?",
+      "modifyAnswer": "Los pedidos pueden modificarse dentro de 1 hora de haberlos realizado si aún no han sido procesados. Después de eso, es posible que necesites realizar un nuevo pedido y devolver los artículos originales. Contacta a nuestro equipo de servicio al cliente inmediatamente si necesitas hacer cambios.",
+      "cancel": "¿Cómo cancelo mi pedido?",
+      "cancelAnswer": "Los pedidos pueden cancelarse dentro de 1 hora de haberlos realizado a través del panel de tu cuenta. Si tu pedido ya ha sido procesado o enviado, necesitarás devolver los artículos una vez recibidos siguiendo nuestro proceso estándar de devolución.",
+      "status": "¿Cómo verifico el estado de mi pedido?",
+      "statusAnswer": "Puedes verificar el estado de tu pedido iniciando sesión en tu cuenta y viendo tu historial de pedidos. También recibirás actualizaciones por correo electrónico en cada etapa: confirmación de pedido, procesamiento, enviado y entregado."
+    },
+    "payment": {
+      "methods": "¿Qué métodos de pago aceptan?",
+      "methodsAnswer": "Aceptamos todas las principales tarjetas de crédito (Visa, MasterCard, American Express, Discover), PayPal, Apple Pay, Google Pay y Shop Pay. También ofrecemos opciones de compra ahora-paga después a través de Klarna y Afterpay para compras calificadas.",
+      "security": "¿Está segura mi información de pago?",
+      "securityAnswer": "Sí, utilizamos encriptación SSL estándar de la industria para proteger tu información de pago. Cumplimos con PCI DSS y nunca almacenamos tu información completa de tarjeta de crédito en nuestros servidores. Todas las transacciones se procesan a través de procesadores de pago seguros."
+    },
+    "account": {
+      "create": "¿Necesito una cuenta para realizar una compra?",
+      "createAnswer": "Aunque puedes pagar como invitado, crear una cuenta te permite rastrear pedidos, guardar direcciones, ver historial de compras, ganar puntos de recompensa y recibir recomendaciones personalizadas. También hace que las compras futuras sean más rápidas.",
+      "password": "¿Cómo restablezco mi contraseña?",
+      "passwordAnswer": "Haz clic en 'Olvidé mi contraseña' en la página de inicio de sesión e introduce tu dirección de correo electrónico. Te enviaremos un enlace para restablecer la contraseña. Si no recibes el correo en unos minutos, revisa tu carpeta de spam o contacta al servicio al cliente."
+    },
+    "support": {
+      "title": "¿Aún tienes preguntas?",
+      "description": "¿No encuentras la respuesta que buscas? Nuestro equipo de soporte al cliente está aquí para ayudarte 24/7.",
+      "contactUs": "Contactar Soporte"
+    }
+  },
   "auth": {
     "signIn": "Iniciar Sesión",
     "signUp": "Registrarse",
@@ -202,6 +258,51 @@
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "resetPassword": "Restablécela aquí"
   },
+  "productDetails": {
+    "breadcrumb": {
+      "home": "Inicio",
+      "products": "Productos"
+    },
+    "bought": "comprados",
+    "inStock": "En Stock",
+    "outOfStock": "Agotado",
+    "available": "disponibles",
+    "description": "Descripción",
+    "size": "Talla",
+    "color": "Color",
+    "quantity": "Cantidad",
+    "addToCart": "Añadir al Carrito",
+    "addToWishlist": "Añadir a Lista de Deseos",
+    "sku": "SKU",
+    "brand": "Marca",
+    "features": "Características",
+    "specifications": "Especificaciones",
+    "reviews": "Reseñas",
+    "colors": {
+      "black": "Negro",
+      "white": "Blanco",
+      "blue": "Azul",
+      "red": "Rojo"
+    },
+    "descriptions": {
+      "wirelessHeadphonesDesc": "Experimenta calidad de sonido premium con estos audífonos inalámbricos de grado profesional. Con tecnología avanzada de cancelación de ruido, comodidad superior y vida útil excepcional de la batería, son perfectos para amantes de la música, profesionales y cualquiera que busque la experiencia de audio definitiva."
+    },
+    "featuresList": {
+      "noiseCancellation": "Cancelación Activa Avanzada de Ruido",
+      "bluetoothConnectivity": "Conectividad Inalámbrica Bluetooth 5.0",
+      "longBattery": "Duración de Batería de 30 Horas con Carga Rápida",
+      "comfortableDesign": "Diseño Ergonómico con Cojines de Espuma con Memoria"
+    },
+    "specLabels": {
+      "brand": "Marca",
+      "weight": "Peso",
+      "batteryLife": "Duración de la Batería",
+      "connectivity": "Conectividad",
+      "frequency": "Respuesta de Frecuencia",
+      "impedance": "Impedancia"
+    },
+    "writeReview": "Escribir una Reseña"
+  },
   "metadata": {
     "homeTitle": "Tienda de Comercio Electrónico",
     "homeDescription": "Plataforma de comercio electrónico moderna y escalable construida con Next.js",
@@ -212,6 +313,8 @@
     "productsTitle": "Productos",
     "productsDescription": "Descubre nuestra increíble colección de productos",
     "cartTitle": "Carrito de Compras",
-    "cartDescription": "Revisa y gestiona los artículos de tu carrito de compras"
+    "cartDescription": "Revisa y gestiona los artículos de tu carrito de compras",
+    "faqTitle": "FAQ - Preguntas Frecuentes",
+    "faqDescription": "Encuentra respuestas a preguntas comunes sobre nuestros productos, envío, devoluciones y soporte al cliente."
   }
 }

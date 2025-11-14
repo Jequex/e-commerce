@@ -7,6 +7,7 @@
     "cart": "Cart",
     "about": "About",
     "contact": "Contact",
+    "faq": "FAQ",
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
@@ -21,6 +22,7 @@
     "cart": "Cart",
     "about": "About",
     "contact": "Contact",
+    "faq": "FAQ",
     "signIn": "Sign Up / Sign In"
   },
   "home": {
@@ -202,6 +204,105 @@
     "forgotPassword": "Forgot your password?",
     "resetPassword": "Reset it here"
   },
+  "faq": {
+    "title": "Frequently Asked",
+    "subtitle": "Questions",
+    "description": "Find quick answers to common questions about our products, shipping, returns, and more.",
+    "categories": {
+      "all": "All Questions",
+      "shipping": "Shipping",
+      "returns": "Returns & Refunds",
+      "orders": "Orders",
+      "payment": "Payment",
+      "account": "Account"
+    },
+    "shipping": {
+      "howLong": "How long does shipping take?",
+      "howLongAnswer": "Standard shipping typically takes 3-7 business days within the continental US. Express shipping options are available for 1-2 business day delivery. International shipping may take 7-21 business days depending on the destination.",
+      "cost": "How much does shipping cost?",
+      "costAnswer": "We offer free standard shipping on orders over $50. For orders under $50, standard shipping costs $5.99. Express shipping rates vary by location and package size, starting at $14.99.",
+      "tracking": "How can I track my order?",
+      "trackingAnswer": "Once your order ships, you'll receive a tracking number via email. You can track your package using this number on our website or the carrier's website. You'll also receive updates on your order status through SMS if you've opted in."
+    },
+    "returns": {
+      "policy": "What is your return policy?",
+      "policyAnswer": "We offer a 30-day return policy for most items. Items must be in original condition with tags attached. Some restrictions apply to certain categories like personal care items, custom products, and final sale items.",
+      "howTo": "How do I return an item?",
+      "howToAnswer": "To return an item, log into your account and select 'Return Items' from your order history. Print the prepaid return label and ship the item back to us. You can also initiate returns by contacting our customer service team.",
+      "refund": "When will I receive my refund?",
+      "refundAnswer": "Refunds are processed within 3-5 business days after we receive your returned item. The refund will be credited to your original payment method. Please allow 5-10 business days for the refund to appear on your statement."
+    },
+    "orders": {
+      "modify": "Can I modify my order after placing it?",
+      "modifyAnswer": "Orders can be modified within 1 hour of placement if they haven't been processed yet. After that, you may need to place a new order and return the original items. Contact our customer service team immediately if you need to make changes.",
+      "cancel": "How do I cancel my order?",
+      "cancelAnswer": "Orders can be cancelled within 1 hour of placement through your account dashboard. If your order has already been processed or shipped, you'll need to return the items once received following our standard return process.",
+      "status": "How do I check my order status?",
+      "statusAnswer": "You can check your order status by logging into your account and viewing your order history. You'll also receive email updates at each stage: order confirmation, processing, shipped, and delivered."
+    },
+    "payment": {
+      "methods": "What payment methods do you accept?",
+      "methodsAnswer": "We accept all major credit cards (Visa, MasterCard, American Express, Discover), PayPal, Apple Pay, Google Pay, and Shop Pay. We also offer buy-now-pay-later options through Klarna and Afterpay for qualified purchases.",
+      "security": "Is my payment information secure?",
+      "securityAnswer": "Yes, we use industry-standard SSL encryption to protect your payment information. We're PCI DSS compliant and never store your full credit card information on our servers. All transactions are processed through secure payment processors."
+    },
+    "account": {
+      "create": "Do I need an account to make a purchase?",
+      "createAnswer": "While you can checkout as a guest, creating an account allows you to track orders, save addresses, view purchase history, earn rewards points, and receive personalized recommendations. It also makes future checkouts faster.",
+      "password": "How do I reset my password?",
+      "passwordAnswer": "Click 'Forgot Password' on the login page and enter your email address. We'll send you a password reset link. If you don't receive the email within a few minutes, check your spam folder or contact customer service."
+    },
+    "support": {
+      "title": "Still Have Questions?",
+      "description": "Can't find the answer you're looking for? Our customer support team is here to help you 24/7.",
+      "contactUs": "Contact Support"
+    }
+  },
+  "productDetails": {
+    "breadcrumb": {
+      "home": "Home",
+      "products": "Products"
+    },
+    "bought": "bought",
+    "inStock": "In Stock",
+    "outOfStock": "Out of Stock",
+    "available": "available",
+    "description": "Description",
+    "size": "Size",
+    "color": "Color",
+    "quantity": "Quantity",
+    "addToCart": "Add to Cart",
+    "addToWishlist": "Add to Wishlist",
+    "sku": "SKU",
+    "brand": "Brand",
+    "features": "Features",
+    "specifications": "Specifications",
+    "reviews": "Reviews",
+    "colors": {
+      "black": "Black",
+      "white": "White",
+      "blue": "Blue",
+      "red": "Red"
+    },
+    "descriptions": {
+      "wirelessHeadphonesDesc": "Experience premium sound quality with these professional-grade wireless headphones. Featuring advanced noise cancellation technology, superior comfort, and exceptional battery life, they're perfect for music lovers, professionals, and anyone seeking the ultimate audio experience."
+    },
+    "featuresList": {
+      "noiseCancellation": "Advanced Active Noise Cancellation",
+      "bluetoothConnectivity": "Bluetooth 5.0 Wireless Connectivity",
+      "longBattery": "30-Hour Battery Life with Quick Charge",
+      "comfortableDesign": "Ergonomic Design with Memory Foam Cushions"
+    },
+    "specLabels": {
+      "brand": "Brand",
+      "weight": "Weight",
+      "batteryLife": "Battery Life",
+      "connectivity": "Connectivity",
+      "frequency": "Frequency Response",
+      "impedance": "Impedance"
+    },
+    "writeReview": "Write a Review"
+  },
   "metadata": {
     "homeTitle": "Ecommerce Store",
     "homeDescription": "Modern, scalable e-commerce platform built with Next.js",
@@ -212,6 +313,8 @@
     "productsTitle": "Products",
     "productsDescription": "Discover our amazing collection of products",
     "cartTitle": "Shopping Cart",
-    "cartDescription": "Review and manage your shopping cart items"
+    "cartDescription": "Review and manage your shopping cart items",
+    "faqTitle": "FAQ - Frequently Asked Questions",
+    "faqDescription": "Find answers to common questions about our products, shipping, returns, and customer support."
   }
 }

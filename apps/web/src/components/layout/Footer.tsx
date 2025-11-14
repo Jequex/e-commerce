@@ -108,6 +108,18 @@ export default function Footer({ activeRoute }: FooterProps) {
                   {t('contact')}
                 </Link>
               </li>
+              <li>
+                <Link 
+                  href="/faq" 
+                  className={`transition-colors ${
+                    isActive('/faq') 
+                      ? 'text-white font-medium' 
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {t('faq')}
+                </Link>
+              </li>
             </ul>
           </div>
 

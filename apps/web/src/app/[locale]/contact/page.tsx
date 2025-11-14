@@ -33,8 +33,8 @@ export default function ContactPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-4">{t('emailSupport')}</h3>
             <p className="text-gray-600 mb-4">{t('emailSupportDescription')}</p>
-            <a href="mailto:support@shophub.com" className="text-blue-600 hover:text-blue-800 font-semibold">
-              support@shophub.com
+            <a href="mailto:support@jequex.com" className="text-blue-600 hover:text-blue-800 font-semibold">
+              support@jequex.com
             </a>
           </div>
 
@@ -46,8 +46,8 @@ export default function ContactPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-4">{t('phoneSupport')}</h3>
             <p className="text-gray-600 mb-4">{t('phoneSupportDescription')}</p>
-            <a href="tel:+1-555-123-4567" className="text-blue-600 hover:text-blue-800 font-semibold">
-              +1 (555) 123-4567
+            <a href="tel:+2348141676170" className="text-blue-600 hover:text-blue-800 font-semibold">
+              +234 814 167 6170
             </a>
           </div>
 
@@ -179,9 +179,9 @@ export default function ContactPage() {
               <p className="text-blue-100 mb-6">
                 {t('faqDescription')}
               </p>
-              <button className="bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
+              <Link href="/faq" className="inline-block bg-white text-blue-600 px-6 py-3 rounded-lg font-semibold hover:bg-blue-50 transition-colors">
                 {t('viewFaq')}
-              </button>
+              </Link>
             </div>
 
             {/* Response Time */}
