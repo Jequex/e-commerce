@@ -57,5 +57,8 @@
     "url": "https://github.com/your-org/ecommerce-monorepo.git"
   },
   "author": "Your Team",
-  "license": "MIT"
+  "license": "MIT",
+  "dependencies": {
+    "drizzle-kit": "^0.31.8"
+  }
 }

@@ -15,6 +15,8 @@
     "lint:fix": "eslint src --ext .ts --fix",
     "migrate": "ts-node src/migrations/run-migrations.ts",
     "migrate:build": "node dist/migrations/run-migrations.js",
+    "migrate:generate": "drizzle-kit generate:pg",
+    "migrate:push": "drizzle-kit push:pg",
     "db:check": "ts-node src/migrations/check-db.ts",
     "db:status": "ts-node src/migrations/check-tables.ts"
   },
