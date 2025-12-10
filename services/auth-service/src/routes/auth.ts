@@ -49,6 +49,26 @@ const verifyEmailSchema = z.object({
   }),
 });
 
+// Admin validation schemas
+const adminRegisterSchema = z.object({
+  body: z.object({
+    email: schemas.email,
+    password: schemas.password,
+    firstName: z.string().min(1).max(50),
+    lastName: z.string().min(1).max(50),
+    role: z.enum(['admin', 'super_admin']).default('admin'),
+    permissions: z.array(z.string()).optional(), // Stored in user metadata
+  }),
+});
+
+const adminLoginSchema = z.object({
+  body: z.object({
+    email: schemas.email,
+    password: z.string().min(1),
+    adminCode: z.string().optional(), // Optional admin verification code
+  }),
+});
+
 // Register
 router.post(
   '/register',
@@ -92,5 +112,20 @@ router.post(
 
 // Resend verification email
 router.post('/resend-verification', authController.resendVerificationEmail.bind(authController));
+
+// Admin routes
+// Admin register
+router.post(
+  '/admin-register',
+  validateRequest(adminRegisterSchema),
+  authController.adminRegister.bind(authController)
+);
+
+// Admin login
+router.post(
+  '/admin-login',
+  validateRequest(adminLoginSchema),
+  authController.adminLogin.bind(authController)
+);
 
 export { router as authRoutes };

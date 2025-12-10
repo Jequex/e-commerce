@@ -824,6 +824,172 @@ export class AuthController {
     }
   }
 
+  // Admin registration
+  async adminRegister(req: Request, res: Response) {
+    try {
+      const { email, password, firstName, lastName, role = 'admin', permissions } = req.body;
+
+      // Check if admin user already exists
+      const existingUser = await db.query.users.findFirst({
+        where: eq(users.email, email)
+      });
+
+      if (existingUser) {
+        return res.status(409).json({
+          error: 'Admin user with this email already exists',
+          code: 'ADMIN_EXISTS'
+        });
+      }
+
+      // Hash password with higher rounds for admin accounts
+      const hashedPassword = await bcrypt.hash(password, 14);
+
+      // Create admin user
+      const [newUser] = await db.insert(users).values({
+        email,
+        passwordHash: hashedPassword,
+        firstName,
+        lastName,
+        role: role as 'admin' | 'super_admin',
+        emailVerified: true, // Admin accounts are pre-verified
+        status: 'active',
+        metadata: { permissions: permissions || [] }, // Store permissions in metadata
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+
+      // Log admin creation activity
+      await this.logUserActivity(newUser.id, 'ADMIN_REGISTER', req);
+
+      res.status(201).json({
+        message: 'Admin user created successfully',
+        admin: {
+          id: newUser.id,
+          email: newUser.email,
+          firstName: newUser.firstName,
+          lastName: newUser.lastName,
+          role: newUser.role,
+          permissions: (newUser.metadata as any)?.permissions || []
+        }
+      });
+
+    } catch (error) {
+      console.error('Admin registration error:', error);
+      res.status(500).json({
+        error: 'Failed to create admin user',
+        code: 'ADMIN_REGISTRATION_FAILED'
+      });
+    }
+  }
+
+  // Admin login
+  async adminLogin(req: Request, res: Response) {
+    try {
+      const { email, password, adminCode } = req.body;
+
+      // Find admin user
+      const user = await db.query.users.findFirst({
+        where: eq(users.email, email)
+      });
+
+      if (!user || !['admin', 'super_admin'].includes(user.role || '')) {
+        return res.status(401).json({
+          error: 'Invalid admin credentials',
+          code: 'INVALID_ADMIN_CREDENTIALS'
+        });
+      }
+
+      // Verify password
+      const isPasswordValid = await bcrypt.compare(password, user.passwordHash);
+      if (!isPasswordValid) {
+        await this.logUserActivity(user.id, 'ADMIN_LOGIN_FAILED', req);
+        return res.status(401).json({
+          error: 'Invalid admin credentials',
+          code: 'INVALID_ADMIN_CREDENTIALS'
+        });
+      }
+
+      // Check if account is active
+      if (user.status !== 'active') {
+        return res.status(403).json({
+          error: 'Admin account is deactivated',
+          code: 'ACCOUNT_DEACTIVATED'
+        });
+      }
+
+      // Optional: Verify admin code if provided (for additional security)
+      if (adminCode && process.env.ADMIN_VERIFICATION_CODE) {
+        if (adminCode !== process.env.ADMIN_VERIFICATION_CODE) {
+          await this.logUserActivity(user.id, 'ADMIN_LOGIN_INVALID_CODE', req);
+          return res.status(401).json({
+            error: 'Invalid admin verification code',
+            code: 'INVALID_ADMIN_CODE'
+          });
+        }
+      }
+
+      // Generate JWT token with admin claims
+      const jwtSecret = process.env.JWT_SECRET;
+      if (!jwtSecret) {
+        throw new Error('JWT_SECRET not configured');
+      }
+
+      const token = jwt.sign(
+        { 
+          userId: user.id, 
+          email: user.email,
+          role: user.role,
+          permissions: (user.metadata as any)?.permissions || [],
+          isAdmin: true
+        },
+        jwtSecret,
+        { expiresIn: '8h' } // Shorter expiry for admin sessions
+      );
+
+      // Create session
+      const sessionId = uuidv4();
+      await db.insert(userSessions).values({
+        id: sessionId,
+        userId: user.id,
+        token: token,
+        expiresAt: new Date(Date.now() + 8 * 60 * 60 * 1000), // 8 hours
+        createdAt: new Date(),
+        lastUsedAt: new Date()
+      });
+
+      // Update last login
+      await db
+        .update(users)
+        .set({ lastLoginAt: new Date(), updatedAt: new Date() })
+        .where(eq(users.id, user.id));
+
+      // Log successful admin login
+      await this.logUserActivity(user.id, 'ADMIN_LOGIN_SUCCESS', req);
+
+      res.json({
+        message: 'Admin login successful',
+        token,
+        sessionId,
+        admin: {
+          id: user.id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+          permissions: (user.metadata as any)?.permissions || [],
+          lastLoginAt: user.lastLoginAt
+        }
+      });
+
+    } catch (error) {
+      console.error('Admin login error:', error);
+      res.status(500).json({
+        error: 'Admin login failed',
+        code: 'ADMIN_LOGIN_ERROR'
+      });
+    }
+  }
+
   // Helper method to log user activities
   private async logUserActivity(
     userId: string, 
