@@ -1,9 +1,9 @@
-import type { Config } from 'drizzle-kit';
+import { defineConfig } from 'drizzle-kit';
 import * as dotenv from 'dotenv';
 
 dotenv.config();
 
-export default {
+export default defineConfig({
   schema: './src/schema/store.ts',
   out: './src/migrations/sql',
   dialect: 'postgresql',
@@ -14,4 +14,4 @@ export default {
     password: process.env.DB_PASSWORD || 'password',
     database: process.env.DB_NAME || 'ecommerce_store',
   },
-} satisfies Config;
+});

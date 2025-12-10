@@ -220,7 +220,7 @@ services:
       - DB_PORT=5432
       - DB_USER=ecommerce
       - DB_PASSWORD=password
-      - DB_NAME=ecommerce
+      - DB_NAME=ecommerce_store
       - JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-random
       - CORS_ORIGIN=http://localhost:3000,http://localhost:3006
       - AUTH_SERVICE_URL=http://auth-service:3001

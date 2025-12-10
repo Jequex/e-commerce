@@ -8,6 +8,13 @@
       "when": 1765364141118,
       "tag": "0000_rich_wild_child",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1765364200000,
+      "tag": "0001_roles_and_permissions",
+      "breakpoints": true
     }
   ]
 }

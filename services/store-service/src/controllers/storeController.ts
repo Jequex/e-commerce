@@ -602,22 +602,21 @@ export class StoreController {
       }
 
       const [newStaff] = await db.insert(storeStaff).values({
-        id: uuidv4(),
         storeId: id,
         userId: validatedData.userId,
-        role: validatedData.role || 'sales_associate',
-        permissions: validatedData.permissions,
+        roleId: validatedData.roleId,
         salary: validatedData.salary,
         commission: validatedData.commission,
         isActive: validatedData.isActive ?? true,
-        hiredAt: new Date(),
-        createdAt: new Date(),
-        updatedAt: new Date()
+        hiredAt: new Date()
       }).returning();
 
       return res.status(201).json({
         message: 'Staff member added successfully',
-        staff: newStaff
+        staff: {
+          ...newStaff,
+          role: newStaff.roleId,  // For backward compatibility
+        }
       });
 
     } catch (error) {

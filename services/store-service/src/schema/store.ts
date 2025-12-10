@@ -19,7 +19,6 @@ import { z } from 'zod';
 export const storeStatusEnum = pgEnum('store_status', ['active', 'inactive', 'pending_approval', 'suspended', 'closed']);
 export const storeTypeEnum = pgEnum('store_type', ['physical', 'online', 'hybrid']);
 export const dayOfWeekEnum = pgEnum('day_of_week', ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']);
-export const staffRoleEnum = pgEnum('staff_role', ['owner', 'manager', 'cashier', 'sales_associate', 'inventory_manager']);
 
 // Store Categories
 export const storeCategories = pgTable('store_categories', {
@@ -34,6 +33,40 @@ export const storeCategories = pgTable('store_categories', {
   metadata: jsonb('metadata'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+// Permissions
+export const permissions = pgTable('permissions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(),
+  description: text('description'),
+  resource: varchar('resource', { length: 50 }).notNull(), // e.g., 'stores', 'products', 'orders'
+  action: varchar('action', { length: 50 }).notNull(), // e.g., 'create', 'read', 'update', 'delete'
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+// Roles
+export const roles = pgTable('roles', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  name: varchar('name', { length: 100 }).notNull().unique(),
+  slug: varchar('slug', { length: 100 }).notNull().unique(),
+  description: text('description'),
+  level: integer('level').notNull().default(1), // Hierarchy level for role comparison
+  isSystemRole: boolean('is_system_role').default(false),
+  isActive: boolean('is_active').default(true),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull()
+});
+
+// Role Permissions (Many-to-Many relationship)
+export const rolePermissions = pgTable('role_permissions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  roleId: uuid('role_id').references(() => roles.id, { onDelete: 'cascade' }).notNull(),
+  permissionId: uuid('permission_id').references(() => permissions.id, { onDelete: 'cascade' }).notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull()
 });
 
 // Stores
@@ -130,8 +163,7 @@ export const storeStaff = pgTable('store_staff', {
   id: uuid('id').primaryKey().defaultRandom(),
   storeId: uuid('store_id').references(() => stores.id, { onDelete: 'cascade' }).notNull(),
   userId: uuid('user_id').notNull(), // Reference to users table in auth service
-  role: staffRoleEnum('role').notNull().default('sales_associate'),
-  permissions: jsonb('permissions'), // Array of permission strings
+  roleId: uuid('role_id').references(() => roles.id).notNull(),
   salary: decimal('salary', { precision: 12, scale: 2 }),
   commission: decimal('commission', { precision: 5, scale: 2 }), // Percentage
   isActive: boolean('is_active').default(true),
@@ -225,11 +257,15 @@ export const storeHoursRelations = relations(storeHours, ({ one }) => ({
   })
 }));
 
-export const storeStaffRelations = relations(storeStaff, ({ one }) => ({
+export const storeStaffRelations = relations(storeStaff, ({ one, many }) => ({
   store: one(stores, {
     fields: [storeStaff.storeId],
     references: [stores.id]
-  })
+  }),
+  role: one(roles, {
+    fields: [storeStaff.roleId],
+    references: [roles.id]
+  }),
 }));
 
 export const storeReviewsRelations = relations(storeReviews, ({ one }) => ({
@@ -243,6 +279,27 @@ export const storeAnalyticsRelations = relations(storeAnalytics, ({ one }) => ({
   store: one(stores, {
     fields: [storeAnalytics.storeId],
     references: [stores.id]
+  })
+}));
+
+// New table relations
+export const permissionsRelations = relations(permissions, ({ many }) => ({
+  rolePermissions: many(rolePermissions),
+}));
+
+export const rolesRelations = relations(roles, ({ many }) => ({
+  permissions: many(rolePermissions),
+  staff: many(storeStaff)
+}));
+
+export const rolePermissionsRelations = relations(rolePermissions, ({ one }) => ({
+  role: one(roles, {
+    fields: [rolePermissions.roleId],
+    references: [roles.id]
+  }),
+  permission: one(permissions, {
+    fields: [rolePermissions.permissionId],
+    references: [permissions.id]
   })
 }));
 
@@ -304,11 +361,42 @@ export const insertStoreHoursSchema = z.object({
 
 export const insertStoreStaffSchema = z.object({
   userId: z.string().uuid(),
-  role: z.enum(['owner', 'manager', 'cashier', 'sales_associate', 'inventory_manager']).optional(),
-  permissions: z.array(z.string()).optional(),
+  roleId: z.string().uuid(),
+  customPermissions: z.array(z.string()).optional(),
   salary: z.string().optional(),
   commission: z.string().optional(),
   isActive: z.boolean().optional()
+});
+
+// New validation schemas for roles and permissions
+export const insertPermissionSchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(100),
+  description: z.string().optional(),
+  resource: z.string().min(1).max(50),
+  action: z.string().min(1).max(50),
+  isActive: z.boolean().optional()
+});
+
+export const insertRoleSchema = z.object({
+  name: z.string().min(1).max(100),
+  slug: z.string().min(1).max(100),
+  description: z.string().optional(),
+  level: z.number().int().min(1).optional(),
+  isSystemRole: z.boolean().optional(),
+  isActive: z.boolean().optional()
+});
+
+export const insertRolePermissionSchema = z.object({
+  roleId: z.string().uuid(),
+  permissionId: z.string().uuid()
+});
+
+export const insertStaffPermissionSchema = z.object({
+  staffId: z.string().uuid(),
+  permissionId: z.string().uuid(),
+  grantedBy: z.string().uuid(),
+  expiresAt: z.string().datetime().optional()
 });
 
 export const insertStoreReviewSchema = z.object({
@@ -324,6 +412,8 @@ export const updateStoreSchema = insertStoreSchema.partial();
 export const updateStoreAddressSchema = insertStoreAddressSchema.partial();
 export const updateStoreHoursSchema = insertStoreHoursSchema.partial();
 export const updateStoreStaffSchema = insertStoreStaffSchema.partial();
+export const updatePermissionSchema = insertPermissionSchema.partial();
+export const updateRoleSchema = insertRoleSchema.partial();
 
 // Search and filter schemas
 export const storeSearchSchema = z.object({
@@ -350,3 +440,6 @@ export type StoreHours = typeof storeHours.$inferSelect;
 export type StoreStaff = typeof storeStaff.$inferSelect;
 export type StoreReview = typeof storeReviews.$inferSelect;
 export type StoreAnalytics = typeof storeAnalytics.$inferSelect;
+export type Permission = typeof permissions.$inferSelect;
+export type Role = typeof roles.$inferSelect;
+export type RolePermission = typeof rolePermissions.$inferSelect;
