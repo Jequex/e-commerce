@@ -60,6 +60,8 @@
   "sidebar": {
     "dashboard": "Dashboard",
     "products": "Products",
+    "stores": "Stores",
+    "store": "Store",
     "orders": "Orders",
     "customers": "Customers",
     "analytics": "Analytics",

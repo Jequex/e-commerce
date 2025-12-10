@@ -60,6 +60,8 @@
   "sidebar": {
     "dashboard": "Panel de Control",
     "products": "Productos",
+    "stores": "Tiendas",
+    "store": "Tienda",
     "orders": "Pedidos",
     "customers": "Clientes",
     "analytics": "Analíticas",

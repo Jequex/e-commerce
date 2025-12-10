@@ -60,6 +60,8 @@
   "sidebar": {
     "dashboard": "Tableau de Bord",
     "products": "Produits",
+    "stores": "Magasins",
+    "store": "Magasin",
     "orders": "Commandes",
     "customers": "Clients",
     "analytics": "Analytiques",

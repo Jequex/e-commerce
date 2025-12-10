@@ -28,6 +28,13 @@ const Sidebar: React.FC = () => {
       href: '/dashboard',
     },
     {
+      id: 'stores',
+      label: t('stores'),
+      icon: 'HomeIcon',
+      href: '/dashboard/stores',
+      badge: 3,
+    },
+    {
       id: 'products',
       label: t('products'),
       icon: 'CubeIcon',
