@@ -208,6 +208,38 @@ services:
       - ecommerce-network
     command: npm run dev
 
+  store-service:
+    build:
+      context: ./services/store-service
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-store-service
+    environment:
+      - NODE_ENV=development
+      - PORT=3007
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=ecommerce
+      - DB_PASSWORD=password
+      - DB_NAME=ecommerce
+      - JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-random
+      - CORS_ORIGIN=http://localhost:3000,http://localhost:3006
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - EMAIL_SERVICE_URL=http://email-service:3005
+      - PRODUCT_SERVICE_URL=http://product-service:3002
+    ports:
+      - "3007:3007"
+    volumes:
+      - ./services/store-service/src:/app/src
+      - ./services/store-service/package.json:/app/package.json
+      - ./services/store-service/tsconfig.json:/app/tsconfig.json
+      - /app/node_modules
+    depends_on:
+      - postgres
+      - auth-service
+    networks:
+      - ecommerce-network
+    command: npm run dev
+
   # Frontend Applications
   web:
     build:
@@ -270,6 +302,7 @@ services:
       - order-service
       - payment-service
       - email-service
+      - store-service
     networks:
       - ecommerce-network
 
