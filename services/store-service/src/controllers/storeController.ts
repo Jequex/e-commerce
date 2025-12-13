@@ -8,6 +8,9 @@ import {
   storeStaff,
   storeReviews,
   storeAnalytics,
+  roles,
+  permissions,
+  rolePermissions,
   insertStoreSchema,
   insertStoreAddressSchema,
   insertStoreHoursSchema,
@@ -916,6 +919,339 @@ export class StoreController {
 
     } catch (error) {
       console.error('Update store rating error:', error);
+    }
+  }
+
+  // Get user's stores (where user is staff)
+  async getUserStores(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: 'Authentication required',
+          code: 'NO_AUTH'
+        });
+      }
+
+      const userId = req.user.id;
+
+      // Get all stores where user is staff
+      const userStores = await db
+        .select({
+          staffId: storeStaff.id,
+          storeId: stores.id,
+          storeName: stores.name,
+          storeSlug: stores.slug,
+          storeDescription: stores.description,
+          storeType: stores.type,
+          storeStatus: stores.status,
+          storeLogo: stores.logo,
+          storeBanner: stores.banner,
+          roleId: storeStaff.roleId,
+          roleName: roles.name,
+          roleSlug: roles.slug,
+          isActive: storeStaff.isActive,
+          hiredAt: storeStaff.hiredAt,
+          createdAt: stores.createdAt
+        })
+        .from(storeStaff)
+        .innerJoin(stores, eq(storeStaff.storeId, stores.id))
+        .innerJoin(roles, eq(storeStaff.roleId, roles.id))
+        .where(
+          and(
+            eq(storeStaff.userId, userId),
+            eq(storeStaff.isActive, true)
+          )
+        )
+        .orderBy(desc(storeStaff.hiredAt));
+
+      return res.json({
+        stores: userStores,
+        count: userStores.length
+      });
+
+    } catch (error) {
+      console.error('Get user stores error:', error);
+      return res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Get user's role in a specific store
+  async getUserStoreRole(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: 'Authentication required',
+          code: 'NO_AUTH'
+        });
+      }
+
+      const { storeId } = req.params;
+      const userId = req.user.id;
+
+      // Get user's staff record and role for this store
+      const [staffRecord] = await db
+        .select({
+          staffId: storeStaff.id,
+          storeId: stores.id,
+          storeName: stores.name,
+          storeSlug: stores.slug,
+          roleId: roles.id,
+          roleName: roles.name,
+          roleSlug: roles.slug,
+          roleDescription: roles.description,
+          isSystemRole: roles.isSystemRole,
+          salary: storeStaff.salary,
+          commission: storeStaff.commission,
+          isActive: storeStaff.isActive,
+          hiredAt: storeStaff.hiredAt
+        })
+        .from(storeStaff)
+        .innerJoin(stores, eq(storeStaff.storeId, stores.id))
+        .innerJoin(roles, eq(storeStaff.roleId, roles.id))
+        .where(
+          and(
+            eq(storeStaff.userId, userId),
+            eq(storeStaff.storeId, storeId),
+            eq(storeStaff.isActive, true)
+          )
+        )
+        .limit(1);
+
+      if (!staffRecord) {
+        return res.status(404).json({
+          error: 'User is not staff in this store',
+          code: 'NOT_STORE_STAFF'
+        });
+      }
+
+      return res.json({
+        staff: staffRecord
+      });
+
+    } catch (error) {
+      console.error('Get user store role error:', error);
+      return res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Get user's permissions in a specific store
+  async getUserStorePermissions(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: 'Authentication required',
+          code: 'NO_AUTH'
+        });
+      }
+
+      const { storeId } = req.params;
+      const userId = req.user.id;
+
+      // First, get the user's role in this store
+      const [staffRecord] = await db
+        .select({
+          roleId: storeStaff.roleId,
+          roleName: roles.name,
+          roleSlug: roles.slug
+        })
+        .from(storeStaff)
+        .innerJoin(roles, eq(storeStaff.roleId, roles.id))
+        .where(
+          and(
+            eq(storeStaff.userId, userId),
+            eq(storeStaff.storeId, storeId),
+            eq(storeStaff.isActive, true)
+          )
+        )
+        .limit(1);
+
+      if (!staffRecord) {
+        return res.status(404).json({
+          error: 'User is not staff in this store',
+          code: 'NOT_STORE_STAFF'
+        });
+      }
+
+      // Get all permissions for this role
+      const rolePerms = await db
+        .select({
+          id: permissions.id,
+          name: permissions.name,
+          slug: permissions.slug,
+          description: permissions.description,
+          resource: permissions.resource,
+          action: permissions.action,
+          isActive: permissions.isActive
+        })
+        .from(permissions)
+        .innerJoin(rolePermissions, eq(rolePermissions.permissionId, permissions.id))
+        .where(
+          and(
+            eq(rolePermissions.roleId, staffRecord.roleId),
+            eq(permissions.isActive, true)
+          )
+        )
+        .orderBy(asc(permissions.resource), asc(permissions.action));
+
+      // Group permissions by resource
+      const permissionsByResource = rolePerms.reduce((acc, perm) => {
+        if (!acc[perm.resource]) {
+          acc[perm.resource] = [];
+        }
+        acc[perm.resource].push(perm);
+        return acc;
+      }, {} as Record<string, typeof rolePerms>);
+
+      return res.json({
+        role: {
+          id: staffRecord.roleId,
+          name: staffRecord.roleName,
+          slug: staffRecord.roleSlug
+        },
+        permissions: rolePerms,
+        permissionsByResource,
+        permissionSlugs: rolePerms.map(p => p.slug),
+        count: rolePerms.length
+      });
+
+    } catch (error) {
+      console.error('Get user store permissions error:', error);
+      return res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Get complete user store info (store + role + permissions)
+  async getUserCompleteStoreInfo(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: 'Authentication required',
+          code: 'NO_AUTH'
+        });
+      }
+
+      const { storeId } = req.params;
+      const userId = req.user.id;
+
+      // Get staff record with store and role info
+      const [staffRecord] = await db
+        .select({
+          staffId: storeStaff.id,
+          storeId: stores.id,
+          storeName: stores.name,
+          storeSlug: stores.slug,
+          storeDescription: stores.description,
+          storeType: stores.type,
+          storeStatus: stores.status,
+          storeLogo: stores.logo,
+          storeBanner: stores.banner,
+          storeEmail: stores.email,
+          storePhone: stores.phone,
+          roleId: roles.id,
+          roleName: roles.name,
+          roleSlug: roles.slug,
+          roleDescription: roles.description,
+          isSystemRole: roles.isSystemRole,
+          salary: storeStaff.salary,
+          commission: storeStaff.commission,
+          isActive: storeStaff.isActive,
+          hiredAt: storeStaff.hiredAt
+        })
+        .from(storeStaff)
+        .innerJoin(stores, eq(storeStaff.storeId, stores.id))
+        .innerJoin(roles, eq(storeStaff.roleId, roles.id))
+        .where(
+          and(
+            eq(storeStaff.userId, userId),
+            eq(storeStaff.storeId, storeId),
+            eq(storeStaff.isActive, true)
+          )
+        )
+        .limit(1);
+
+      if (!staffRecord) {
+        return res.status(404).json({
+          error: 'User is not staff in this store',
+          code: 'NOT_STORE_STAFF'
+        });
+      }
+
+      // Get permissions for this role
+      const rolePerms = await db
+        .select({
+          id: permissions.id,
+          name: permissions.name,
+          slug: permissions.slug,
+          description: permissions.description,
+          resource: permissions.resource,
+          action: permissions.action
+        })
+        .from(permissions)
+        .innerJoin(rolePermissions, eq(rolePermissions.permissionId, permissions.id))
+        .where(
+          and(
+            eq(rolePermissions.roleId, staffRecord.roleId),
+            eq(permissions.isActive, true)
+          )
+        )
+        .orderBy(asc(permissions.resource), asc(permissions.action));
+
+      // Group permissions by resource
+      const permissionsByResource = rolePerms.reduce((acc, perm) => {
+        if (!acc[perm.resource]) {
+          acc[perm.resource] = [];
+        }
+        acc[perm.resource].push(perm);
+        return acc;
+      }, {} as Record<string, typeof rolePerms>);
+
+      return res.json({
+        staff: {
+          id: staffRecord.staffId,
+          isActive: staffRecord.isActive,
+          hiredAt: staffRecord.hiredAt,
+          salary: staffRecord.salary,
+          commission: staffRecord.commission
+        },
+        store: {
+          id: staffRecord.storeId,
+          name: staffRecord.storeName,
+          slug: staffRecord.storeSlug,
+          description: staffRecord.storeDescription,
+          type: staffRecord.storeType,
+          status: staffRecord.storeStatus,
+          logo: staffRecord.storeLogo,
+          banner: staffRecord.storeBanner,
+          email: staffRecord.storeEmail,
+          phone: staffRecord.storePhone
+        },
+        role: {
+          id: staffRecord.roleId,
+          name: staffRecord.roleName,
+          slug: staffRecord.roleSlug,
+          description: staffRecord.roleDescription,
+          isSystemRole: staffRecord.isSystemRole
+        },
+        permissions: rolePerms,
+        permissionsByResource,
+        permissionSlugs: rolePerms.map(p => p.slug)
+      });
+
+    } catch (error) {
+      console.error('Get user complete store info error:', error);
+      return res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
     }
   }
 }

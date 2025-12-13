@@ -154,4 +154,41 @@ router.get('/:id/analytics',
   asyncHandler(storeController.getStoreAnalytics)
 );
 
+// User Store Management - Get authenticated user's store information
+
+// Get all stores where user is staff
+router.get('/user/stores',
+  generalLimiter,
+  authenticateToken,
+  requireAuth,
+  asyncHandler(storeController.getUserStores)
+);
+
+// Get user's role in a specific store
+router.get('/user/stores/:storeId/role',
+  generalLimiter,
+  authenticateToken,
+  requireAuth,
+  validateParams(z.object({ storeId: z.string().uuid() })),
+  asyncHandler(storeController.getUserStoreRole)
+);
+
+// Get user's permissions in a specific store
+router.get('/user/stores/:storeId/permissions',
+  generalLimiter,
+  authenticateToken,
+  requireAuth,
+  validateParams(z.object({ storeId: z.string().uuid() })),
+  asyncHandler(storeController.getUserStorePermissions)
+);
+
+// Get complete user store info (store + role + permissions)
+router.get('/user/stores/:storeId/complete',
+  generalLimiter,
+  authenticateToken,
+  requireAuth,
+  validateParams(z.object({ storeId: z.string().uuid() })),
+  asyncHandler(storeController.getUserCompleteStoreInfo)
+);
+
 export { router as storeRoutes };
