@@ -102,18 +102,19 @@ export const stores = pgTable('stores', {
   images: jsonb('images'), // Array of image URLs
   
   // Analytics
-  totalProducts: integer('total_products').default(0),
   totalOrders: integer('total_orders').default(0),
   totalRevenue: decimal('total_revenue', { precision: 15, scale: 2 }).default('0'),
   averageRating: decimal('average_rating', { precision: 3, scale: 2 }),
   totalReviews: integer('total_reviews').default(0),
   
+  // Verification
+  isVerified: boolean('is_verified').default(false),
+  verifiedAt: timestamp('verified_at'),
+  
   // Metadata
   metadata: jsonb('metadata'),
   
   // Timestamps
-  approvedAt: timestamp('approved_at'),
-  lastActiveAt: timestamp('last_active_at'),
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull()
 });

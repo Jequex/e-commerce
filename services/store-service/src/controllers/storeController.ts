@@ -64,7 +64,7 @@ export class StoreController {
         categoryId: validatedData.categoryId,
         allowOnlineOrders: validatedData.allowOnlineOrders ?? true,
         allowPickup: validatedData.allowPickup ?? true,
-        allowDelivery: validatedData.allowDelivery ?? false,
+        allowDelivery: validatedData.allowDelivery ?? true,
         deliveryRadius: validatedData.deliveryRadius,
         minOrderAmount: validatedData.minOrderAmount,
         logo: validatedData.logo,

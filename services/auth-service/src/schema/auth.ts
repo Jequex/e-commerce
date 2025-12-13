@@ -1,5 +1,5 @@
 import { pgTable, text, timestamp, boolean, jsonb, uuid, varchar, integer } from 'drizzle-orm/pg-core';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
+// import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
 // Users table
@@ -126,9 +126,28 @@ export const insertUserSchema = z.object({
   metadata: z.record(z.any()).optional(),
 });
 
-export const selectUserSchema = createSelectSchema(users).omit({
-  passwordHash: true,
-  twoFactorSecret: true,
+// Manual select schema to avoid drizzle-zod version issues
+export const selectUserSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  username: z.string().nullable(),
+  firstName: z.string().nullable(),
+  lastName: z.string().nullable(),
+  phone: z.string().nullable(),
+  avatar: z.string().nullable(),
+  role: z.string(),
+  status: z.string(),
+  emailVerified: z.boolean(),
+  phoneVerified: z.boolean(),
+  twoFactorEnabled: z.boolean(),
+  preferences: z.any(),
+  metadata: z.any(),
+  lastLoginAt: z.date().nullable(),
+  lastLoginIp: z.string().nullable(),
+  loginAttempts: z.number(),
+  lockedUntil: z.date().nullable(),
+  createdAt: z.date(),
+  updatedAt: z.date(),
 });
 
 export const loginSchema = z.object({

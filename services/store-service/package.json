@@ -18,7 +18,8 @@
     "migrate:generate": "drizzle-kit generate:pg",
     "migrate:push": "drizzle-kit push:pg",
     "db:check": "ts-node src/migrations/check-db.ts",
-    "db:status": "ts-node src/migrations/check-tables.ts"
+    "db:status": "ts-node src/migrations/check-tables.ts",
+    "seed": "ts-node src/utils/seed.ts"
   },
   "dependencies": {
     "axios": "^1.13.2",

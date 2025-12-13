@@ -1,7 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import { db } from '../config/database';
-import { users, userSessions } from '../schema/auth';
+import { users, userSessions, apiKeys } from '../schema/auth';
 import { eq, and } from 'drizzle-orm';
 
 export interface AuthenticatedRequest extends Request {
@@ -207,17 +208,19 @@ export const apiKeyAuth = async (
     }
 
     // Hash the API key and check against database
-    const { auth } = await import('@ecommerce/utils');
-    const hashedKey = await auth.hashPassword(apiKey);
+    const hashedKey = await bcrypt.hash(apiKey, 10);
 
-    // Note: In a real implementation, you'd store the hash and compare
-    // This is a simplified example
-    const [validKey] = await db.query.apiKeys.findMany({
-      where: (apiKeys, { eq, and }) => and(
-        eq(apiKeys.keyHash, hashedKey),
-        eq(apiKeys.isActive, true)
-      ),
-    });
+    // Find the API key in the database
+    const [validKey] = await db
+      .select()
+      .from(apiKeys)
+      .where(
+        and(
+          eq(apiKeys.keyHash, hashedKey),
+          eq(apiKeys.isActive, true)
+        )
+      )
+      .limit(1);
 
     if (!validKey) {
       return res.status(401).json({
@@ -239,7 +242,7 @@ export const apiKeyAuth = async (
       id: 'api-key-user',
       email: 'api@system.com',
       role: 'api',
-      permissions: validKey.permissions as string[] || [],
+      permissions: (validKey.permissions as string[]) || [],
     };
 
     next();

@@ -1,19 +1,12 @@
 {
-  "version": "5",
-  "dialect": "pg",
+  "version": "7",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1765364141118,
-      "tag": "0000_rich_wild_child",
-      "breakpoints": true
-    },
-    {
-      "idx": 1,
-      "version": "5",
-      "when": 1765364200000,
-      "tag": "0001_roles_and_permissions",
+      "version": "7",
+      "when": 1704067200000,
+      "tag": "0000_initial_schema",
       "breakpoints": true
     }
   ]

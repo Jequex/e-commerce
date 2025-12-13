@@ -6,6 +6,8 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { testConnection } from './config/database';
 import { storeRoutes } from './routes/store';
+import roleRoutes from './routes/role.routes';
+import permissionRoutes from './routes/permission.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { generalLimiter } from './middleware/rateLimiter';
 
@@ -107,6 +109,8 @@ app.get('/live', (req, res) => {
 
 // API routes
 app.use('/api/v1/stores', storeRoutes);
+app.use('/api/v1/roles', roleRoutes);
+app.use('/api/v1/permissions', permissionRoutes);
 
 // API documentation route
 app.get('/api/v1', (req, res) => {
@@ -140,6 +144,23 @@ app.get('/api/v1', (req, res) => {
       },
       categories: {
         'GET /api/v1/stores/categories/list': 'Get store categories',
+      },
+      roles: {
+        'GET /api/v1/roles': 'List all roles (authenticated)',
+        'POST /api/v1/roles': 'Create a new role (authenticated)',
+        'GET /api/v1/roles/:id': 'Get role details with permissions (authenticated)',
+        'PUT /api/v1/roles/:id': 'Update role (authenticated)',
+        'DELETE /api/v1/roles/:id': 'Delete role (authenticated)',
+        'POST /api/v1/roles/:id/permissions': 'Assign permission to role (authenticated)',
+        'DELETE /api/v1/roles/:id/permissions/:permissionId': 'Remove permission from role (authenticated)',
+      },
+      permissions: {
+        'GET /api/v1/permissions': 'List all permissions with filters (authenticated)',
+        'POST /api/v1/permissions': 'Create a new permission (authenticated)',
+        'GET /api/v1/permissions/:id': 'Get permission details (authenticated)',
+        'PUT /api/v1/permissions/:id': 'Update permission (authenticated)',
+        'DELETE /api/v1/permissions/:id': 'Delete permission (authenticated)',
+        'GET /api/v1/permissions/by-resource': 'Get permissions grouped by resource (authenticated)',
       }
     },
     authentication: 'Bearer token required for protected endpoints',
