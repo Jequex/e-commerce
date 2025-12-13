@@ -170,7 +170,7 @@ export const createProductSchema = z.object({
   shortDescription: z.string().max(500).optional(),
   sku: z.string().min(1).max(100),
   barcode: z.string().optional(),
-  storeId: z.string().uuid().optional(),
+  storeId: z.string().uuid(),
   categoryId: z.string().uuid().optional(),
   price: z.number().positive(),
   compareAtPrice: z.number().positive().optional(),
