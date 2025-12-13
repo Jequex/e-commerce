@@ -4,12 +4,24 @@ import React, { useState } from 'react';
 import { useRouter, usePathname } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
-import * as Icons from '@radix-ui/react-icons';
+import { 
+  MdDashboard, 
+  MdStore, 
+  MdShoppingCart, 
+  MdPeople, 
+  MdBarChart, 
+  MdAnalytics, 
+  MdSettings,
+  MdMenu,
+  MdRocket
+} from 'react-icons/md';
+import { GiBoxUnpacking } from "react-icons/gi";
+import { FaPeopleRoof } from "react-icons/fa6";
 
 interface SidebarItem {
   id: string;
   label: string;
-  icon: keyof typeof Icons;
+  icon: React.ComponentType<{ className?: string }>;
   href: string;
   badge?: number;
 }
@@ -24,46 +36,59 @@ const Sidebar: React.FC = () => {
     {
       id: 'dashboard',
       label: t('dashboard'),
-      icon: 'DashboardIcon',
+      icon: MdDashboard,
       href: '/dashboard',
     },
     {
       id: 'stores',
       label: t('stores'),
-      icon: 'HomeIcon',
+      icon: MdStore,
       href: '/dashboard/stores',
       badge: 3,
     },
     {
       id: 'products',
       label: t('products'),
-      icon: 'CubeIcon',
+      icon: GiBoxUnpacking,
       href: '/dashboard/products',
       badge: 12,
     },
     {
       id: 'orders',
       label: t('orders'),
-      icon: 'FileIcon',
+      icon: MdShoppingCart,
       href: '/dashboard/orders',
       badge: 5,
     },
     {
       id: 'customers',
       label: t('customers'),
-      icon: 'PersonIcon',
+      icon: MdPeople,
       href: '/dashboard/customers',
+    },
+    {
+      id: 'staff',
+      label: t('staff'),
+      icon: FaPeopleRoof,
+      href: '/dashboard/staff',
+      badge: 2,
+    },
+    {
+      id: 'reports',
+      label: t('reports'),
+      icon: MdBarChart,
+      href: '/dashboard/reports',
     },
     {
       id: 'analytics',
       label: t('analytics'),
-      icon: 'BarChartIcon',
+      icon: MdAnalytics,
       href: '/dashboard/analytics',
     },
     {
       id: 'settings',
       label: t('settings'),
-      icon: 'GearIcon',
+      icon: MdSettings,
       href: '/dashboard/settings',
     },
   ];
@@ -97,7 +122,7 @@ const Sidebar: React.FC = () => {
                 className="flex items-center space-x-3"
               >
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <Icons.RocketIcon className="w-4 h-4 text-white" />
+                  <MdRocket className="w-4 h-4 text-white" />
                 </div>
                 <div>
                   <h1 className="text-lg font-bold text-gray-900 dark:text-white">
@@ -114,7 +139,7 @@ const Sidebar: React.FC = () => {
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
-            <Icons.HamburgerMenuIcon className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            <MdMenu className="w-4 h-4 text-gray-600 dark:text-gray-400" />
           </button>
         </div>
       </div>
@@ -122,7 +147,7 @@ const Sidebar: React.FC = () => {
       {/* Navigation */}
       <nav className="p-4 space-y-2">
         {sidebarItems.map((item) => {
-          const Icon = Icons[item.icon as keyof typeof Icons];
+          const Icon = item.icon;
           const isActive = pathname === item.href;
           
           return (
