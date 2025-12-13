@@ -4,12 +4,10 @@ import {
   products, 
   productVariants,
   categories,
-  brands,
   productReviews,
   createProductSchema,
   updateProductSchema,
-  createCategorySchema,
-  createBrandSchema
+  createCategorySchema
 } from '../schema/products';
 import { eq, and, desc, asc, ilike, sql, or } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
@@ -78,7 +76,6 @@ export class ProductController {
         sortOrder = 'desc',
         search,
         categoryId,
-        brandId,
         isActive,
         isFeatured,
         minPrice,
@@ -107,9 +104,6 @@ export class ProductController {
         conditions.push(eq(products.categoryId, categoryId as string));
       }
 
-      if (brandId) {
-        conditions.push(eq(products.brandId, brandId as string));
-      }
 
       if (isActive !== undefined) {
         conditions.push(eq(products.isActive, isActive === 'true'));
@@ -168,7 +162,6 @@ export class ProductController {
         where: conditions.length > 0 ? and(...conditions) : undefined,
         with: {
           category: true,
-          brand: true,
           variants: {
             where: eq(productVariants.isDefault, true),
             limit: 1
@@ -216,7 +209,6 @@ export class ProductController {
         where: eq(products.id, id),
         with: {
           category: true,
-          brand: true,
           variants: {
             orderBy: asc(productVariants.position)
           },
@@ -225,12 +217,7 @@ export class ProductController {
             orderBy: desc(productReviews.createdAt),
             limit: 10
           },
-          attributes: true,
-          collections: {
-            with: {
-              collection: true
-            }
-          }
+          attributes: true
         }
       });
 
@@ -486,7 +473,6 @@ export class ProductController {
           products: {
             where: eq(products.isActive, true),
             with: {
-              brand: true
             },
             orderBy: desc(products.createdAt),
             limit: 20
@@ -514,80 +500,12 @@ export class ProductController {
     }
   }
 
-  // Brand CRUD operations
-  async createBrand(req: Request, res: Response) {
-    try {
-      const validatedData = createBrandSchema.parse(req.body);
-
-      // Check if slug already exists
-      const existingBrand = await db.query.brands.findFirst({
-        where: eq(brands.slug, validatedData.slug)
-      });
-
-      if (existingBrand) {
-        return res.status(409).json({
-          error: 'Brand with this slug already exists',
-          code: 'SLUG_EXISTS'
-        });
-      }
-
-      const [newBrand] = await db.insert(brands).values({
-        id: uuidv4(),
-        ...validatedData,
-        createdAt: new Date(),
-        updatedAt: new Date()
-      }).returning();
-
-      res.status(201).json({
-        message: 'Brand created successfully',
-        brand: newBrand
-      });
-
-    } catch (error) {
-      console.error('Create brand error:', error);
-      
-      if (error instanceof Error && error.name === 'ZodError') {
-        return res.status(400).json({
-          error: 'Validation failed',
-          details: error.message,
-          code: 'VALIDATION_ERROR'
-        });
-      }
-
-      res.status(500).json({
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR'
-      });
-    }
-  }
-
-  async getBrands(req: Request, res: Response) {
-    try {
-      const brandList = await db.query.brands.findMany({
-        where: eq(brands.isActive, true),
-        orderBy: asc(brands.name)
-      });
-
-      res.json({
-        brands: brandList
-      });
-
-    } catch (error) {
-      console.error('Get brands error:', error);
-      res.status(500).json({
-        error: 'Internal server error',
-        code: 'INTERNAL_ERROR'
-      });
-    }
-  }
-
   // Product search
   async searchProducts(req: Request, res: Response) {
     try {
       const { 
         q: query,
         category,
-        brand,
         minPrice,
         maxPrice,
         rating,
@@ -622,10 +540,6 @@ export class ProductController {
         searchConditions.push(eq(products.categoryId, category as string));
       }
 
-      if (brand) {
-        searchConditions.push(eq(products.brandId, brand as string));
-      }
-
       if (minPrice) {
         searchConditions.push(sql`${products.price} >= ${minPrice}`);
       }
@@ -642,7 +556,6 @@ export class ProductController {
         where: and(...searchConditions),
         with: {
           category: true,
-          brand: true,
           variants: {
             where: eq(productVariants.isDefault, true),
             limit: 1
@@ -701,7 +614,6 @@ export class ProductController {
         ),
         with: {
           category: true,
-          brand: true
         },
         orderBy: desc(products.createdAt),
         limit: limitNum
@@ -713,6 +625,189 @@ export class ProductController {
 
     } catch (error) {
       console.error('Get featured products error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Get products by store ID
+  async getProductsByStore(req: Request, res: Response) {
+    try {
+      const { storeId } = req.params;
+      const {
+        page = 1,
+        limit = 20,
+        sortBy = 'createdAt',
+        sortOrder = 'desc',
+        search,
+        categoryId,
+        isActive,
+        isFeatured,
+        minPrice,
+        maxPrice
+      } = req.query;
+
+      const pageNum = parseInt(page as string, 10);
+      const limitNum = parseInt(limit as string, 10);
+      const offset = (pageNum - 1) * limitNum;
+
+      // Build where conditions
+      const conditions = [eq(products.storeId, storeId)];
+      
+      if (search) {
+        const searchCondition = or(
+          ilike(products.name, `%${search}%`),
+          ilike(products.description, `%${search}%`),
+          ilike(products.sku, `%${search}%`)
+        );
+        if (searchCondition) {
+          conditions.push(searchCondition);
+        }
+      }
+
+      if (categoryId) {
+        conditions.push(eq(products.categoryId, categoryId as string));
+      }
+
+
+      if (isActive !== undefined) {
+        conditions.push(eq(products.isActive, isActive === 'true'));
+      }
+
+      if (isFeatured !== undefined) {
+        conditions.push(eq(products.isFeatured, isFeatured === 'true'));
+      }
+
+      if (minPrice) {
+        conditions.push(sql`${products.price} >= ${minPrice}`);
+      }
+
+      if (maxPrice) {
+        conditions.push(sql`${products.price} <= ${maxPrice}`);
+      }
+
+      // Build order by
+      let orderByClause;
+      const sortField = sortBy as string;
+      
+      switch (sortField) {
+        case 'name':
+          orderByClause = sortOrder === 'asc' ? asc(products.name) : desc(products.name);
+          break;
+        case 'price':
+          orderByClause = sortOrder === 'asc' ? asc(products.price) : desc(products.price);
+          break;
+        case 'createdAt':
+        default:
+          orderByClause = sortOrder === 'asc' ? asc(products.createdAt) : desc(products.createdAt);
+          break;
+      }
+
+      // Get total count
+      const [{ count }] = await db
+        .select({ count: sql<number>`count(*)::int` })
+        .from(products)
+        .where(and(...conditions));
+
+      // Get products with relations
+      const storeProducts = await db.query.products.findMany({
+        where: and(...conditions),
+        with: {
+          category: true,
+          variants: true
+        },
+        orderBy: orderByClause,
+        limit: limitNum,
+        offset
+      });
+
+      res.json({
+        products: storeProducts,
+        pagination: {
+          page: pageNum,
+          limit: limitNum,
+          total: count,
+          totalPages: Math.ceil(count / limitNum)
+        }
+      });
+
+    } catch (error) {
+      console.error('Get products by store error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Get store product statistics
+  async getStoreProductStats(req: Request, res: Response) {
+    try {
+      const { storeId } = req.params;
+
+      const [stats] = await db
+        .select({
+          totalProducts: sql<number>`count(*)::int`,
+          activeProducts: sql<number>`count(*) filter (where ${products.isActive} = true)::int`,
+          inactiveProducts: sql<number>`count(*) filter (where ${products.isActive} = false)::int`,
+          featuredProducts: sql<number>`count(*) filter (where ${products.isFeatured} = true)::int`,
+          totalInventory: sql<number>`sum(${products.inventoryQuantity})::int`,
+          avgPrice: sql<string>`avg(${products.price})::numeric(10,2)`
+        })
+        .from(products)
+        .where(eq(products.storeId, storeId));
+
+      res.json({
+        storeId,
+        statistics: {
+          totalProducts: stats.totalProducts || 0,
+          activeProducts: stats.activeProducts || 0,
+          inactiveProducts: stats.inactiveProducts || 0,
+          featuredProducts: stats.featuredProducts || 0,
+          totalInventory: stats.totalInventory || 0,
+          averagePrice: stats.avgPrice || '0.00'
+        }
+      });
+
+    } catch (error) {
+      console.error('Get store product stats error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Get store featured products
+  async getStoreFeaturedProducts(req: Request, res: Response) {
+    try {
+      const { storeId } = req.params;
+      const { limit = 10 } = req.query;
+      const limitNum = parseInt(limit as string, 10);
+
+      const featuredProducts = await db.query.products.findMany({
+        where: and(
+          eq(products.storeId, storeId),
+          eq(products.isActive, true),
+          eq(products.isFeatured, true)
+        ),
+        with: {
+          category: true,
+        },
+        orderBy: desc(products.createdAt),
+        limit: limitNum
+      });
+
+      res.json({
+        storeId,
+        products: featuredProducts,
+        count: featuredProducts.length
+      });
+
+    } catch (error) {
+      console.error('Get store featured products error:', error);
       res.status(500).json({
         error: 'Internal server error',
         code: 'INTERNAL_ERROR'

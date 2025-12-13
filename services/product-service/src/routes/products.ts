@@ -23,7 +23,12 @@ router.get('/search', searchLimiter, productController.searchProducts.bind(produ
 router.get('/featured', productController.getFeaturedProducts.bind(productController));
 router.get('/categories', productController.getCategories.bind(productController));
 router.get('/categories/:id', productController.getCategory.bind(productController));
-router.get('/brands', productController.getBrands.bind(productController));
+
+// Store-specific routes (public)
+router.get('/store/:storeId', productController.getProductsByStore.bind(productController));
+router.get('/store/:storeId/stats', productController.getStoreProductStats.bind(productController));
+router.get('/store/:storeId/featured', productController.getStoreFeaturedProducts.bind(productController));
+
 router.get('/', productController.getProducts.bind(productController));
 router.get('/:id', productController.getProduct.bind(productController));
 
@@ -37,7 +42,6 @@ router.post('/', productController.createProduct.bind(productController));
 router.put('/:id', productController.updateProduct.bind(productController));
 router.delete('/:id', productController.deleteProduct.bind(productController));
 router.post('/categories', productController.createCategory.bind(productController));
-router.post('/brands', productController.createBrand.bind(productController));
 
 // Health check endpoint
 router.get('/health', (req, res) => {

@@ -10,8 +10,8 @@ export const products = pgTable('products', {
   shortDescription: text('short_description'),
   sku: text('sku').unique().notNull(),
   barcode: text('barcode'),
-  categoryId: uuid('category_id').references(() => categories.id),
-  brandId: uuid('brand_id').references(() => brands.id),
+  storeId: uuid('store_id'),
+  categoryId: uuid('category_id'),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   compareAtPrice: decimal('compare_at_price', { precision: 10, scale: 2 }),
   costPrice: decimal('cost_price', { precision: 10, scale: 2 }),
@@ -73,25 +73,10 @@ export const categories = pgTable('categories', {
   name: text('name').notNull(),
   description: text('description'),
   slug: text('slug').unique().notNull(),
-  parentId: uuid('parent_id').references(() => categories.id),
+  parentId: uuid('parent_id'),
   image: text('image'),
   isActive: boolean('is_active').default(true),
   sortOrder: integer('sort_order').default(0),
-  metaTitle: text('meta_title'),
-  metaDescription: text('meta_description'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-// Brands table
-export const brands = pgTable('brands', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  name: text('name').unique().notNull(),
-  description: text('description'),
-  slug: text('slug').unique().notNull(),
-  logo: text('logo'),
-  website: text('website'),
-  isActive: boolean('is_active').default(true),
   metaTitle: text('meta_title'),
   metaDescription: text('meta_description'),
   createdAt: timestamp('created_at').defaultNow(),
@@ -114,31 +99,6 @@ export const productReviews = pgTable('product_reviews', {
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-// Product collections/sets table
-export const collections = pgTable('collections', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  title: text('title').notNull(),
-  description: text('description'),
-  slug: text('slug').unique().notNull(),
-  image: text('image'),
-  isActive: boolean('is_active').default(true),
-  sortOrder: integer('sort_order').default(0),
-  conditions: jsonb('conditions').$type<CollectionCondition[]>(),
-  metaTitle: text('meta_title'),
-  metaDescription: text('meta_description'),
-  createdAt: timestamp('created_at').defaultNow(),
-  updatedAt: timestamp('updated_at').defaultNow(),
-});
-
-// Many-to-many relationship between products and collections
-export const productCollections = pgTable('product_collections', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  productId: uuid('product_id').references(() => products.id, { onDelete: 'cascade' }).notNull(),
-  collectionId: uuid('collection_id').references(() => collections.id, { onDelete: 'cascade' }).notNull(),
-  position: integer('position').default(0),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
 // Product attributes (for flexible product properties)
 export const productAttributes = pgTable('product_attributes', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -156,13 +116,8 @@ export const productsRelations = relations(products, ({ one, many }) => ({
     fields: [products.categoryId],
     references: [categories.id],
   }),
-  brand: one(brands, {
-    fields: [products.brandId],
-    references: [brands.id],
-  }),
   variants: many(productVariants),
   reviews: many(productReviews),
-  collections: many(productCollections),
   attributes: many(productAttributes),
 }));
 
@@ -182,29 +137,10 @@ export const categoriesRelations = relations(categories, ({ one, many }) => ({
   products: many(products),
 }));
 
-export const brandsRelations = relations(brands, ({ many }) => ({
-  products: many(products),
-}));
-
 export const productReviewsRelations = relations(productReviews, ({ one }) => ({
   product: one(products, {
     fields: [productReviews.productId],
     references: [products.id],
-  }),
-}));
-
-export const collectionsRelations = relations(collections, ({ many }) => ({
-  products: many(productCollections),
-}));
-
-export const productCollectionsRelations = relations(productCollections, ({ one }) => ({
-  product: one(products, {
-    fields: [productCollections.productId],
-    references: [products.id],
-  }),
-  collection: one(collections, {
-    fields: [productCollections.collectionId],
-    references: [collections.id],
   }),
 }));
 
@@ -222,12 +158,8 @@ export type ProductVariant = typeof productVariants.$inferSelect;
 export type NewProductVariant = typeof productVariants.$inferInsert;
 export type Category = typeof categories.$inferSelect;
 export type NewCategory = typeof categories.$inferInsert;
-export type Brand = typeof brands.$inferSelect;
-export type NewBrand = typeof brands.$inferInsert;
 export type ProductReview = typeof productReviews.$inferSelect;
 export type NewProductReview = typeof productReviews.$inferInsert;
-export type Collection = typeof collections.$inferSelect;
-export type NewCollection = typeof collections.$inferInsert;
 export type ProductAttribute = typeof productAttributes.$inferSelect;
 export type NewProductAttribute = typeof productAttributes.$inferInsert;
 
@@ -238,8 +170,8 @@ export const createProductSchema = z.object({
   shortDescription: z.string().max(500).optional(),
   sku: z.string().min(1).max(100),
   barcode: z.string().optional(),
+  storeId: z.string().uuid().optional(),
   categoryId: z.string().uuid().optional(),
-  brandId: z.string().uuid().optional(),
   price: z.number().positive(),
   compareAtPrice: z.number().positive().optional(),
   costPrice: z.number().positive().optional(),
@@ -293,19 +225,6 @@ export const createCategorySchema = z.object({
 
 export const updateCategorySchema = createCategorySchema.partial();
 
-export const createBrandSchema = z.object({
-  name: z.string().min(1).max(255),
-  description: z.string().optional(),
-  slug: z.string().min(1).max(255),
-  logo: z.string().url().optional(),
-  website: z.string().url().optional(),
-  isActive: z.boolean().default(true),
-  metaTitle: z.string().optional(),
-  metaDescription: z.string().optional(),
-});
-
-export const updateBrandSchema = createBrandSchema.partial();
-
 export const createReviewSchema = z.object({
   productId: z.string().uuid(),
   userId: z.string().uuid(),
@@ -326,10 +245,4 @@ export interface ProductImage {
   src: string;
   alt?: string;
   position?: number;
-}
-
-export interface CollectionCondition {
-  field: string;
-  operator: 'equals' | 'not_equals' | 'contains' | 'starts_with' | 'ends_with' | 'greater_than' | 'less_than';
-  value: string | number | boolean;
 }
