@@ -81,10 +81,6 @@ export default function DashboardPage() {
           </p>
         </div>
         <div className="mt-4 md:mt-0 flex items-center space-x-3">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2">
-            <Icons.PlusIcon className="w-4 h-4" />
-            <span>Add Product</span>
-          </button>
           <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center space-x-2">
             <Icons.DownloadIcon className="w-4 h-4" />
             <span>Export</span>
