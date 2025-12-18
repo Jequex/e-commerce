@@ -12,7 +12,18 @@ const ThemeSwitcher: React.FC = () => {
   // useEffect only runs on the client, so now we can safely show the UI
   useEffect(() => {
     setMounted(true);
-  }, []);
+
+    // Add keyboard shortcut (Ctrl/Cmd + Shift + L)
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'l') {
+        e.preventDefault();
+        setTheme(theme === 'dark' ? 'light' : 'dark');
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyPress);
+    return () => document.removeEventListener('keydown', handleKeyPress);
+  }, [theme, setTheme]);
 
   if (!mounted) {
     return (
@@ -22,11 +33,16 @@ const ThemeSwitcher: React.FC = () => {
     );
   }
 
+  const toggleTheme = () => {
+    setTheme(theme === 'dark' ? 'light' : 'dark');
+  };
+
   return (
     <button
-      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+      onClick={toggleTheme}
       className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg transition-colors relative"
-      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+      title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode (Ctrl+Shift+L)`}
+      aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
       <AnimatePresence mode="wait" initial={false}>
         {theme === 'dark' ? (
