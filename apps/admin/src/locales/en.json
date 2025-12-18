@@ -5,6 +5,7 @@
     "success": "Success",
     "cancel": "Cancel",
     "save": "Save",
+    "saving": "Saving...",
     "edit": "Edit",
     "delete": "Delete",
     "view": "View",
@@ -106,7 +107,11 @@
     "deleteSuccess": "Product deleted successfully",
     "updateSuccess": "Product updated successfully",
     "createSuccess": "Product created successfully",
-    "loading": "Loading products..."
+    "loading": "Loading products...",
+    "compareAtPrice": "Compare at Price",
+    "barcode": "Barcode",
+    "quantity": "Quantity",
+    "trackQuantity": "Track Quantity"
   },
   "stores": {
     "title": "Stores",

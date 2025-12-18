@@ -15,9 +15,18 @@ const PORT = process.env.PORT || 3002;
 
 // Security middleware
 app.use(helmet());
+
+// CORS configuration
+const corsOrigin = process.env.CORS_ORIGIN
+  ? process.env.CORS_ORIGIN.split(',')
+  : ['http://localhost:3000', 'http://localhost:3006'];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  origin: corsOrigin,
   credentials: true,
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  preflightContinue: false,
+  optionsSuccessStatus: 204,
 }));
 
 // Compression middleware

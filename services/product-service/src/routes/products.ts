@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ProductController } from '../controllers/productController';
-import { authMiddleware, requireAdmin, requireCustomer } from '../middleware/auth';
+import { authMiddleware, requireStoreOwnerOrAdmin, requireCustomer } from '../middleware/auth';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -37,7 +37,7 @@ router.use(authMiddleware);
 router.use(requireCustomer);
 
 // Admin-only routes
-router.use(requireAdmin);
+router.use(requireStoreOwnerOrAdmin);
 router.post('/', productController.createProduct.bind(productController));
 router.put('/:id', productController.updateProduct.bind(productController));
 router.delete('/:id', productController.deleteProduct.bind(productController));

@@ -105,6 +105,7 @@ services:
       - DATABASE_URL=postgresql://ecommerce:password@postgres:5432/ecommerce_products
       - REDIS_URL=redis://redis:6379
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-random
     ports:
       - "3002:3002"
     volumes:
@@ -131,6 +132,7 @@ services:
       - DATABASE_URL=postgresql://ecommerce:password@postgres:5432/ecommerce_orders
       - REDIS_URL=redis://redis:6379
       - KAFKA_BROKER=kafka:9092
+      - JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-random
     ports:
       - "3003:3003"
     volumes:
@@ -159,6 +161,7 @@ services:
       - STRIPE_SECRET_KEY=sk_test_your_stripe_key_here
       - PAYPAL_CLIENT_ID=your_paypal_client_id
       - PAYPAL_CLIENT_SECRET=your_paypal_client_secret
+      - JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-random
     ports:
       - "3004:3004"
     volumes:

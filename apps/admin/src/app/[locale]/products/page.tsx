@@ -6,8 +6,9 @@ import { motion } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
 import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
-import { useAuthStore } from '@/stores/use-auth-store';
+import { usePageStore } from '@/stores/use-page-store';
 import { useRouter } from '@/i18n/navigation';
+import AddProductModal from '@/components/modals/AddProductModal';
 
 interface Product {
   id: string;
@@ -35,10 +36,12 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [filterStock, setFilterStock] = useState<'all' | 'in-stock' | 'out-of-stock' | 'low-stock'>('all');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   
   const t = useTranslations('products');
   const common = useTranslations('common');
-  const { admin, token } = useAuthStore();
+  const { data: pageData } = usePageStore.getState();
   const router = useRouter();
 
   useEffect(() => {
@@ -51,13 +54,10 @@ export default function ProductsPage() {
     
     try {
       // For now, fetch all products. You can add store filtering later
-      const url = `http://${urls.products.getAll}`;
+      const url = `http://${urls.products.getByStore}/${pageData?.store.id}`;
       
       const data = await callApi(url, {
         method: 'GET',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       setProducts(data.products || data || []);
@@ -74,9 +74,6 @@ export default function ProductsPage() {
     try {
       await callApi(`http://${urls.products.delete.replace(':id', productId)}`, {
         method: 'DELETE',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
       });
 
       setProducts(products.filter(p => p.id !== productId));
@@ -84,6 +81,10 @@ export default function ProductsPage() {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete product');
     }
+  };
+
+  const handleProductAdded = (newProduct: Product) => {
+    setProducts([newProduct, ...products]);
   };
 
   const filteredProducts = products.filter((product) => {
@@ -141,7 +142,7 @@ export default function ProductsPage() {
         </div>
         <div className="mt-4 md:mt-0">
           <button 
-            onClick={() => router.push('/products/new')}
+            onClick={() => setIsAddModalOpen(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
           >
             <Icons.PlusIcon className="w-4 h-4" />
@@ -343,6 +344,11 @@ export default function ProductsPage() {
           </div>
         )}
       </motion.div>
+      <AddProductModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={handleProductAdded}
+      />
     </div>
   );
 }

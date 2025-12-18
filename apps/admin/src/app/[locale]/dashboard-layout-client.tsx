@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
+import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
 
@@ -13,6 +14,15 @@ export default function DashboardLayoutClient({
 }) {
   const t = useTranslations('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const pathname = usePathname();
+  
+  // Check if current route is login
+  const isLoginPage = pathname?.endsWith('/login');
+  
+  // If it's the login page, render children without sidebar and header
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
   
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex">
