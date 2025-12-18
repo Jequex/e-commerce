@@ -7,7 +7,8 @@ import { motion } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
 import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
-import pageStore from '@/stores/use-page-store';
+import { useAuthStore } from '@/stores/use-auth-store';
+import { usePageStore } from '@/stores/use-page-store';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,7 +19,8 @@ export default function LoginPage() {
   const router = useRouter();
   const t = useTranslations('auth');
   const common = useTranslations('common');
-  const {setAdminInfo, setToken, setSessionId} = pageStore.getState();
+  const { setAuth } = useAuthStore();
+  const { setData } = usePageStore.getState();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,13 +36,21 @@ export default function LoginPage() {
         }),
       });
 
-      console.log(data);
-      
+      // Store the token and admin data in Zustand store and localStorage
+      setAuth(data.token, data.sessionId, data.admin);
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('sessionId', data.sessionId);
+      localStorage.setItem('admin', JSON.stringify(data.admin));
 
-      // Store the token and admin data
-      setAdminInfo(data.admin);
-      setToken(data.token);
-      setSessionId(data.sessionId);
+      const stores = await callApi(`http://${urls.store.getUserStore}`, {
+        method: 'GET',
+      });
+
+      const allData = await callApi(`http://${urls.store.getAllData}/${stores.stores[0].storeId}/complete`, {
+        method: 'GET',
+      });
+
+      setData(allData);
 
       // Redirect to dashboard
       router.push('/dashboard');

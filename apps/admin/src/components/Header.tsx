@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
 import LanguageSwitcher from './LanguageSwitcher';
+import { useAuthStore } from '@/stores/use-auth-store';
+import { useLogout } from '@/hooks/use-logout';
 
 interface HeaderProps {
   title: string;
@@ -14,6 +16,8 @@ const Header: React.FC<HeaderProps> = ({ title, onMenuToggle }) => {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isNotificationOpen, setIsNotificationOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const { admin } = useAuthStore();
+  const logout = useLogout();
 
   const notifications = [
     {
@@ -193,8 +197,8 @@ const Header: React.FC<HeaderProps> = ({ title, onMenuToggle }) => {
                   <span className="text-white text-sm font-medium">A</span>
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium text-gray-900 dark:text-white">Admin User</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">admin@example.com</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-white">{admin?.firstName} {admin?.lastName}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{admin?.email}</p>
                 </div>
                 <Icons.ChevronDownIcon className="w-4 h-4 text-gray-400" />
               </button>
@@ -218,7 +222,7 @@ const Header: React.FC<HeaderProps> = ({ title, onMenuToggle }) => {
                         Settings
                       </a>
                       <hr className="my-2 border-gray-200 dark:border-gray-700" />
-                      <a href="#" className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
+                      <a onClick={logout} href="#" className="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700">
                         <Icons.ExitIcon className="w-4 h-4 mr-3" />
                         Sign out
                       </a>

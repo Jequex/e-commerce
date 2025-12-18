@@ -6,10 +6,12 @@ import { motion } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
 import StatsCard from '@/components/StatsCard';
 import ChartCard from '@/components/ChartCard';
+import { usePageStore } from '@/stores/use-page-store';
 
 export default function DashboardPage() {
   const t = useTranslations('dashboard');
   const common = useTranslations('common');
+  const { data } = usePageStore.getState();
 
   // Sample chart data
   const salesData = {
@@ -72,7 +74,7 @@ export default function DashboardPage() {
       >
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t('welcome')}
+            {t('welcome', { store: data.store.name || '' })}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             Here's what's happening with your business today

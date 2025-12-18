@@ -37,7 +37,7 @@
   },
   "dashboard": {
     "title": "Panel de Administración",
-    "welcome": "Bienvenido a tu panel de administración de e-commerce",
+    "welcome": "Bienvenido al panel de administración de {store}",
     "totalOrders": "Total de Pedidos",
     "totalProducts": "Total de Productos",
     "totalUsers": "Total de Usuarios",

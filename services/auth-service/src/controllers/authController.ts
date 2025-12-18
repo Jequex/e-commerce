@@ -976,7 +976,6 @@ export class AuthController {
           firstName: user.firstName,
           lastName: user.lastName,
           role: user.role,
-          permissions: (user.metadata as any)?.permissions || [],
           lastLoginAt: user.lastLoginAt
         }
       });

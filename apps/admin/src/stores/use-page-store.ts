@@ -2,32 +2,23 @@ import { createStore } from 'zustand/vanilla'
 import { persist } from 'zustand/middleware'
 
 type PageStoreState = {
-  adminInfo: Record<string, any> | null
-  token: string
-  sessionId: string
+  data: any
 }
 
 type PageStoreActions = {
-  setAdminInfo: (info: Record<string, any>) => void
-  setToken: (token: string) => void
-  setSessionId: (sessionId: string) => void
+  setData: (data: any) => void
 }
 
 type PageStore = PageStoreState & PageStoreActions
 
-const pageStore = createStore<PageStore>()(
+export const usePageStore = createStore<PageStore>()(
   persist(
     (set) => ({
-      adminInfo: null,
-      token: '',
-      sessionId: '',
-
-      setAdminInfo: (info) => set({ adminInfo: info }),
-      setToken: (token) => set({ token }),
-      setSessionId: (sessionId) => set({ sessionId }),
+      data: {},
+      setData: (data: any) => {
+        set({ data });
+      }
     }),
     { name: 'page-storage' },
   ),
 )
-
-export default pageStore

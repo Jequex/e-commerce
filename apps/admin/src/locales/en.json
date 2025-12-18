@@ -37,7 +37,7 @@
   },
   "dashboard": {
     "title": "Admin Dashboard",
-    "welcome": "Welcome to your e-commerce admin dashboard",
+    "welcome": "Welcome to the {store} admin dashboard",
     "totalOrders": "Total Orders",
     "totalProducts": "Total Products",
     "totalUsers": "Total Users",

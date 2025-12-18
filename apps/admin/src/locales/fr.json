@@ -37,7 +37,7 @@
   },
   "dashboard": {
     "title": "Tableau de Bord Admin",
-    "welcome": "Bienvenue dans votre tableau de bord e-commerce admin",
+    "welcome": "Bienvenue au tableau de bord admin de {store}",
     "totalOrders": "Total des Commandes",
     "totalProducts": "Total des Produits",
     "totalUsers": "Total des Utilisateurs",
