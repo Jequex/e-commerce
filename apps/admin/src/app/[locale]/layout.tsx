@@ -3,6 +3,7 @@ import {getMessages} from 'next-intl/server';
 import {notFound} from 'next/navigation';
 import {routing} from '@/i18n/routing';
 import {AuthGuard} from '@/components/auth-guard';
+import DashboardLayoutClient from './dashboard-layout-client';
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({locale}));
@@ -27,7 +28,9 @@ export default async function LocaleLayout({
   return (
     <NextIntlClientProvider messages={messages}>
       <AuthGuard>
-        {children}
+        <DashboardLayoutClient>
+          {children}
+        </DashboardLayoutClient>
       </AuthGuard>
     </NextIntlClientProvider>
   );
