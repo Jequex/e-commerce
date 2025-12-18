@@ -21,5 +21,21 @@
     "update": "localhost:3002/api/products/:id",
     "delete": "localhost:3002/api/products/:id",
     "getCategories": "localhost:3002/api/products/categories"
+  },
+  "orders": {
+    "getAll": "localhost:3003/api/orders/admin/all",
+    "getOne": "localhost:3003/api/orders/:id",
+    "update": "localhost:3003/api/orders/admin/:id",
+    "getUserOrders": "localhost:3003/api/orders/my-orders"
+  },
+  "staff": {
+    "getUserStores": "localhost:3007/api/v1/stores/user/stores",
+    "addStaff": "localhost:3007/api/v1/stores/:id/staff"
+  },
+  "customers": {
+    "getAll": "localhost:3001/api/users",
+    "getOne": "localhost:3001/api/users/:id",
+    "update": "localhost:3001/api/users/:id",
+    "delete": "localhost:3001/api/users/:id"
   }
 }

@@ -42,7 +42,7 @@ export default function LoginPage() {
       localStorage.setItem('sessionId', data.sessionId);
       localStorage.setItem('admin', JSON.stringify(data.admin));
 
-      const stores = await callApi(`http://${urls.store.getUserStore}`, {
+      const stores = await callApi(`http://${urls.store.getUserStores}`, {
         method: 'GET',
       });
 
