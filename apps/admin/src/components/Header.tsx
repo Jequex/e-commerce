@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
 import LanguageSwitcher from './LanguageSwitcher';
+import ThemeSwitcher from './ThemeSwitcher';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { useLogout } from '@/hooks/use-logout';
 
@@ -179,10 +180,8 @@ const Header: React.FC<HeaderProps> = ({ title, onMenuToggle }) => {
               </AnimatePresence>
             </div>
             
-            {/* Theme Toggle */}
-            <button className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg transition-colors">
-              <Icons.SunIcon className="w-5 h-5" />
-            </button>
+            {/* Theme Switcher */}
+            <ThemeSwitcher />
             
             {/* Language Switcher */}
             <LanguageSwitcher />
