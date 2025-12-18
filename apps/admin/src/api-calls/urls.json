@@ -3,7 +3,23 @@
     "login": "localhost:3001/api/auth/admin-login"
   },
   "store": {
-    "getUserStore": "localhost:3007/api/v1/stores/user/stores",
-    "getAllData": "localhost:3007/api/v1/stores/user/stores"
+    "getAll": "localhost:3007/api/v1/stores",
+    "getOne": "localhost:3007/api/v1/stores/:id",
+    "create": "localhost:3007/api/v1/stores",
+    "update": "localhost:3007/api/v1/stores/:id",
+    "delete": "localhost:3007/api/v1/stores/:id",
+    "getUserStores": "localhost:3007/api/v1/stores/user/stores",
+    "getAllData": "localhost:3007/api/v1/stores/user/stores",
+    "getCategories": "localhost:3007/api/v1/stores/categories/list"
+  },
+  "products": {
+    "getAll": "localhost:3002/api/products",
+    "getByStore": "localhost:3002/api/products/store",
+    "getStoreStats": "localhost:3002/api/products/store/:storeId/stats",
+    "getOne": "localhost:3002/api/products/:id",
+    "create": "localhost:3002/api/products",
+    "update": "localhost:3002/api/products/:id",
+    "delete": "localhost:3002/api/products/:id",
+    "getCategories": "localhost:3002/api/products/categories"
   }
 }
