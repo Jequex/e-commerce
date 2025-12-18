@@ -44,21 +44,21 @@ const Sidebar: React.FC = () => {
       label: t('stores'),
       icon: MdStore,
       href: '/stores',
-      badge: 3,
+      // badge: 3,
     },
     {
       id: 'products',
       label: t('products'),
       icon: GiBoxUnpacking,
       href: '/products',
-      badge: 12,
+      // badge: 12,
     },
     {
       id: 'orders',
       label: t('orders'),
       icon: MdShoppingCart,
       href: '/orders',
-      badge: 5,
+      // badge: 5,
     },
     {
       id: 'customers',
@@ -71,26 +71,26 @@ const Sidebar: React.FC = () => {
       label: t('staff'),
       icon: FaPeopleRoof,
       href: '/staff',
-      badge: 2,
+      // badge: 2,
     },
-    {
-      id: 'reports',
-      label: t('reports'),
-      icon: MdBarChart,
-      href: '/reports',
-    },
-    {
-      id: 'analytics',
-      label: t('analytics'),
-      icon: MdAnalytics,
-      href: '/analytics',
-    },
-    {
-      id: 'settings',
-      label: t('settings'),
-      icon: MdSettings,
-      href: '/settings',
-    },
+    // {
+    //   id: 'reports',
+    //   label: t('reports'),
+    //   icon: MdBarChart,
+    //   href: '/reports',
+    // },
+    // {
+    //   id: 'analytics',
+    //   label: t('analytics'),
+    //   icon: MdAnalytics,
+    //   href: '/analytics',
+    // },
+    // {
+    //   id: 'settings',
+    //   label: t('settings'),
+    //   icon: MdSettings,
+    //   href: '/settings',
+    // },
   ];
 
   const handleNavigation = (href: string) => {

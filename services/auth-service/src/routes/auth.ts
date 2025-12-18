@@ -113,6 +113,9 @@ router.post(
 // Resend verification email
 router.post('/resend-verification', authController.resendVerificationEmail.bind(authController));
 
+// Get user by ID (for inter-service communication)
+router.get('/user/:userId', authController.getUserById.bind(authController));
+
 // Admin routes
 // Admin register
 router.post(

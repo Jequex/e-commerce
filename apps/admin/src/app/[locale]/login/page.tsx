@@ -20,7 +20,7 @@ export default function LoginPage() {
   const t = useTranslations('auth');
   const common = useTranslations('common');
   const { setAuth } = useAuthStore();
-  const { setData } = usePageStore.getState();
+  const { setData, setUserStores } = usePageStore.getState();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +45,8 @@ export default function LoginPage() {
       const stores = await callApi(`http://${urls.store.getUserStores}`, {
         method: 'GET',
       });
+
+      setUserStores(stores.stores);
 
       const allData = await callApi(`http://${urls.store.getAllData}/${stores.stores[0].storeId}/complete`, {
         method: 'GET',

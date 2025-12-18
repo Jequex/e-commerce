@@ -22,6 +22,7 @@ import {
   updateStoreStaffSchema,
   storeSearchSchema
 } from '../schema/store';
+import axios from 'axios';
 import { eq, and, desc, asc, like, gte, lte, sql } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { AuthenticatedRequest } from '../middleware/auth.js';
@@ -702,9 +703,49 @@ export class StoreController {
         .where(eq(storeStaff.storeId, id))
         .orderBy(desc(storeStaff.hiredAt));
 
+      // Fetch user details from auth service for each staff member
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://auth-service:3001';
+      
+      const staffWithUserDetails = await Promise.all(
+        staffMembers.map(async (staff) => {
+          let userDetails = {
+            email: null,
+            firstName: null,
+            lastName: null
+          };
+
+          try {
+            // Try to fetch user details from auth service
+            const userResponse = await axios.get(
+              `${authServiceUrl}/api/auth/user/${staff.userId}`,
+              { 
+                headers: { Authorization: req.headers.authorization },
+                timeout: 2000 // 2 second timeout
+              }
+            );
+            
+            if (userResponse.data && userResponse.data.user) {
+              userDetails = {
+                email: userResponse.data.user.email,
+                firstName: userResponse.data.user.firstName,
+                lastName: userResponse.data.user.lastName
+              };
+            }
+          } catch (error) {
+            // Silently fail and return null values for user details
+            console.log(`Could not fetch user details for userId: ${staff.userId}`);
+          }
+
+          return {
+            ...staff,
+            user: userDetails
+          };
+        })
+      );
+
       return res.json({
-        staff: staffMembers,
-        count: staffMembers.length
+        staff: staffWithUserDetails,
+        count: staffWithUserDetails.length
       });
 
     } catch (error) {

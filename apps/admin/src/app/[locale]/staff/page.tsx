@@ -14,6 +14,7 @@ interface StaffMember {
   storeId: string;
   userId: string;
   roleId: string;
+  roleName: string;
   salary: string | null;
   commission: string | null;
   isActive: boolean;
@@ -40,28 +41,29 @@ interface StaffMember {
 }
 
 interface Store {
-  id: string;
-  name: string;
+  storeId: string;
+  storeName: string;
   staff: StaffMember[];
 }
 
 export default function StaffPage() {
-  // const [stores, setStores] = useState<Store[]>([]);
+  const [stores, setStores] = useState<Store[]>([]);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
-  // const [filterStore, setFilterStore] = useState<'all' | string>('all');
+  const [filterStore, setFilterStore] = useState<'all' | string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   
   const t = useTranslations('staff');
   const common = useTranslations('common');
   const { token } = useAuthStore();
-  const { data: pageData } = usePageStore.getState();
+  const { data: pageData, userStores } = usePageStore.getState();
 
   useEffect(() => {
     fetchStaffData();
+    setStores(userStores);
   }, []);
 
   const fetchStaffData = async () => {
@@ -78,25 +80,22 @@ export default function StaffPage() {
         },
       });
 
-      // const storesData = data.stores || data || [];
-      // setStores(storesData);
-
       // Flatten staff from all stores
-      // const allStaff: StaffMember[] = [];
-      // storesData.forEach((store: Store) => {
-      //   if (store.staff && Array.isArray(store.staff)) {
-      //     store.staff.forEach((staff: StaffMember) => {
-      //       allStaff.push({
-      //         ...staff,
-      //         store: {
-      //           id: store.id,
-      //           name: store.name,
-      //           category: (store as any).category || null,
-      //         }
-      //       });
-      //     });
-      //   }
-      // });
+      const allStaff: StaffMember[] = [];
+      stores.forEach((store: Store) => {
+        if (store.staff && Array.isArray(store.staff)) {
+          store.staff.forEach((staff: StaffMember) => {
+            allStaff.push({
+              ...staff,
+              store: {
+                id: store.storeId,
+                name: store.storeName,
+                category: (store as any).category || null,
+              }
+            });
+          });
+        }
+      });
 
       setStaffMembers(data.staff);
     } catch (err) {
@@ -113,8 +112,7 @@ export default function StaffPage() {
       staff.user?.email?.toLowerCase().includes(searchLower) ||
       staff.user?.firstName?.toLowerCase().includes(searchLower) ||
       staff.user?.lastName?.toLowerCase().includes(searchLower) ||
-      staff.role?.name?.toLowerCase().includes(searchLower) ||
-      staff.store?.name?.toLowerCase().includes(searchLower);
+      staff.role?.name?.toLowerCase().includes(searchLower);
     
     // Status filter
     const matchesStatus = filterStatus === 'all' || 
@@ -122,12 +120,10 @@ export default function StaffPage() {
                          (filterStatus === 'inactive' && !staff.isActive);
     
     // Store filter
-    // const matchesStore = filterStore === 'all' || staff.storeId === filterStore;
-
-    console.log(matchesSearch, matchesStatus);
+    const matchesStore = filterStore === 'all' || staff.storeId === filterStore;
     
     
-    return  matchesStatus // && matchesStore;
+    return  matchesSearch && matchesStatus && matchesStore;
   });
 
   const getStaffName = (staff: StaffMember) => {
@@ -224,7 +220,7 @@ export default function StaffPage() {
           </div>
 
           {/* Store Filter */}
-          {/* <div>
+          <div>
             <select
               value={filterStore}
               onChange={(e) => setFilterStore(e.target.value)}
@@ -232,12 +228,12 @@ export default function StaffPage() {
             >
               <option value="all">{t('store')}: All</option>
               {stores.map((store) => (
-                <option key={store.id} value={store.id}>
-                  {store.name}
+                <option key={store.storeId} value={store.storeId}>
+                  {store.storeName}
                 </option>
               ))}
             </select>
-          </div> */}
+          </div>
         </div>
       </motion.div>
 
@@ -308,12 +304,12 @@ export default function StaffPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm text-gray-900 dark:text-white">
-                        {staff.store?.name || 'Unknown Store'}
+                        {stores.find(store => store.storeId === staff.storeId)?.storeName || 'Unknown Store'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <span className="inline-flex px-2 py-1 text-xs font-semibold rounded-full bg-blue-50 text-blue-600 dark:bg-blue-900/20">
-                        {staff.role?.name || 'No Role'}
+                        {staff.roleName || 'No Role'}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
