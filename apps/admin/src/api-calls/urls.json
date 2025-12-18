@@ -30,7 +30,9 @@
   },
   "staff": {
     "getUserStores": "localhost:3007/api/v1/stores/user/stores",
-    "addStaff": "localhost:3007/api/v1/stores/:id/staff"
+    "addStaff": "localhost:3007/api/v1/stores/:id/staff",
+    "getStaff": "localhost:3007/api/v1/stores/:id/staff",
+    "removeStaff": "localhost:3007/api/v1/stores/:storeId/staff/:staffId"
   },
   "customers": {
     "getAll": "localhost:3001/api/users",

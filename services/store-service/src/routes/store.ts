@@ -126,6 +126,27 @@ router.post('/:id/staff',
   asyncHandler(storeController.addStoreStaff)
 );
 
+// Get store staff
+router.get('/:id/staff',
+  generalLimiter,
+  authenticateToken,
+  requireAuth,
+  validateParams(uuidParamSchema),
+  asyncHandler(storeController.getStoreStaff)
+);
+
+// Remove store staff
+router.delete('/:storeId/staff/:staffId',
+  strictLimiter,
+  authenticateToken,
+  requireAuth,
+  validateParams(z.object({
+    storeId: z.string().uuid('Invalid store ID format'),
+    staffId: z.string().uuid('Invalid staff ID format')
+  })),
+  asyncHandler(storeController.removeStoreStaff)
+);
+
 // Review Management
 
 // Add store review

@@ -640,6 +640,152 @@ export class StoreController {
     }
   }
 
+  // Get store staff
+  async getStoreStaff(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: 'Authentication required',
+          code: 'NO_AUTH'
+        });
+      }
+
+      const { id } = req.params;
+
+      // Check if store exists
+      const storeResult = await db.select().from(stores)
+        .where(eq(stores.id, id))
+        .limit(1);
+
+      if (storeResult.length === 0) {
+        return res.status(404).json({
+          error: 'Store not found',
+          code: 'STORE_NOT_FOUND'
+        });
+      }
+      
+      const store = storeResult[0];
+
+      // Check if user has permission to view staff
+      // (store owner, admin, or staff member of the store)
+      const isStaffMember = await db.select().from(storeStaff)
+        .where(and(
+          eq(storeStaff.storeId, id),
+          eq(storeStaff.userId, req.user.id),
+          eq(storeStaff.isActive, true)
+        ))
+        .limit(1);
+
+      if (store.ownerId !== req.user.id && !req.user.isAdmin && isStaffMember.length === 0) {
+        return res.status(403).json({
+          error: 'Insufficient permissions',
+          code: 'INSUFFICIENT_PERMISSIONS'
+        });
+      }
+
+      // Get all staff members with their role information
+      const staffMembers = await db
+        .select({
+          id: storeStaff.id,
+          userId: storeStaff.userId,
+          storeId: storeStaff.storeId,
+          roleId: storeStaff.roleId,
+          roleName: roles.name,
+          roleSlug: roles.slug,
+          salary: storeStaff.salary,
+          commission: storeStaff.commission,
+          isActive: storeStaff.isActive,
+          hiredAt: storeStaff.hiredAt
+        })
+        .from(storeStaff)
+        .innerJoin(roles, eq(storeStaff.roleId, roles.id))
+        .where(eq(storeStaff.storeId, id))
+        .orderBy(desc(storeStaff.hiredAt));
+
+      return res.json({
+        staff: staffMembers,
+        count: staffMembers.length
+      });
+
+    } catch (error) {
+      console.error('Get store staff error:', error);
+      return res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Remove store staff
+  async removeStoreStaff(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: 'Authentication required',
+          code: 'NO_AUTH'
+        });
+      }
+
+      const { storeId, staffId } = req.params;
+
+      // Check if store exists
+      const storeResult = await db.select().from(stores)
+        .where(eq(stores.id, storeId))
+        .limit(1);
+
+      if (storeResult.length === 0) {
+        return res.status(404).json({
+          error: 'Store not found',
+          code: 'STORE_NOT_FOUND'
+        });
+      }
+      
+      const store = storeResult[0];
+
+      // Check ownership or admin permission
+      if (store.ownerId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({
+          error: 'Insufficient permissions',
+          code: 'INSUFFICIENT_PERMISSIONS'
+        });
+      }
+
+      // Check if staff member exists
+      const staffResult = await db.select().from(storeStaff)
+        .where(and(
+          eq(storeStaff.id, staffId),
+          eq(storeStaff.storeId, storeId)
+        ))
+        .limit(1);
+
+      if (staffResult.length === 0) {
+        return res.status(404).json({
+          error: 'Staff member not found',
+          code: 'STAFF_NOT_FOUND'
+        });
+      }
+
+      // Delete the staff member
+      await db
+        .delete(storeStaff)
+        .where(and(
+          eq(storeStaff.id, staffId),
+          eq(storeStaff.storeId, storeId)
+        ));
+
+      return res.json({
+        message: 'Staff member removed successfully'
+      });
+
+    } catch (error) {
+      console.error('Remove store staff error:', error);
+      return res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
   // Review Management
   async addStoreReview(req: AuthenticatedRequest, res: Response): Promise<Response> {
     try {

@@ -7,6 +7,7 @@ import * as Icons from '@radix-ui/react-icons';
 import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
 import { useAuthStore } from '@/stores/use-auth-store';
+import { usePageStore } from '@/stores/use-page-store';
 
 interface StaffMember {
   id: string;
@@ -45,18 +46,19 @@ interface Store {
 }
 
 export default function StaffPage() {
-  const [stores, setStores] = useState<Store[]>([]);
+  // const [stores, setStores] = useState<Store[]>([]);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
-  const [filterStore, setFilterStore] = useState<'all' | string>('all');
+  // const [filterStore, setFilterStore] = useState<'all' | string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   
   const t = useTranslations('staff');
   const common = useTranslations('common');
   const { token } = useAuthStore();
+  const { data: pageData } = usePageStore.getState();
 
   useEffect(() => {
     fetchStaffData();
@@ -67,7 +69,7 @@ export default function StaffPage() {
     setError('');
     
     try {
-      const url = `http://${urls.staff.getUserStores}`;
+      const url = `http://${urls.staff.getStaff.replace(':id', pageData?.store?.id || '')}`;
       
       const data = await callApi(url, {
         method: 'GET',
@@ -76,27 +78,27 @@ export default function StaffPage() {
         },
       });
 
-      const storesData = data.stores || data || [];
-      setStores(storesData);
+      // const storesData = data.stores || data || [];
+      // setStores(storesData);
 
       // Flatten staff from all stores
-      const allStaff: StaffMember[] = [];
-      storesData.forEach((store: Store) => {
-        if (store.staff && Array.isArray(store.staff)) {
-          store.staff.forEach((staff: StaffMember) => {
-            allStaff.push({
-              ...staff,
-              store: {
-                id: store.id,
-                name: store.name,
-                category: (store as any).category || null,
-              }
-            });
-          });
-        }
-      });
-      
-      setStaffMembers(allStaff);
+      // const allStaff: StaffMember[] = [];
+      // storesData.forEach((store: Store) => {
+      //   if (store.staff && Array.isArray(store.staff)) {
+      //     store.staff.forEach((staff: StaffMember) => {
+      //       allStaff.push({
+      //         ...staff,
+      //         store: {
+      //           id: store.id,
+      //           name: store.name,
+      //           category: (store as any).category || null,
+      //         }
+      //       });
+      //     });
+      //   }
+      // });
+
+      setStaffMembers(data.staff);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load staff');
     } finally {
@@ -120,9 +122,12 @@ export default function StaffPage() {
                          (filterStatus === 'inactive' && !staff.isActive);
     
     // Store filter
-    const matchesStore = filterStore === 'all' || staff.storeId === filterStore;
+    // const matchesStore = filterStore === 'all' || staff.storeId === filterStore;
+
+    console.log(matchesSearch, matchesStatus);
     
-    return matchesSearch && matchesStatus && matchesStore;
+    
+    return  matchesStatus // && matchesStore;
   });
 
   const getStaffName = (staff: StaffMember) => {
@@ -219,7 +224,7 @@ export default function StaffPage() {
           </div>
 
           {/* Store Filter */}
-          <div>
+          {/* <div>
             <select
               value={filterStore}
               onChange={(e) => setFilterStore(e.target.value)}
@@ -232,7 +237,7 @@ export default function StaffPage() {
                 </option>
               ))}
             </select>
-          </div>
+          </div> */}
         </div>
       </motion.div>
 
