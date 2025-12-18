@@ -5,25 +5,50 @@ import { useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
+import callApi from '@/api-calls/callApi';
+import urls from '@/api-calls/urls.json';
+import pageStore from '@/stores/use-page-store';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
   const router = useRouter();
   const t = useTranslations('auth');
   const common = useTranslations('common');
+  const {setAdminInfo, setToken, setSessionId} = pageStore.getState();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // Simulate login
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      const data = await callApi(`http://${urls.auth.login}`, {
+        method: 'POST',
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      });
+
+      console.log(data);
+      
+
+      // Store the token and admin data
+      setAdminInfo(data.admin);
+      setToken(data.token);
+      setSessionId(data.sessionId);
+
+      // Redirect to dashboard
       router.push('/dashboard');
-    }, 1000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred during login');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -74,6 +99,18 @@ export default function LoginPage() {
             className="mt-8 space-y-6"
             onSubmit={handleSubmit}
           >
+            {/* Error Message */}
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start"
+              >
+                <Icons.ExclamationTriangleIcon className="h-5 w-5 text-red-500 mr-3 mt-0.5 flex-shrink-0" />
+                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+              </motion.div>
+            )}
+
             <div className="space-y-4">
               {/* Email Input */}
               <div>
@@ -152,21 +189,6 @@ export default function LoginPage() {
                 t('signIn')
               )}
             </motion.button>
-
-            {/* Demo Credentials */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-              className="text-center p-4 bg-blue-50 dark:bg-gray-700/50 rounded-xl border border-blue-200 dark:border-gray-600"
-            >
-              <p className="text-sm text-blue-800 dark:text-blue-300 font-medium mb-1">
-                Demo Credentials
-              </p>
-              <p className="text-xs text-blue-600 dark:text-blue-400">
-                admin@example.com / password
-              </p>
-            </motion.div>
           </motion.form>
         </div>
       </motion.div>
