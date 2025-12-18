@@ -45,7 +45,7 @@ const ThemeSwitcher: React.FC = () => {
       aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
     >
       <AnimatePresence mode="wait" initial={false}>
-        {theme === 'dark' ? (
+        {theme === 'light' ? (
           <motion.div
             key="moon"
             initial={{ y: -20, opacity: 0, rotate: -90 }}
