@@ -209,7 +209,16 @@
     "permissions": "Permissions",
     "userId": "User ID",
     "firstName": "First Name",
-    "lastName": "Last Name"
+    "lastName": "Last Name",
+    "personalInfo": "Personal Information",
+    "employmentDetails": "Employment Details",
+    "roleDescription": "Role Description",
+    "activeStatus": "Active Status",
+    "staffMember": "Staff Member",
+    "selectRole": "Select a role",
+    "failedToLoadRoles": "Failed to load roles",
+    "failedToUpdateStaff": "Failed to update staff member",
+    "staffUpdated": "Staff member updated successfully"
   },
   "customers": {
     "title": "Customers",

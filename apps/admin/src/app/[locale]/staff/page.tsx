@@ -9,6 +9,8 @@ import urls from '@/api-calls/urls.json';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { usePageStore } from '@/stores/use-page-store';
 import AddStaffModal from '@/components/modals/AddStaffModal';
+import ViewStaffModal from '@/components/modals/ViewStaffModal';
+import EditStaffModal from '@/components/modals/EditStaffModal';
 
 interface StaffMember {
   id: string;
@@ -56,6 +58,9 @@ export default function StaffPage() {
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [filterStore, setFilterStore] = useState<'all' | string>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   
   const t = useTranslations('staff');
   const common = useTranslations('common');
@@ -108,6 +113,20 @@ export default function StaffPage() {
 
   const handleStaffAdded = (newStaff: StaffMember) => {
     setStaffMembers([newStaff, ...staffMembers]);
+  };
+
+  const handleViewStaff = (staffMember: StaffMember) => {
+    setSelectedStaff(staffMember);
+    setShowViewModal(true);
+  };
+
+  const handleEditStaff = (staffMember: StaffMember) => {
+    setSelectedStaff(staffMember);
+    setShowEditModal(true);
+  };
+
+  const handleStaffUpdated = () => {
+    fetchStaffData();
   };
 
   const filteredStaff = staffMembers.filter((staff) => {
@@ -344,12 +363,14 @@ export default function StaffPage() {
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <div className="flex items-center space-x-2">
                         <button
+                          onClick={() => handleViewStaff(staff)}
                           className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                           title={common('view')}
                         >
                           <Icons.EyeOpenIcon className="h-5 w-5" />
                         </button>
                         <button
+                          onClick={() => handleEditStaff(staff)}
                           className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
                           title={common('edit')}
                         >
@@ -370,6 +391,28 @@ export default function StaffPage() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={handleStaffAdded}
+        storeId={pageData?.store?.id || ''}
+      />
+
+      {/* View Staff Modal */}
+      <ViewStaffModal
+        isOpen={showViewModal}
+        onClose={() => {
+          setShowViewModal(false);
+          setSelectedStaff(null);
+        }}
+        staff={selectedStaff}
+      />
+
+      {/* Edit Staff Modal */}
+      <EditStaffModal
+        isOpen={showEditModal}
+        onClose={() => {
+          setShowEditModal(false);
+          setSelectedStaff(null);
+        }}
+        onSuccess={handleStaffUpdated}
+        staff={selectedStaff}
         storeId={pageData?.store?.id || ''}
       />
     </div>

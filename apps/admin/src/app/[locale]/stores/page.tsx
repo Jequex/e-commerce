@@ -10,6 +10,8 @@ import { useAuthStore } from '@/stores/use-auth-store';
 import { usePageStore } from '@/stores/use-page-store';
 import { useRouter } from '@/i18n/navigation';
 import { permission } from 'process';
+import ViewStoreModal from '@/components/modals/ViewStoreModal';
+import EditStoreModal from '@/components/modals/EditStoreModal';
 
 interface Store {
   id: string;
@@ -44,6 +46,9 @@ export default function StoresPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [filterStatus, setFilterStatus] = useState<'all' | 'active' | 'inactive'>('all');
   const [filterVerified, setFilterVerified] = useState<'all' | 'verified' | 'unverified'>('all');
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   
   const t = useTranslations('stores');
   const common = useTranslations('common');
@@ -93,6 +98,21 @@ export default function StoresPage() {
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Failed to delete store');
     }
+  };
+
+  const handleViewClick = (store: Store) => {
+    setSelectedStore(store);
+    setIsViewModalOpen(true);
+  };
+
+  const handleEditClick = (store: Store) => {
+    setSelectedStore(store);
+    setIsEditModalOpen(true);
+  };
+
+  const handleStoreUpdated = (updatedStore: Store) => {
+    setStores(stores.map(s => s.id === updatedStore.id ? updatedStore : s));
+    setSelectedStore(null);
   };
 
   const filteredStores = stores.filter((store) => {
@@ -347,7 +367,7 @@ export default function StoresPage() {
                   {/* Actions */}
                   <div className="flex items-center space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
                     {storePermissions?.find((permission:{action: string}) => permission.action === 'view') && <button
-                      onClick={() => router.push(`/stores/${store.id}`)}
+                      onClick={() => handleViewClick(store)}
                       className="flex-1 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center space-x-1"
                       title={common('view')}
                     >
@@ -355,7 +375,7 @@ export default function StoresPage() {
                       <span>{common('view')}</span>
                     </button>}
                     {storePermissions?.find((permission:{action: string}) => permission.action === 'update') && <button
-                      onClick={() => router.push(`/stores/${store.id}/edit`)}
+                      onClick={() => handleEditClick(store)}
                       className="flex-1 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center justify-center space-x-1"
                       title={common('edit')}
                     >
@@ -376,6 +396,27 @@ export default function StoresPage() {
           </div>
         )}
       </motion.div>
+      
+      {/* View Store Modal */}
+      <ViewStoreModal
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedStore(null);
+        }}
+        store={selectedStore}
+      />
+      
+      {/* Edit Store Modal */}
+      <EditStoreModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedStore(null);
+        }}
+        onSuccess={handleStoreUpdated}
+        store={selectedStore}
+      />
     </div>
   );
 }

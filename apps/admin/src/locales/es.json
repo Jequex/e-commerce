@@ -209,7 +209,16 @@
     "permissions": "Permisos",
     "userId": "ID de Usuario",
     "firstName": "Nombre",
-    "lastName": "Apellido"
+    "lastName": "Apellido",
+    "personalInfo": "Información Personal",
+    "employmentDetails": "Detalles de Empleo",
+    "roleDescription": "Descripción del Rol",
+    "activeStatus": "Estado Activo",
+    "staffMember": "Miembro del Personal",
+    "selectRole": "Seleccionar un rol",
+    "failedToLoadRoles": "Error al cargar roles",
+    "failedToUpdateStaff": "Error al actualizar miembro del personal",
+    "staffUpdated": "Miembro del personal actualizado exitosamente"
   },
   "customers": {
     "title": "Clientes",
