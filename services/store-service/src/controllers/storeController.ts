@@ -602,8 +602,6 @@ export class StoreController {
         { timeout: 5000 } // 5 second timeout
       );
 
-      console.log(userResponse);
-
       if (!userResponse.data || !userResponse.data.admin) {
         return res.status(500).json({
           error: 'Failed to create user in auth service',
@@ -775,6 +773,92 @@ export class StoreController {
 
     } catch (error) {
       console.error('Get store staff error:', error);
+      return res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // update store staff
+  async updateStoreStaff(req: AuthenticatedRequest, res: Response): Promise<Response> {
+    try {
+      if (!req.user) {
+        return res.status(401).json({
+          error: 'Authentication required',
+          code: 'NO_AUTH'
+        });
+      }
+
+      const { storeId, staffId } = req.params;
+      const validatedData = updateStoreStaffSchema.parse(req.body);
+
+      // Check if store exists
+      const storeResult = await db.select().from(stores)
+        .where(eq(stores.id, storeId))
+        .limit(1);
+
+      if (storeResult.length === 0) {
+        return res.status(404).json({
+          error: 'Store not found',
+          code: 'STORE_NOT_FOUND'
+        });
+      }
+      
+      const store = storeResult[0];
+
+      // Check ownership or admin permission
+      if (store.ownerId !== req.user.id && !req.user.isAdmin) {
+        return res.status(403).json({
+          error: 'Insufficient permissions',
+          code: 'INSUFFICIENT_PERMISSIONS'
+        });
+      }
+      
+      // Check if staff member exists
+      const staffResult = await db.select().from(storeStaff)
+        .where(and(
+          eq(storeStaff.id, staffId),
+          eq(storeStaff.storeId, storeId)
+        ))
+        .limit(1);
+
+      if (staffResult.length === 0) {
+        return res.status(404).json({
+          error: 'Staff member not found',
+          code: 'STAFF_NOT_FOUND'
+        });
+      }
+
+      // Update staff member
+      const [updatedStaff] = await db
+        .update(storeStaff)
+        .set({
+          ...validatedData,
+          updatedAt: new Date()
+        })
+        .where(and(
+          eq(storeStaff.id, staffId),
+          eq(storeStaff.storeId, storeId)
+        ))
+        .returning();
+
+      return res.json({
+        message: 'Staff member updated successfully',
+        staff: updatedStaff
+      });
+
+    } catch (error) {
+      console.error('Update store staff error:', error);
+      
+      if (error instanceof Error && error.name === 'ZodError') {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.message,
+          code: 'VALIDATION_ERROR'
+        });
+      }
+
       return res.status(500).json({
         error: 'Internal server error',
         code: 'INTERNAL_ERROR'

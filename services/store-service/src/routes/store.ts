@@ -11,7 +11,8 @@ import {
   insertStoreStaffSchema,
   insertStoreReviewSchema,
   updateStoreSchema,
-  storeSearchSchema
+  storeSearchSchema,
+  updateStoreStaffSchema
 } from '../schema/store';
 import { z } from 'zod';
 
@@ -133,6 +134,19 @@ router.get('/:id/staff',
   requireAuth,
   validateParams(uuidParamSchema),
   asyncHandler(storeController.getStoreStaff)
+);
+
+// Update store staff member
+router.put('/:storeId/staff/:staffId',
+  strictLimiter,
+  authenticateToken,
+  requireAuth,
+  validateParams(z.object({
+    storeId: z.string().uuid('Invalid store ID format'),
+    staffId: z.string().uuid('Invalid staff ID format')
+  })),
+  validateBody(updateStoreStaffSchema),
+  asyncHandler(storeController.updateStoreStaff)
 );
 
 // Remove store staff

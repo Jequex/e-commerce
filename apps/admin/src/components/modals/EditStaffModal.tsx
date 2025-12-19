@@ -118,8 +118,8 @@ export default function EditStaffModal({ isOpen, onClose, onSuccess, staff, stor
         },
         body: JSON.stringify({
           roleId: formData.roleId,
-          salary: parseFloat(formData.salary),
-          commission: parseFloat(formData.commission),
+          salary: formData.salary,
+          commission: formData.commission,
           isActive: formData.isActive,
         }),
       });

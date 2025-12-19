@@ -373,6 +373,14 @@ export const insertStoreStaffSchema = z.object({
   isActive: z.boolean().optional()
 });
 
+export const updateStoreStaffSchema = z.object({
+  roleId: z.string().uuid(),
+  customPermissions: z.array(z.string()).optional(),
+  salary: z.string().optional(),
+  commission: z.string().optional(),
+  isActive: z.boolean().optional()
+});
+
 // New validation schemas for roles and permissions
 export const insertPermissionSchema = z.object({
   name: z.string().min(1).max(100),
@@ -416,7 +424,6 @@ export const insertStoreReviewSchema = z.object({
 export const updateStoreSchema = insertStoreSchema.partial();
 export const updateStoreAddressSchema = insertStoreAddressSchema.partial();
 export const updateStoreHoursSchema = insertStoreHoursSchema.partial();
-export const updateStoreStaffSchema = insertStoreStaffSchema.partial();
 export const updatePermissionSchema = insertPermissionSchema.partial();
 export const updateRoleSchema = insertRoleSchema.partial();
 

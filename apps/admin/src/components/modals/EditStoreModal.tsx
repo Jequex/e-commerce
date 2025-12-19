@@ -117,7 +117,7 @@ export default function EditStoreModal({
           {/* Store Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              {t('name')} <span className="text-red-500">*</span>
+              {t('storeName')} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
