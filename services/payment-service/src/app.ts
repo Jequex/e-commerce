@@ -18,6 +18,8 @@ app.use(helmet());
 app.use(cors({
   origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  maxAge: 86400, // Cache preflight for 24 hours
 }));
 
 // Compression middleware

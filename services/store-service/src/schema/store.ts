@@ -361,7 +361,6 @@ export const insertStoreHoursSchema = z.object({
 });
 
 export const insertStoreStaffSchema = z.object({
-  userId: z.string().uuid(),
   email: z.string().email(),
   password: z.string().min(6),
   firstName: z.string().min(1).max(100),

@@ -36,8 +36,7 @@ app.use(cors({
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Authorization'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
+  maxAge: 86400, // Cache preflight for 24 hours
 }));
 
 // Compression middleware

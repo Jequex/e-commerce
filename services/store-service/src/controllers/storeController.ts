@@ -591,7 +591,7 @@ export class StoreController {
       // call auth service to create user
       const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
       const userResponse = await axios.post(
-        `${authServiceUrl}/api/auth/register`,
+        `${authServiceUrl}/api/auth/admin-register`,
         {
           email: validatedData.email,
           password: validatedData.password,
@@ -602,22 +602,22 @@ export class StoreController {
         { timeout: 5000 } // 5 second timeout
       );
 
-      if (!userResponse.data || !userResponse.data.user) {
+      console.log(userResponse);
+
+      if (!userResponse.data || !userResponse.data.admin) {
         return res.status(500).json({
           error: 'Failed to create user in auth service',
           code: 'AUTH_SERVICE_ERROR'
         });
       }
 
-      const userId = userResponse.data.user.id;
-
-      validatedData.userId = userId;
+      const userId = userResponse.data.admin.id;
 
       // Check if user is already staff
       const existingStaffResult = await db.select().from(storeStaff)
         .where(and(
           eq(storeStaff.storeId, id),
-          eq(storeStaff.userId, validatedData.userId)
+          eq(storeStaff.userId, userId)
         ))
         .limit(1);
 
@@ -632,7 +632,7 @@ export class StoreController {
 
       const [newStaff] = await db.insert(storeStaff).values({
         storeId: id,
-        userId: validatedData.userId,
+        userId: userId,
         roleId: validatedData.roleId,
         salary: validatedData.salary,
         commission: validatedData.commission,

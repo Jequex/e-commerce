@@ -25,8 +25,8 @@ app.use(cors({
   origin: corsOrigin,
   credentials: true,
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
-  preflightContinue: false,
-  optionsSuccessStatus: 204,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  maxAge: 86400, // Cache preflight for 24 hours
 }));
 
 // Compression middleware

@@ -7,7 +7,9 @@ import * as Icons from '@radix-ui/react-icons';
 import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
 import { useAuthStore } from '@/stores/use-auth-store';
+import { usePageStore } from '@/stores/use-page-store';
 import { useRouter } from '@/i18n/navigation';
+import { permission } from 'process';
 
 interface Store {
   id: string;
@@ -46,6 +48,7 @@ export default function StoresPage() {
   const t = useTranslations('stores');
   const common = useTranslations('common');
   const { token } = useAuthStore();
+  const { data: {permissionsByResource : { stores : storePermissions } } } = usePageStore.getState();
   const router = useRouter();
 
   useEffect(() => {
@@ -139,7 +142,7 @@ export default function StoresPage() {
             {filteredStores.length} {filteredStores.length === 1 ? 'store' : 'stores'}
           </p>
         </div>
-        <div className="mt-4 md:mt-0">
+        {storePermissions?.find((permission:{action: string}) => permission.action === 'create') && <div className="mt-4 md:mt-0">
           <button 
             onClick={() => router.push('/stores/new')}
             className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
@@ -147,7 +150,7 @@ export default function StoresPage() {
             <Icons.PlusIcon className="w-4 h-4" />
             <span>{t('addStore')}</span>
           </button>
-        </div>
+        </div>}
       </motion.div>
 
       {/* Error Message */}
@@ -343,29 +346,29 @@ export default function StoresPage() {
 
                   {/* Actions */}
                   <div className="flex items-center space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <button
+                    {storePermissions?.find((permission:{action: string}) => permission.action === 'view') && <button
                       onClick={() => router.push(`/stores/${store.id}`)}
                       className="flex-1 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center space-x-1"
                       title={common('view')}
                     >
                       <Icons.EyeOpenIcon className="h-4 w-4" />
                       <span>{common('view')}</span>
-                    </button>
-                    <button
+                    </button>}
+                    {storePermissions?.find((permission:{action: string}) => permission.action === 'update') && <button
                       onClick={() => router.push(`/stores/${store.id}/edit`)}
                       className="flex-1 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center justify-center space-x-1"
                       title={common('edit')}
                     >
                       <Icons.Pencil1Icon className="h-4 w-4" />
                       <span>{common('edit')}</span>
-                    </button>
-                    <button
+                    </button>}
+                    {storePermissions?.find((permission:{action: string}) => permission.action === 'delete') && <button
                       onClick={() => handleDelete(store.id)}
                       className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       title={common('delete')}
                     >
                       <Icons.TrashIcon className="h-4 w-4" />
-                    </button>
+                    </button>}
                   </div>
                 </div>
               </motion.div>

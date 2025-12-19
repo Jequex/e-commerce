@@ -73,8 +73,8 @@ export default function AddStaffModal({
       lastName: formData.get('lastName') as string | null,
       userRole: 'admin',
       roleId: formData.get('roleId') as string,
-      salary: formData.get('salary') ? parseFloat(formData.get('salary') as string) : null,
-      commission: formData.get('commission') ? parseFloat(formData.get('commission') as string) : null,
+      salary: formData.get('salary') ? formData.get('salary') as string : '',
+      commission: formData.get('commission') ? formData.get('commission') as string : '',
     };
 
     try {
