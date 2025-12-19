@@ -9,18 +9,22 @@ import urls from '@/api-calls/urls.json';
 import { usePageStore } from '@/stores/use-page-store';
 import { useRouter } from '@/i18n/navigation';
 import AddProductModal from '@/components/modals/AddProductModal';
+import EditProductModal from '@/components/modals/EditProductModal';
+import ViewProductModal from '@/components/modals/ViewProductModal';
+import DeleteConfirmModal from '@/components/modals/DeleteConfirmModal';
+import { toast } from 'react-toastify';
 
 interface Product {
   id: string;
   name: string;
   description: string | null;
-  price: number;
-  compareAtPrice: number | null;
+  price: number | string;
+  compareAtPrice: number | string | null;
   costPerItem: number | null;
   sku: string | null;
   barcode: string | null;
   trackQuantity: boolean;
-  quantity: number;
+  inventoryQuantity: number;
   category: string | null;
   images: string[] | null;
   isFeatured: boolean;
@@ -38,6 +42,12 @@ export default function ProductsPage() {
   const [filterStock, setFilterStock] = useState<'all' | 'in-stock' | 'out-of-stock' | 'low-stock'>('all');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [productToDelete, setProductToDelete] = useState<Product | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const t = useTranslations('products');
   const common = useTranslations('common');
@@ -68,23 +78,49 @@ export default function ProductsPage() {
     }
   };
 
-  const handleDelete = async (productId: string) => {
-    if (!confirm(t('deleteConfirm'))) return;
+  const handleDeleteClick = (product: Product) => {
+    setProductToDelete(product);
+    setIsDeleteModalOpen(true);
+  };
 
+  const handleDeleteConfirm = async () => {
+    if (!productToDelete) return;
+
+    setIsDeleting(true);
     try {
-      await callApi(`http://${urls.products.delete.replace(':id', productId)}`, {
+      await callApi(`http://${urls.products.delete.replace(':id', productToDelete.id)}`, {
         method: 'DELETE',
       });
 
-      setProducts(products.filter(p => p.id !== productId));
-      alert(t('deleteSuccess'));
+      toast.success(t('deleteSuccess'));
+
+      setProducts(products.filter(p => p.id !== productToDelete.id));
+      setIsDeleteModalOpen(false);
+      setProductToDelete(null);
     } catch (err) {
-      alert(err instanceof Error ? err.message : 'Failed to delete product');
+      toast.error(err instanceof Error ? err.message : t('deleteError'));
+    } finally {
+      setIsDeleting(false);
     }
   };
 
   const handleProductAdded = (newProduct: Product) => {
     setProducts([newProduct, ...products]);
+  };
+
+  const handleProductUpdated = (updatedProduct: Product) => {
+    setProducts(products.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+    setSelectedProduct(null);
+  };
+
+  const handleEditClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsEditModalOpen(true);
+  };
+
+  const handleViewClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsViewModalOpen(true);
   };
 
   const filteredProducts = products.filter((product) => {
@@ -99,9 +135,9 @@ export default function ProductsPage() {
     
     // Stock filter
     const matchesStock = filterStock === 'all' ||
-                        (filterStock === 'in-stock' && product.quantity > 10) ||
-                        (filterStock === 'low-stock' && product.quantity > 0 && product.quantity <= 10) ||
-                        (filterStock === 'out-of-stock' && product.quantity === 0);
+                        (filterStock === 'in-stock' && product.inventoryQuantity > 10) ||
+                        (filterStock === 'low-stock' && product.inventoryQuantity > 0 && product.inventoryQuantity <= 10) ||
+                        (filterStock === 'out-of-stock' && product.inventoryQuantity === 0);
     
     return matchesSearch && matchesStatus && matchesStock;
   });
@@ -258,7 +294,7 @@ export default function ProductsPage() {
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                 {filteredProducts.map((product) => {
-                  const stockStatus = getStockStatus(product.quantity);
+                  const stockStatus = getStockStatus(product.inventoryQuantity);
                   return (
                     <tr key={product.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -289,17 +325,17 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-900 dark:text-white">
-                          ${product.price.toFixed(2)}
+                          ${typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price).toFixed(2)}
                         </div>
                         {product.compareAtPrice && (
                           <div className="text-xs text-gray-500 dark:text-gray-400 line-through">
-                            ${product.compareAtPrice.toFixed(2)}
+                            ${typeof product.compareAtPrice === 'number' ? product.compareAtPrice.toFixed(2) : parseFloat(product.compareAtPrice).toFixed(2)}
                           </div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${stockStatus.color}`}>
-                          {product.quantity} {stockStatus.label}
+                          {product.inventoryQuantity} {stockStatus.label}
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -314,21 +350,21 @@ export default function ProductsPage() {
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
                           <button
-                            onClick={() => router.push(`/products/${product.id}`)}
+                            onClick={() => handleViewClick(product)}
                             className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
                             title={common('view')}
                           >
                             <Icons.EyeOpenIcon className="h-5 w-5" />
                           </button>
                           <button
-                            onClick={() => router.push(`/products/${product.id}/edit`)}
+                            onClick={() => handleEditClick(product)}
                             className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
                             title={common('edit')}
                           >
                             <Icons.Pencil1Icon className="h-5 w-5" />
                           </button>
                           <button
-                            onClick={() => handleDelete(product.id)}
+                            onClick={() => handleDeleteClick(product)}
                             className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                             title={common('delete')}
                           >
@@ -348,6 +384,35 @@ export default function ProductsPage() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={handleProductAdded}
+      />
+      <EditProductModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        onSuccess={handleProductUpdated}
+        product={selectedProduct}
+      />
+      <ViewProductModal
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedProduct(null);
+        }}
+        product={selectedProduct}
+      />
+      <DeleteConfirmModal
+        isOpen={isDeleteModalOpen}
+        onClose={() => {
+          setIsDeleteModalOpen(false);
+          setProductToDelete(null);
+        }}
+        onConfirm={handleDeleteConfirm}
+        title={t('deleteProduct')}
+        message={t('deleteConfirm')}
+        itemName={productToDelete?.name}
+        isDeleting={isDeleting}
       />
     </div>
   );

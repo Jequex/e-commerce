@@ -1,32 +1,53 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
 import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
-import { usePageStore } from '@/stores/use-page-store';
 import { toast } from 'react-toastify';
 
-interface AddProductModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSuccess: (product: any) => void;
+interface Product {
+  id: string;
+  name: string;
+  description: string | null;
+  price: number | string;
+  compareAtPrice: number | string | null;
+  costPerItem: number | null;
+  sku: string | null;
+  barcode: string | null;
+  trackQuantity: boolean;
+  inventoryQuantity: number;
+  category: string | null;
+  images: string[] | null;
+  isFeatured: boolean;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-export default function AddProductModal({
+interface EditProductModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: (product: Product) => void;
+  product: Product | null;
+}
+
+export default function EditProductModal({
   isOpen,
   onClose,
   onSuccess,
-}: AddProductModalProps) {
+  product,
+}: EditProductModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const t = useTranslations('products');
   const common = useTranslations('common');
-  const { data: pageData } = usePageStore.getState();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (!product) return;
+
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
@@ -34,34 +55,35 @@ export default function AddProductModal({
       name: formData.get('name') as string,
       description: formData.get('description') as string,
       price: parseFloat(formData.get('price') as string),
-      compareAtPrice: formData.get('compareAtPrice') ? parseFloat(formData.get('compareAtPrice') as string) : null,
+      compareAtPrice: formData.get('compareAtPrice') 
+        ? parseFloat(formData.get('compareAtPrice') as string) 
+        : null,
       sku: formData.get('sku') as string,
       barcode: formData.get('barcode') as string || null,
       inventoryQuantity: parseInt(formData.get('inventoryQuantity') as string),
       trackQuantity: formData.get('trackQuantity') === 'on',
       isActive: formData.get('isActive') === 'on',
       isFeatured: formData.get('isFeatured') === 'on',
-      storeId: pageData?.store.id,
     };
 
     try {
-      const newProduct = await callApi(`http://${urls.products.create}`, {
-        method: 'POST',
+      const url = `http://${urls.products.update.replace(':id', product.id)}`;
+      const updatedProduct = await callApi(url, {
+        method: 'PUT',
         body: JSON.stringify(productData),
       });
 
-      onSuccess(newProduct.product);
-      toast.success(t('createSuccess'));
-      // e.currentTarget.reset();
+      onSuccess(updatedProduct.product || updatedProduct);
+      toast.success(t('updateSuccess'));
       onClose();
     } catch (err) {
-        toast.error(err instanceof Error ? err.message : t('createError'));
+      toast.error(err instanceof Error ? err.message : t('updateError'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  if (!isOpen) return null;
+  if (!isOpen || !product) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
@@ -73,7 +95,7 @@ export default function AddProductModal({
       >
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
-            {t('addProduct')}
+            {t('editProduct')}
           </h2>
           <button
             onClick={onClose}
@@ -93,6 +115,7 @@ export default function AddProductModal({
               type="text"
               name="name"
               required
+              defaultValue={product.name}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="Enter product name"
             />
@@ -106,6 +129,7 @@ export default function AddProductModal({
             <textarea
               name="description"
               rows={3}
+              defaultValue={product.description || ''}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="Enter product description"
             />
@@ -123,6 +147,7 @@ export default function AddProductModal({
                 required
                 step="0.01"
                 min="0"
+                defaultValue={typeof product.price === 'number' ? product.price : parseFloat(product.price)}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 placeholder="0.00"
               />
@@ -136,6 +161,13 @@ export default function AddProductModal({
                 name="compareAtPrice"
                 step="0.01"
                 min="0"
+                defaultValue={
+                  product.compareAtPrice 
+                    ? typeof product.compareAtPrice === 'number' 
+                      ? product.compareAtPrice 
+                      : parseFloat(product.compareAtPrice)
+                    : ''
+                }
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 placeholder="0.00"
               />
@@ -151,6 +183,7 @@ export default function AddProductModal({
               <input
                 type="text"
                 name="sku"
+                defaultValue={product.sku || ''}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 placeholder="SKU-001"
               />
@@ -162,6 +195,7 @@ export default function AddProductModal({
               <input
                 type="text"
                 name="barcode"
+                defaultValue={product.barcode || ''}
                 className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
                 placeholder="123456789"
               />
@@ -178,7 +212,7 @@ export default function AddProductModal({
               name="inventoryQuantity"
               required
               min="0"
-              defaultValue="0"
+              defaultValue={product.inventoryQuantity}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
             />
           </div>
@@ -189,7 +223,7 @@ export default function AddProductModal({
               <input
                 type="checkbox"
                 name="trackQuantity"
-                defaultChecked
+                defaultChecked={product.trackQuantity}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -200,7 +234,7 @@ export default function AddProductModal({
               <input
                 type="checkbox"
                 name="isActive"
-                defaultChecked
+                defaultChecked={product.isActive}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -211,6 +245,7 @@ export default function AddProductModal({
               <input
                 type="checkbox"
                 name="isFeatured"
+                defaultChecked={product.isFeatured}
                 className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
               />
               <span className="text-sm text-gray-700 dark:text-gray-300">
@@ -241,8 +276,8 @@ export default function AddProductModal({
                 </>
               ) : (
                 <>
-                  <Icons.PlusIcon className="w-4 h-4" />
-                  <span>{t('addProduct')}</span>
+                  <Icons.CheckIcon className="w-4 h-4" />
+                  <span>{common('save')}</span>
                 </>
               )}
             </button>

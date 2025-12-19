@@ -6,6 +6,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Header from '@/components/Header';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 export default function DashboardLayoutClient({
   children,
@@ -69,6 +71,7 @@ export default function DashboardLayoutClient({
           </motion.div>
         </main>
       </div>
+      <ToastContainer position="bottom-right" autoClose={5000} />
     </div>
   );
 }
