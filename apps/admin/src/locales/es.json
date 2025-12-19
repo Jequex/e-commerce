@@ -22,6 +22,7 @@
     "deleteWarning": "¿Está seguro de que desea eliminar este elemento? Esta acción no se puede deshacer.",
     "name": "Nombre",
     "email": "Email",
+    "password": "Contraseña",
     "phone": "Teléfono",
     "address": "Dirección",
     "status": "Estado",
@@ -206,7 +207,9 @@
     "addSuccess": "Miembro del personal agregado exitosamente",
     "loading": "Cargando personal...",
     "permissions": "Permisos",
-    "userId": "ID de Usuario"
+    "userId": "ID de Usuario",
+    "firstName": "Nombre",
+    "lastName": "Apellido"
   },
   "customers": {
     "title": "Clientes",

@@ -22,6 +22,7 @@
     "deleteWarning": "Are you sure you want to delete this item? This action cannot be undone.",
     "name": "Name",
     "email": "Email",
+    "password": "Password",
     "phone": "Phone",
     "address": "Address",
     "status": "Status",
@@ -206,7 +207,9 @@
     "addSuccess": "Staff member added successfully",
     "loading": "Loading staff...",
     "permissions": "Permissions",
-    "userId": "User ID"
+    "userId": "User ID",
+    "firstName": "First Name",
+    "lastName": "Last Name"
   },
   "customers": {
     "title": "Customers",

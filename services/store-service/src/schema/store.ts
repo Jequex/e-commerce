@@ -13,6 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { z } from 'zod';
+import { email } from 'zod/v4';
 
 // Enums
 export const storeStatusEnum = pgEnum('store_status', ['active', 'inactive', 'pending_approval', 'suspended', 'closed']);
@@ -361,6 +362,11 @@ export const insertStoreHoursSchema = z.object({
 
 export const insertStoreStaffSchema = z.object({
   userId: z.string().uuid(),
+  email: z.string().email(),
+  password: z.string().min(6),
+  firstName: z.string().min(1).max(100),
+  lastName: z.string().min(1).max(100).optional(),
+  userRole: z.enum(['admin', 'super-admin', 'employee']),
   roleId: z.string().uuid(),
   customPermissions: z.array(z.string()).optional(),
   salary: z.string().optional(),

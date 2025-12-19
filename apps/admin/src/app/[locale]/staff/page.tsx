@@ -8,6 +8,7 @@ import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { usePageStore } from '@/stores/use-page-store';
+import AddStaffModal from '@/components/modals/AddStaffModal';
 
 interface StaffMember {
   id: string;
@@ -103,6 +104,10 @@ export default function StaffPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStaffAdded = (newStaff: StaffMember) => {
+    setStaffMembers([newStaff, ...staffMembers]);
   };
 
   const filteredStaff = staffMembers.filter((staff) => {
@@ -360,34 +365,13 @@ export default function StaffPage() {
         )}
       </motion.div>
 
-      {/* Add Staff Modal Placeholder */}
-      {showAddModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6"
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                {t('addStaff')}
-              </h2>
-              <button
-                onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-              >
-                <Icons.Cross2Icon className="h-6 w-6" />
-              </button>
-            </div>
-            <div className="text-center py-8">
-              <Icons.InfoCircledIcon className="mx-auto h-12 w-12 text-blue-500 mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">
-                Staff management form coming soon...
-              </p>
-            </div>
-          </motion.div>
-        </div>
-      )}
+      {/* Add Staff Modal */}
+      <AddStaffModal
+        isOpen={showAddModal}
+        onClose={() => setShowAddModal(false)}
+        onSuccess={handleStaffAdded}
+        storeId={pageData?.store?.id || ''}
+      />
     </div>
   );
 }

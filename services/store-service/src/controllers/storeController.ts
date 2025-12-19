@@ -588,6 +588,31 @@ export class StoreController {
         });
       }
 
+      // call auth service to create user
+      const authServiceUrl = process.env.AUTH_SERVICE_URL || 'http://localhost:3001';
+      const userResponse = await axios.post(
+        `${authServiceUrl}/api/auth/register`,
+        {
+          email: validatedData.email,
+          password: validatedData.password,
+          firstName: validatedData.firstName,
+          lastName: validatedData.lastName,
+          role: validatedData.userRole
+        },
+        { timeout: 5000 } // 5 second timeout
+      );
+
+      if (!userResponse.data || !userResponse.data.user) {
+        return res.status(500).json({
+          error: 'Failed to create user in auth service',
+          code: 'AUTH_SERVICE_ERROR'
+        });
+      }
+
+      const userId = userResponse.data.user.id;
+
+      validatedData.userId = userId;
+
       // Check if user is already staff
       const existingStaffResult = await db.select().from(storeStaff)
         .where(and(

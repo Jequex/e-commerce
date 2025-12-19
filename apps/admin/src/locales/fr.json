@@ -22,6 +22,7 @@
     "deleteWarning": "Êtes-vous sûr de vouloir supprimer cet élément ? Cette action ne peut pas être annulée.",
     "name": "Nom",
     "email": "Email",
+    "password": "Mot de Passe",
     "phone": "Téléphone",
     "address": "Adresse",
     "status": "Statut",
@@ -206,7 +207,9 @@
     "addSuccess": "Membre du personnel ajouté avec succès",
     "loading": "Chargement du personnel...",
     "permissions": "Permissions",
-    "userId": "ID Utilisateur"
+    "userId": "ID Utilisateur",
+    "firstName": "Prénom",
+    "lastName": "Nom de Famille"
   },
   "customers": {
     "title": "Clients",
