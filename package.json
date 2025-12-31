@@ -61,4 +61,8 @@
   "dependencies": {
     "drizzle-kit": "^0.31.8"
   }
+  ,
+  "overrides": {
+    "ajv": "8.17.1"
+  }
 }
