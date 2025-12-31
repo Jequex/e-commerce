@@ -1,8 +1,9 @@
 import './globals.css';
+import 'react-toastify/dist/ReactToastify.css';
 import type { Metadata } from 'next';
 import { Lato } from 'next/font/google';
 import { Providers } from './providers';
-import { Toaster } from 'react-hot-toast';
+import { ToastContainer } from 'react-toastify';
 
 const lato = Lato({
   subsets: ['latin'],
@@ -70,16 +71,17 @@ export default function RootLayout({
           <div className="flex min-h-screen flex-col">
             <main className="flex-1">{children}</main>
           </div>
-          <Toaster
+          <ToastContainer
             position="top-right"
-            toastOptions={{
-              duration: 4000,
-              style: {
-                background: 'hsl(var(--card))',
-                color: 'hsl(var(--card-foreground))',
-                border: '1px solid hsl(var(--border))',
-              },
-            }}
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="light"
           />
         </Providers>
       </body>

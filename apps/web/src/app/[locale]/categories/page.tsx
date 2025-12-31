@@ -3,76 +3,104 @@
 import { Link } from '@/i18n/navigation';
 import { Navbar, Footer } from '@/components/layout';
 import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
+import { getProductCategories } from '@/api-calls/products';
+
+interface Category {
+  id: string;
+  name: string;
+  slug: string;
+  description?: string;
+  image?: string;
+  sortOrder?: number;
+  isActive: boolean;
+}
 
 export default function CategoriesPage() {
   const t = useTranslations('categories');
-  
-  const categories = [
-    { 
-      id: 1, 
-      nameKey: 'electronics', 
-      icon: '📱', 
-      productCount: 245,
-      bgGradient: 'from-blue-400 via-purple-500 to-indigo-600',
-      description: 'Latest gadgets and technology'
-    },
-    { 
-      id: 2, 
-      nameKey: 'fashion', 
-      icon: '👗', 
-      productCount: 189,
-      bgGradient: 'from-pink-400 via-red-500 to-orange-500',
-      description: 'Trendy clothing and accessories'
-    },
-    { 
-      id: 3, 
-      nameKey: 'homeGarden', 
-      icon: '🏡', 
-      productCount: 156,
-      bgGradient: 'from-green-400 via-teal-500 to-cyan-600',
-      description: 'Home decor and gardening essentials'
-    },
-    { 
-      id: 4, 
-      nameKey: 'sports', 
-      icon: '⚽', 
-      productCount: 134,
-      bgGradient: 'from-orange-400 via-yellow-500 to-red-500',
-      description: 'Sports and fitness equipment'
-    },
-    { 
-      id: 5, 
-      nameKey: 'beauty', 
-      icon: '💄', 
-      productCount: 98,
-      bgGradient: 'from-purple-400 via-pink-500 to-rose-500',
-      description: 'Beauty and personal care products'
-    },
-    { 
-      id: 6, 
-      nameKey: 'books', 
-      icon: '📚', 
-      productCount: 87,
-      bgGradient: 'from-indigo-400 via-blue-500 to-purple-600',
-      description: 'Books and educational materials'
-    },
-    { 
-      id: 7, 
-      nameKey: 'automotive', 
-      icon: '🚗', 
-      productCount: 76,
-      bgGradient: 'from-gray-400 via-slate-500 to-zinc-600',
-      description: 'Car accessories and parts'
-    },
-    { 
-      id: 8, 
-      nameKey: 'toys', 
-      icon: '🧸', 
-      productCount: 65,
-      bgGradient: 'from-yellow-400 via-orange-500 to-pink-500',
-      description: 'Toys and games for all ages'
-    }
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        setLoading(true);
+        const response = await getProductCategories();
+        setCategories(response.categories || []);
+      } catch (err) {
+        console.error('Error fetching categories:', err);
+        setError('Failed to load categories');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  // Color gradients for categories
+  const gradients = [
+    'from-blue-400 via-purple-500 to-indigo-600',
+    'from-pink-400 via-red-500 to-orange-500',
+    'from-green-400 via-teal-500 to-cyan-600',
+    'from-orange-400 via-yellow-500 to-red-500',
+    'from-purple-400 via-pink-500 to-rose-500',
+    'from-indigo-400 via-blue-500 to-purple-600',
+    'from-gray-400 via-slate-500 to-zinc-600',
+    'from-yellow-400 via-orange-500 to-pink-500',
   ];
+
+  // Emoji icons for categories (can be customized based on category name)
+  const getIconForCategory = (name: string): string => {
+    const lowerName = name.toLowerCase();
+    if (lowerName.includes('electronic') || lowerName.includes('tech')) return '📱';
+    if (lowerName.includes('fashion') || lowerName.includes('cloth')) return '👗';
+    if (lowerName.includes('home') || lowerName.includes('garden')) return '🏡';
+    if (lowerName.includes('sport') || lowerName.includes('fitness')) return '⚽';
+    if (lowerName.includes('beauty') || lowerName.includes('cosmetic')) return '💄';
+    if (lowerName.includes('book')) return '📚';
+    if (lowerName.includes('auto') || lowerName.includes('car')) return '🚗';
+    if (lowerName.includes('toy') || lowerName.includes('game')) return '🧸';
+    if (lowerName.includes('food') || lowerName.includes('grocery')) return '🍔';
+    if (lowerName.includes('music') || lowerName.includes('instrument')) return '🎵';
+    return '🛍️'; // Default icon
+  };
+  
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <Navbar activeRoute="/products" />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="inline-block h-12 w-12 animate-spin rounded-full border-4 border-solid border-blue-600 border-r-transparent"></div>
+            <p className="mt-4 text-blue-900 font-semibold">Loading categories...</p>
+          </div>
+        </div>
+        <Footer activeRoute="/categories" />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+        <Navbar activeRoute="/products" />
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <p className="text-red-600 font-semibold mb-4">{error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            >
+              Try Again
+            </button>
+          </div>
+        </div>
+        <Footer activeRoute="/categories" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -92,7 +120,7 @@ export default function CategoriesPage() {
             <div className="flex justify-center">
               <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full">
                 <span className="text-blue-900 font-semibold">
-                  {categories.reduce((total, cat) => total + cat.productCount, 0)}+ Products Available
+                  {categories.length} {categories.length === 1 ? 'Category' : 'Categories'} Available
                 </span>
               </div>
             </div>
@@ -101,14 +129,14 @@ export default function CategoriesPage() {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
-          {categories.map((category) => (
+          {categories.filter(cat => cat.isActive).map((category, index) => (
             <Link
               key={category.id}
-              href={`/?category=${category.nameKey}`}
+              href={`/?categoryId=${category.id}`}
               className="group"
             >
               <div className="relative overflow-hidden rounded-3xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 hover:-rotate-1">
-                <div className={`h-64 bg-gradient-to-br ${category.bgGradient} p-6 flex flex-col justify-between relative`}>
+                <div className={`h-64 bg-gradient-to-br ${gradients[index % gradients.length]} p-6 flex flex-col justify-between relative`}>
                   {/* Background Pattern */}
                   <div className="absolute inset-0 opacity-20">
                     <div className="absolute top-4 left-4 w-16 h-16 border-2 border-white/30 rounded-full"></div>
@@ -119,20 +147,20 @@ export default function CategoriesPage() {
                   {/* Content */}
                   <div className="relative z-10">
                     <div className="text-6xl mb-4 group-hover:scale-110 transition-transform duration-300">
-                      {category.icon}
+                      {getIconForCategory(category.name)}
                     </div>
                     <h3 className="text-2xl font-bold text-white mb-2 capitalize">
-                      {category.nameKey}
+                      {category.name}
                     </h3>
                     <p className="text-white/80 text-sm mb-4">
-                      {category.description}
+                      {category.description || 'Discover amazing products'}
                     </p>
                   </div>
                   
                   <div className="relative z-10">
                     <div className="flex items-center justify-between text-white">
                       <span className="text-lg font-semibold">
-                        {category.productCount} items
+                        Browse
                       </span>
                       <div className="bg-white/20 backdrop-blur-sm p-2 rounded-full group-hover:bg-white/30 transition-colors">
                         <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,6 +174,12 @@ export default function CategoriesPage() {
             </Link>
           ))}
         </div>
+
+        {categories.filter(cat => cat.isActive).length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-blue-900/70 text-lg">No categories available at the moment.</p>
+          </div>
+        )}
       </div>
       
       <Footer activeRoute="/categories" />

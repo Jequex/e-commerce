@@ -1,10 +1,11 @@
 'use client';
 
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { LanguageSelector } from '@/components/common';
 import { useState } from 'react';
 import { useAuth } from '@/providers';
+import { useCartStore } from '@/stores/use-cart-store';
 
 interface NavbarProps {
   activeRoute?: string;
@@ -14,14 +15,16 @@ export default function Navbar({ activeRoute }: NavbarProps) {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const [searchQuery, setSearchQuery] = useState('');
-  const { openAuthModal } = useAuth();
+  const { openAuthModal, user, isAuthenticated, logout } = useAuth();
   const isActive = (route: string) => activeRoute === route;
+  const totalItems = useCartStore((state) => state.getTotalItems());
+  const router = useRouter();
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
       // Navigate to search results page with query
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
+      router.push(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
     }
   };
 
@@ -83,13 +86,18 @@ export default function Navbar({ activeRoute }: NavbarProps) {
               </Link>
               <Link 
                 href="/cart" 
-                className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                className={`relative px-3 py-2 rounded-md text-sm font-medium transition-colors ${
                   isActive('/cart')
                     ? 'text-blue-600'
                     : 'text-gray-700 hover:text-blue-600'
                 }`}
               >
                 {t('cart')}
+                {totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+                    {totalItems}
+                  </span>
+                )}
               </Link>
               <Link 
                 href="/about" 
@@ -112,12 +120,27 @@ export default function Navbar({ activeRoute }: NavbarProps) {
                 {t('contact')}
               </Link>
               <LanguageSelector />
-              <button 
-                onClick={() => openAuthModal()}
-                className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
-              >
-                {t('signIn')}
-              </button>
+              
+              {isAuthenticated ? (
+                <div className="flex items-center space-x-4">
+                  <span className="text-sm text-gray-700">
+                    {user?.firstName || user?.email}
+                  </span>
+                  <button 
+                    onClick={logout}
+                    className="bg-gradient-to-r from-red-500 to-pink-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                  >
+                    {t('signOut') || 'Sign Out'}
+                  </button>
+                </div>
+              ) : (
+                <button 
+                  onClick={() => openAuthModal()}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                >
+                  {t('signIn')}
+                </button>
+              )}
             </div>
           </div>
         </div>

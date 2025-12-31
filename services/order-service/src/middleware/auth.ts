@@ -1,4 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
+import * as jwt from 'jsonwebtoken';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
@@ -20,12 +21,32 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     });
   }
 
-  // TODO: Verify token with auth service
-  req.user = {
-    id: 'mock-user-id',
-    email: 'mock@example.com',
-    role: 'customer'
-  };
+  // Verify JWT token
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    console.error('JWT_SECRET not configured');
+    return res.status(500).json({
+      error: 'Server configuration error',
+      code: 'CONFIG_ERROR'
+    });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, jwtSecret) as any;
+    
+    // Attach user info to request
+    req.user = {
+      id: decoded.userId || decoded.id,
+      email: decoded.email,
+      role: decoded.role
+    };
+
+  } catch (error) {
+    return res.status(401).json({
+      error: 'Invalid token',
+      code: 'INVALID_TOKEN'
+    });
+  }
 
   next();
 };

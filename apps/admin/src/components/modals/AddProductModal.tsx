@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
@@ -21,18 +21,47 @@ export default function AddProductModal({
   onSuccess,
 }: AddProductModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
+  const [loadingCategories, setLoadingCategories] = useState(true);
   const t = useTranslations('products');
   const common = useTranslations('common');
   const { data: pageData } = usePageStore.getState();
+
+  useEffect(() => {
+    if (isOpen) {
+      fetchCategories();
+    }
+  }, [isOpen]);
+
+  const fetchCategories = async () => {
+    try {
+      setLoadingCategories(true);
+      const response = await callApi(`http://${urls.categories.getAll}`, {
+        method: 'GET',
+      });
+      
+      if (response && response.categories) {
+        setCategories(response.categories);
+      }
+    } catch (error) {
+      console.error('Failed to fetch categories:', error);
+      toast.error('Failed to load categories');
+    } finally {
+      setLoadingCategories(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
+    const categoryId = formData.get('categoryId') as string;
+    
     const productData = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
+      categoryId: categoryId && categoryId !== '' ? parseInt(categoryId) : null,
       price: parseFloat(formData.get('price') as string),
       compareAtPrice: formData.get('compareAtPrice') ? parseFloat(formData.get('compareAtPrice') as string) : null,
       sku: formData.get('sku') as string,
@@ -109,6 +138,30 @@ export default function AddProductModal({
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="Enter product description"
             />
+          </div>
+
+          {/* Category */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              {t('category')}
+            </label>
+            {loadingCategories ? (
+              <div className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 flex items-center justify-center">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+              </div>
+            ) : (
+              <select
+                name="categoryId"
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                <option value="">{t('selectCategory')}</option>
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.parentId ? `  ${category.name}` : category.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           {/* Price Fields */}

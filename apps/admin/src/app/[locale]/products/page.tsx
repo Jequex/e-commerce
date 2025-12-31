@@ -14,6 +14,21 @@ import ViewProductModal from '@/components/modals/ViewProductModal';
 import DeleteConfirmModal from '@/components/modals/DeleteConfirmModal';
 import { toast } from 'react-toastify';
 
+interface Category {
+  id: number;
+  name: string;
+  description: string | null;
+  slug: string;
+  parentId: number | null;
+  image: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -25,7 +40,8 @@ interface Product {
   barcode: string | null;
   trackQuantity: boolean;
   inventoryQuantity: number;
-  category: string | null;
+  category: Category | null;
+  categoryId: number | null;
   images: string[] | null;
   isFeatured: boolean;
   isActive: boolean;
@@ -51,7 +67,9 @@ export default function ProductsPage() {
   
   const t = useTranslations('products');
   const common = useTranslations('common');
-  const { data: {store, permissionsByResource : { products : productPermissions } } } = usePageStore.getState();
+  const { data } = usePageStore.getState();
+  const store = data?.store;
+  const productPermissions = data?.permissionsByResource?.products;
   const router = useRouter();
 
   useEffect(() => {
@@ -63,6 +81,10 @@ export default function ProductsPage() {
     setError('');
     
     try {
+      if (!store?.id) {
+        throw new Error('Store not found');
+      }
+      
       // For now, fetch all products. You can add store filtering later
       const url = `http://${urls.products.getByStore}/${store.id}`;
       
@@ -276,6 +298,9 @@ export default function ProductsPage() {
                     {t('productName')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                    {t('category')}
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                     {t('sku')}
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -310,13 +335,13 @@ export default function ProductsPage() {
                             <div className="text-sm font-medium text-gray-900 dark:text-white">
                               {product.name}
                             </div>
-                            {product.category && (
-                              <div className="text-sm text-gray-500 dark:text-gray-400">
-                                {product.category}
-                              </div>
-                            )}
                           </div>
                         </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="text-sm text-gray-900 dark:text-white">
+                          {product.category?.name || '-'}
+                        </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="text-sm text-gray-900 dark:text-white">

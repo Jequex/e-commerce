@@ -11,6 +11,6 @@
     "resolveJsonModule": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": ["src/simple-app.ts"],
+  "include": ["src/app.ts"],
   "exclude": ["node_modules", "dist"]
 }

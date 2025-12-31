@@ -27,7 +27,8 @@
     "signIn": "S'inscrire / Se Connecter",
     "privacyPolicy": "Politique de Confidentialité",
     "termsOfService": "Conditions d'Utilisation",
-    "cookiePolicy": "Politique de Cookies"
+    "cookiePolicy": "Politique de Cookies",
+    "signOut": "Se Déconnecter"
   },
   "home": {
     "title": "Achetez l'Avenir",
@@ -91,6 +92,7 @@
     "startShopping": "Commencer les Achats",
     "continueShopping": "Continuer les Achats",
     "item": "Article",
+    "items": "Articles du Panier",
     "quantity": "Quantité",
     "total": "Total",
     "subtotal": "Sous-total",
@@ -98,8 +100,14 @@
     "tax": "Taxes",
     "grandTotal": "Total Général",
     "checkout": "Procéder au Paiement",
+    "proceedToCheckout": "Procéder au Paiement",
     "remove": "Supprimer",
     "update": "Mettre à Jour",
+    "clearCart": "Vider le Panier",
+    "orderSummary": "Résumé de la Commande",
+    "freeShippingMessage": "Ajoutez plus pour la livraison gratuite!",
+    "secureCheckout": "Paiement Sécurisé",
+    "freeReturns": "Retours Gratuits",
     "benefits": "Avantages des Achats",
     "securePayment": "Paiement Sécurisé",
     "securePaymentDescription": "Vos informations de paiement sont cryptées et sécurisées",

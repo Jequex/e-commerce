@@ -27,7 +27,8 @@
     "signIn": "Registrarse / Iniciar Sesión",
     "privacyPolicy": "Política de Privacidad",
     "termsOfService": "Términos de Servicio",
-    "cookiePolicy": "Política de Cookies"
+    "cookiePolicy": "Política de Cookies",
+    "signOut": "Cerrar Sesión"
   },
   "home": {
     "title": "Compra el Futuro",
@@ -91,6 +92,7 @@
     "startShopping": "Comenzar a Comprar",
     "continueShopping": "Continuar Comprando",
     "item": "Artículo",
+    "items": "Artículos del Carrito",
     "quantity": "Cantidad",
     "total": "Total",
     "subtotal": "Subtotal",
@@ -98,8 +100,14 @@
     "tax": "Impuestos",
     "grandTotal": "Total General",
     "checkout": "Proceder al Pago",
+    "proceedToCheckout": "Proceder al Pago",
     "remove": "Eliminar",
     "update": "Actualizar",
+    "clearCart": "Vaciar Carrito",
+    "orderSummary": "Resumen del Pedido",
+    "freeShippingMessage": "¡Añade más para envío gratis!",
+    "secureCheckout": "Pago Seguro",
+    "freeReturns": "Devoluciones Gratuitas",
     "benefits": "Beneficios de Comprar",
     "securePayment": "Pago Seguro",
     "securePaymentDescription": "Tu información de pago está encriptada y segura",

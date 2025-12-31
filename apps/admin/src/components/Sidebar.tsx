@@ -54,6 +54,12 @@ const Sidebar: React.FC = () => {
       // badge: 12,
     },
     {
+      id: 'categories',
+      label: 'Categories',
+      icon: MdBarChart,
+      href: '/categories',
+    },
+    {
       id: 'orders',
       label: t('orders'),
       icon: MdShoppingCart,

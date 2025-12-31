@@ -18,32 +18,7 @@ const searchLimiter = rateLimit({
   legacyHeaders: false,
 });
 
-// Public routes
-router.get('/search', searchLimiter, productController.searchProducts.bind(productController));
-router.get('/featured', productController.getFeaturedProducts.bind(productController));
-router.get('/categories', productController.getCategories.bind(productController));
-router.get('/categories/:id', productController.getCategory.bind(productController));
-
-// Store-specific routes (public)
-router.get('/store/:storeId', productController.getProductsByStore.bind(productController));
-router.get('/store/:storeId/stats', productController.getStoreProductStats.bind(productController));
-router.get('/store/:storeId/featured', productController.getStoreFeaturedProducts.bind(productController));
-
-router.get('/', productController.getProducts.bind(productController));
-router.get('/:id', productController.getProduct.bind(productController));
-
-// Protected routes - Customer access
-router.use(authMiddleware);
-router.use(requireCustomer);
-
-// Admin-only routes
-router.use(requireStoreOwnerOrAdmin);
-router.post('/', productController.createProduct.bind(productController));
-router.put('/:id', productController.updateProduct.bind(productController));
-router.delete('/:id', productController.deleteProduct.bind(productController));
-router.post('/categories', productController.createCategory.bind(productController));
-
-// Health check endpoint
+// Health check endpoint (must be first, no auth required)
 router.get('/health', (req, res) => {
   res.json({
     status: 'healthy',
@@ -51,5 +26,35 @@ router.get('/health', (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Public routes - Categories (more specific routes first)
+router.get('/categories', productController.getCategories.bind(productController));
+router.get('/categories/:id', productController.getCategory.bind(productController));
+
+// Public routes - Products
+router.get('/search', searchLimiter, productController.searchProducts.bind(productController));
+router.get('/featured', productController.getFeaturedProducts.bind(productController));
+
+// Store-specific routes (public)
+router.get('/store/:storeId', productController.getProductsByStore.bind(productController));
+router.get('/store/:storeId/stats', productController.getStoreProductStats.bind(productController));
+router.get('/store/:storeId/featured', productController.getStoreFeaturedProducts.bind(productController));
+
+// General product routes (public)
+router.get('/', productController.getProducts.bind(productController));
+router.get('/:id', productController.getProduct.bind(productController));
+
+// Protected routes - Require authentication
+router.use(authMiddleware);
+
+// Admin-only routes for products
+router.post('/', requireStoreOwnerOrAdmin, productController.createProduct.bind(productController));
+router.put('/:id', requireStoreOwnerOrAdmin, productController.updateProduct.bind(productController));
+router.delete('/:id', requireStoreOwnerOrAdmin, productController.deleteProduct.bind(productController));
+
+// Admin-only routes for categories
+router.post('/categories', requireStoreOwnerOrAdmin, productController.createCategory.bind(productController));
+router.put('/categories/:id', requireStoreOwnerOrAdmin, productController.updateCategory.bind(productController));
+router.delete('/categories/:id', requireStoreOwnerOrAdmin, productController.deleteCategory.bind(productController));
 
 export default router;

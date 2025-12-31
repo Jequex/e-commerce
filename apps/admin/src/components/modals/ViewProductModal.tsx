@@ -5,6 +5,21 @@ import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
 
+interface Category {
+  id: number;
+  name: string;
+  description: string | null;
+  slug: string;
+  parentId: number | null;
+  image: string | null;
+  isActive: boolean;
+  sortOrder: number;
+  metaTitle: string | null;
+  metaDescription: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 interface Product {
   id: string;
   name: string;
@@ -16,7 +31,7 @@ interface Product {
   barcode: string | null;
   trackQuantity: boolean;
   inventoryQuantity: number;
-  category: string | null;
+  category: Category | null;
   images: string[] | null;
   isFeatured: boolean;
   isActive: boolean;
@@ -203,6 +218,16 @@ export default function ViewProductModal({
             </div>
           </div>
 
+          {/* Category */}
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+              {t('category')}
+            </label>
+            <p className="text-gray-900 dark:text-white">
+              {product.category?.name || '-'}
+            </p>
+          </div>
+
           {/* Inventory Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
@@ -238,18 +263,6 @@ export default function ViewProductModal({
               </p>
             </div>
           </div>
-
-          {/* Category */}
-          {product.category && (
-            <div className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
-                {t('category')}
-              </label>
-              <p className="text-gray-900 dark:text-white">
-                {product.category}
-              </p>
-            </div>
-          )}
 
           {/* Timestamps */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">

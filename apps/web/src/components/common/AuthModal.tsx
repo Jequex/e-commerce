@@ -3,6 +3,9 @@
 import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
+import { useAuth } from '@/providers';
+import { toast } from 'react-toastify';
+import callApi from '@/api-calls/callApi';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -15,12 +18,15 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     email: '',
     password: '',
     confirmPassword: '',
-    name: '',
+    firstName: '',
+    lastName: '',
   });
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [error, setError] = useState('');
 
   const t = useTranslations('auth');
+  const { login } = useAuth();
 
   useEffect(() => {
     setMounted(true);
@@ -50,19 +56,71 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError('');
     
-    // Simulate API call
-    setTimeout(() => {
+    try {
+      if (mode === 'signup') {
+        // Validate passwords match
+        if (formData.password !== formData.confirmPassword) {
+          setError('Passwords do not match');
+          setIsLoading(false);
+          return;
+        }
+
+        // Register new user
+        const registerResponse = await callApi('http://localhost:3001/api/auth/register', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+          }),
+        });
+
+        toast.success('Account created successfully!');
+        
+        // After registration, log them in
+        const loginResponse = await callApi('http://localhost:3001/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+
+        login(loginResponse.token, loginResponse.user);
+        toast.success('Welcome! Your cart has been synced.');
+        
+      } else {
+        // Sign in existing user
+        const response = await callApi('http://localhost:3001/api/auth/login', {
+          method: 'POST',
+          body: JSON.stringify({
+            email: formData.email,
+            password: formData.password,
+          }),
+        });
+
+        login(response.token, response.user);
+        toast.success('Welcome back! Your cart has been synced.');
+      }
+      
+      setFormData({ email: '', password: '', confirmPassword: '', firstName: '', lastName: '' });
+      
+    } catch (err: any) {
+      console.error('Auth error:', err);
+      setError(err.message || 'An error occurred. Please try again.');
+      toast.error(err.message || 'Authentication failed');
+    } finally {
       setIsLoading(false);
-      // Handle success/error states here
-      console.log(`${mode} submitted:`, formData);
-      onClose();
-    }, 1000);
+    }
   };
 
   const toggleMode = () => {
     setMode(mode === 'signin' ? 'signup' : 'signin');
-    setFormData({ email: '', password: '', confirmPassword: '', name: '' });
+    setFormData({ email: '', password: '', confirmPassword: '', firstName: '', lastName: '' });
+    setError('');
   };
 
   const modalContent = (
@@ -95,26 +153,48 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             <p className="mt-2 text-gray-600">
               {mode === 'signin' ? t('signInSubtitle') : t('signUpSubtitle')}
             </p>
+            {error && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm text-red-600">{error}</p>
+              </div>
+            )}
           </div>
 
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
             {mode === 'signup' && (
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('fullName')}
-                </label>
-                <input
-                  id="name"
-                  name="name"
-                  type="text"
-                  required
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder={t('fullNamePlaceholder')}
-                />
-              </div>
+              <>
+                <div>
+                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('firstName') || 'First Name'}
+                  </label>
+                  <input
+                    id="firstName"
+                    name="firstName"
+                    type="text"
+                    required
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    placeholder="John"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('lastName') || 'Last Name'}
+                  </label>
+                  <input
+                    id="lastName"
+                    name="lastName"
+                    type="text"
+                    required
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    placeholder="Doe"
+                  />
+                </div>
+              </>
             )}
 
             <div>

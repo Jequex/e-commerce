@@ -35,17 +35,18 @@ router.use(authMiddleware);
 // Customer routes
 router.use(requireCustomer);
 
+// Shopping cart routes (must come before /:id route)
+router.post('/cart/add', cartLimiter, orderController.addToCart.bind(orderController));
+router.get('/cart', orderController.getCart.bind(orderController));
+router.put('/cart/update/:itemId', cartLimiter, orderController.updateCartItem.bind(orderController));
+router.delete('/cart/remove/:itemId', cartLimiter, orderController.removeCartItem.bind(orderController));
+router.delete('/cart/clear', orderController.clearCart.bind(orderController));
+
 // Order management
 router.post('/', orderLimiter, orderController.createOrder.bind(orderController));
 router.get('/my-orders', orderController.getUserOrders.bind(orderController));
 router.get('/:id', orderController.getOrder.bind(orderController));
 router.put('/:id/cancel', orderController.cancelOrder.bind(orderController));
-
-// Shopping cart
-router.post('/cart/add', cartLimiter, orderController.addToCart.bind(orderController));
-router.get('/cart', orderController.getCart.bind(orderController));
-router.put('/cart/items/:itemId', cartLimiter, orderController.updateCartItem.bind(orderController));
-router.delete('/cart/clear', orderController.clearCart.bind(orderController));
 
 // Admin-only routes
 router.get('/admin/all', requireAdmin, orderController.getAllOrders.bind(orderController));

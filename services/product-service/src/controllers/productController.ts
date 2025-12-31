@@ -76,6 +76,7 @@ export class ProductController {
         sortOrder = 'desc',
         search,
         categoryId,
+        storeId,
         isActive,
         isFeatured,
         minPrice,
@@ -104,6 +105,9 @@ export class ProductController {
         conditions.push(eq(products.categoryId, categoryId as string));
       }
 
+      if (storeId) {
+        conditions.push(eq(products.storeId, storeId as string));
+      }
 
       if (isActive !== undefined) {
         conditions.push(eq(products.isActive, isActive === 'true'));
@@ -240,8 +244,26 @@ export class ProductController {
           eq(productReviews.isApproved, true)
         ));
 
+      // Fetch store details if storeId exists
+      let store = null;
+      if (product.storeId) {
+        try {
+          const storeServiceUrl = process.env.STORE_SERVICE_URL || 'http://store-service:3007';
+          const storeResponse = await fetch(`${storeServiceUrl}/api/v1/stores/${product.storeId}`);
+          
+          if (storeResponse.ok) {
+            const storeData = await storeResponse.json();
+            store = storeData.store || storeData;
+          }
+        } catch (storeError) {
+          console.error('Error fetching store details:', storeError);
+          // Continue without store details if fetch fails
+        }
+      }
+
       const productWithStats = {
         ...product,
+        store,
         reviewStats: {
           averageRating: reviewStats[0]?.averageRating ? Number(reviewStats[0].averageRating.toFixed(2)) : 0,
           reviewCount: reviewStats[0]?.reviewCount || 0
@@ -493,6 +515,131 @@ export class ProductController {
 
     } catch (error) {
       console.error('Get category error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async updateCategory(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const validatedData = createCategorySchema.parse(req.body);
+
+      // Check if category exists
+      const existingCategory = await db.query.categories.findFirst({
+        where: eq(categories.id, id)
+      });
+
+      if (!existingCategory) {
+        return res.status(404).json({
+          error: 'Category not found',
+          code: 'CATEGORY_NOT_FOUND'
+        });
+      }
+
+      // Check if slug is being changed and if it's already in use
+      if (validatedData.slug !== existingCategory.slug) {
+        const slugExists = await db.query.categories.findFirst({
+          where: and(
+            eq(categories.slug, validatedData.slug),
+            sql`${categories.id} != ${id}`
+          )
+        });
+
+        if (slugExists) {
+          return res.status(409).json({
+            error: 'Category with this slug already exists',
+            code: 'SLUG_EXISTS'
+          });
+        }
+      }
+
+      const [updatedCategory] = await db
+        .update(categories)
+        .set({
+          ...validatedData,
+          updatedAt: new Date()
+        })
+        .where(eq(categories.id, id))
+        .returning();
+
+      res.json({
+        message: 'Category updated successfully',
+        category: updatedCategory
+      });
+
+    } catch (error) {
+      console.error('Update category error:', error);
+      
+      if (error instanceof Error && error.name === 'ZodError') {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.message,
+          code: 'VALIDATION_ERROR'
+        });
+      }
+
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async deleteCategory(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+
+      // Check if category exists
+      const existingCategory = await db.query.categories.findFirst({
+        where: eq(categories.id, id),
+        with: {
+          children: true
+        }
+      });
+
+      if (!existingCategory) {
+        return res.status(404).json({
+          error: 'Category not found',
+          code: 'CATEGORY_NOT_FOUND'
+        });
+      }
+
+      // Check if category has products
+      const productsInCategory = await db.query.products.findFirst({
+        where: eq(products.categoryId, id)
+      });
+
+      if (productsInCategory) {
+        return res.status(409).json({
+          error: 'Cannot delete category with associated products',
+          code: 'CATEGORY_HAS_PRODUCTS',
+          message: 'Please remove or reassign products before deleting this category'
+        });
+      }
+
+      // Check if category has subcategories
+      if (existingCategory.children && existingCategory.children.length > 0) {
+        return res.status(409).json({
+          error: 'Cannot delete category with subcategories',
+          code: 'CATEGORY_HAS_CHILDREN',
+          message: 'Please delete subcategories first before deleting this category'
+        });
+      }
+
+      // Delete the category
+      await db
+        .delete(categories)
+        .where(eq(categories.id, id));
+
+      res.json({
+        message: 'Category deleted successfully'
+      });
+
+    } catch (error) {
+      console.error('Delete category error:', error);
       res.status(500).json({
         error: 'Internal server error',
         code: 'INTERNAL_ERROR'

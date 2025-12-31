@@ -72,8 +72,7 @@ export class OrderController {
       // Create the order in a transaction
       const result = await db.transaction(async (tx) => {
         // Create order
-        const [newOrder] = await tx.insert(orders).values({
-          id: uuidv4(),
+        const orderData: typeof orders.$inferInsert = {
           orderNumber,
           userId: validatedData.userId,
           email: validatedData.email,
@@ -83,17 +82,16 @@ export class OrderController {
           totalDiscounts: totalDiscounts.toFixed(2),
           totalPrice: totalPrice.toFixed(2),
           customerInfo: validatedData.customerInfo,
-          billingAddress: validatedData.billingAddress,
-          shippingAddress: validatedData.shippingAddress,
+          billingAddress: validatedData.billingAddress as any,
+          shippingAddress: validatedData.shippingAddress as any,
           notes: validatedData.notes,
           tags: validatedData.tags,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        }).returning();
+        };
+        
+        const [newOrder] = await tx.insert(orders).values(orderData).returning();
 
         // Create line items
         const lineItemsData = validatedData.lineItems.map(item => ({
-          id: uuidv4(),
           orderId: newOrder.id,
           productId: item.productId,
           variantId: item.variantId,
@@ -103,8 +101,6 @@ export class OrderController {
           productTitle: 'Product Title', // Would be fetched from product service
           variantTitle: item.variantId ? 'Variant Title' : null,
           properties: item.properties,
-          createdAt: new Date(),
-          updatedAt: new Date(),
         }));
 
         const newLineItems = await tx.insert(orderLineItems).values(lineItemsData).returning();
@@ -120,7 +116,6 @@ export class OrderController {
             }
 
             return {
-              id: uuidv4(),
               orderId: newOrder.id,
               code: discount.code,
               type: discount.type,
@@ -128,7 +123,6 @@ export class OrderController {
               amount: amount.toFixed(2),
               title: discount.title,
               description: discount.description,
-              createdAt: new Date(),
             };
           });
 
@@ -137,14 +131,12 @@ export class OrderController {
 
         // Create order created event
         await tx.insert(orderEvents).values({
-          id: uuidv4(),
           orderId: newOrder.id,
           eventType: 'created',
           description: 'Order created',
           actorId: req.user?.id,
           actorType: 'user',
           newValues: { status: 'pending' },
-          createdAt: new Date(),
         });
 
         return { order: newOrder, lineItems: newLineItems };
@@ -345,7 +337,6 @@ export class OrderController {
 
         // Create event for the update
         await tx.insert(orderEvents).values({
-          id: uuidv4(),
           orderId: id,
           eventType: 'updated',
           description: 'Order updated by admin',
@@ -353,7 +344,6 @@ export class OrderController {
           actorType: 'admin',
           previousValues: currentOrder,
           newValues: validatedData,
-          createdAt: new Date(),
         });
 
         return updatedOrder;
@@ -430,7 +420,6 @@ export class OrderController {
 
         // Create cancellation event
         await tx.insert(orderEvents).values({
-          id: uuidv4(),
           orderId: id,
           eventType: 'cancelled',
           description: reason || 'Order cancelled',
@@ -439,7 +428,6 @@ export class OrderController {
           previousValues: { status: currentOrder.status },
           newValues: { status: OrderStatus.CANCELLED },
           metadata: { reason },
-          createdAt: new Date(),
         });
 
         return updatedOrder;
@@ -562,11 +550,8 @@ export class OrderController {
 
       if (!cart) {
         [cart] = await db.insert(shoppingCarts).values({
-          id: uuidv4(),
           userId: req.user.id,
           expiresAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days
-          createdAt: new Date(),
-          updatedAt: new Date(),
         }).returning();
       }
 
@@ -598,14 +583,11 @@ export class OrderController {
       } else {
         // Add new item
         const [newItem] = await db.insert(cartLineItems).values({
-          id: uuidv4(),
           cartId: cart.id,
           productId: validatedData.productId,
           variantId: validatedData.variantId,
           quantity: validatedData.quantity,
           properties: validatedData.properties,
-          createdAt: new Date(),
-          updatedAt: new Date(),
         }).returning();
 
         res.json({
@@ -693,7 +675,16 @@ export class OrderController {
         }
       });
 
-      if (!cartItem || cartItem.cart.userId !== req.user.id) {
+      if (!cartItem) {
+        return res.status(404).json({
+          error: 'Cart item not found',
+          code: 'CART_ITEM_NOT_FOUND'
+        });
+      }
+
+      // Verify ownership
+      const cart = Array.isArray(cartItem.cart) ? cartItem.cart[0] : cartItem.cart;
+      if (!cart || cart.userId !== req.user.id) {
         return res.status(404).json({
           error: 'Cart item not found',
           code: 'CART_ITEM_NOT_FOUND'
@@ -769,6 +760,58 @@ export class OrderController {
 
     } catch (error) {
       console.error('Clear cart error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async removeCartItem(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { itemId } = req.params;
+
+      if (!req.user) {
+        return res.status(401).json({
+          error: 'Authentication required',
+          code: 'NO_AUTH'
+        });
+      }
+
+      // Get cart item and verify ownership
+      const cartItem = await db.query.cartLineItems.findFirst({
+        where: eq(cartLineItems.id, itemId),
+        with: {
+          cart: true
+        }
+      });
+
+      if (!cartItem) {
+        return res.status(404).json({
+          error: 'Cart item not found',
+          code: 'CART_ITEM_NOT_FOUND'
+        });
+      }
+
+      // Verify ownership
+      const cart = Array.isArray(cartItem.cart) ? cartItem.cart[0] : cartItem.cart;
+      if (!cart || cart.userId !== req.user.id) {
+        return res.status(404).json({
+          error: 'Cart item not found',
+          code: 'CART_ITEM_NOT_FOUND'
+        });
+      }
+
+      // Remove item
+      await db.delete(cartLineItems).where(eq(cartLineItems.id, itemId));
+      
+      res.json({
+        message: 'Item removed from cart'
+      });
+
+    } catch (error) {
+      console.error('Remove cart item error:', error);
+      
       res.status(500).json({
         error: 'Internal server error',
         code: 'INTERNAL_ERROR'

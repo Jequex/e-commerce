@@ -96,7 +96,7 @@ export const orderTransactions = pgTable('order_transactions', {
   
   // Gateway-specific data
   gatewayTransactionId: text('gateway_transaction_id'),
-  parentId: uuid('parent_id').references(() => orderTransactions.id),
+  parentId: uuid('parent_id'), // Reference to parent transaction for refunds
   
   // Additional info
   message: text('message'),

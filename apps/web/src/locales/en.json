@@ -27,7 +27,8 @@
     "signIn": "Sign Up / Sign In",
     "privacyPolicy": "Privacy Policy",
     "termsOfService": "Terms of Service",
-    "cookiePolicy": "Cookie Policy"
+    "cookiePolicy": "Cookie Policy",
+    "signOut": "Sign Out"
   },
   "home": {
     "title": "Shop the Future",
@@ -91,6 +92,7 @@
     "startShopping": "Start Shopping",
     "continueShopping": "Continue Shopping",
     "item": "Item",
+    "items": "Cart Items",
     "quantity": "Quantity",
     "total": "Total",
     "subtotal": "Subtotal",
@@ -98,8 +100,14 @@
     "tax": "Tax",
     "grandTotal": "Grand Total",
     "checkout": "Proceed to Checkout",
+    "proceedToCheckout": "Proceed to Checkout",
     "remove": "Remove",
     "update": "Update",
+    "clearCart": "Clear Cart",
+    "orderSummary": "Order Summary",
+    "freeShippingMessage": "Add more for free shipping!",
+    "secureCheckout": "Secure Checkout",
+    "freeReturns": "Free Returns",
     "benefits": "Shopping Benefits",
     "securePayment": "Secure Payment",
     "securePaymentDescription": "Your payment information is encrypted and secure",

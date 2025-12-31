@@ -1,29 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Navbar, Footer } from '@/components/layout';
 import Image from 'next/image';
-
-interface ProductDetails {
-  id: number;
-  nameKey: string;
-  price: number;
-  originalPrice?: number;
-  images: string[];
-  categoryKey: string;
-  rating: number;
-  buyersCount: number;
-  descriptionKey: string;
-  features: string[];
-  specifications: { [key: string]: string };
-  inStock: boolean;
-  stockCount: number;
-  brand: string;
-  sku: string;
-}
+import { getProductById } from '@/api-calls/products';
+import { Product } from '@/types/products';
+import { useCartStore } from '@/stores/use-cart-store';
+import { toast } from 'react-toastify';
 
 export default function ProductDetailsPage() {
   const params = useParams();
@@ -33,41 +19,52 @@ export default function ProductDetailsPage() {
   const [selectedSize, setSelectedSize] = useState('');
   const [selectedColor, setSelectedColor] = useState('');
   const [quantity, setQuantity] = useState(1);
-  const [activeTab, setActiveTab] = useState('features');
+  const [activeTab, setActiveTab] = useState('description');
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Mock product data - in real app, this would be fetched based on params.id
-  const product: ProductDetails = {
-    id: Number(params.id) || 1,
-    nameKey: 'wirelessHeadphones',
-    price: 299,
-    originalPrice: 399,
-    images: [
-      'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=800&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1484704849700-f032a568e944?w=800&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1487215078519-e21cc028cb29?w=800&h=800&fit=crop',
-      'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=800&h=800&fit=crop'
-    ],
-    categoryKey: 'electronics',
-    rating: 4.8,
-    buyersCount: 2847,
-    descriptionKey: 'wirelessHeadphonesDesc',
-    features: ['noiseCancellation', 'bluetoothConnectivity', 'longBattery', 'comfortableDesign'],
-    specifications: {
-      'brand': 'AudioTech Pro',
-      'weight': '250g',
-      'batteryLife': '30 hours',
-      'connectivity': 'Bluetooth 5.0, USB-C',
-      'frequency': '20Hz - 20kHz',
-      'impedance': '32 Ohms'
-    },
-    inStock: true,
-    stockCount: 47,
-    brand: 'AudioTech Pro',
-    sku: 'ATP-WH-001'
-  };
+  useEffect(() => {
+    const fetchProduct = async () => {
+      if (!params.id) return;
+      
+      try {
+        setLoading(true);
+        setError('');
+        const response = await getProductById(params.id as string);
+        setProduct(response.product);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load product');
+        console.error('Error fetching product:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [params.id]);
 
   const sizes = ['S', 'M', 'L', 'XL'];
   const colors = ['Black', 'White', 'Blue', 'Red'];
+  const addToCart = useCartStore((state) => state.addItem);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    
+    addToCart({
+      id: product.id,
+      productId: product.id,
+      name: product.name,
+      price: parseFloat(product.price),
+      sku: product.sku,
+      image: product.images?.[0],
+      maxQuantity: product.inventoryQuantity,
+      quantity: quantity,
+    });
+    
+    toast.success(`${quantity} item(s) added to cart!`);
+    setQuantity(1);
+  };
 
   const renderStars = (rating: number) => {
     return [...Array(5)].map((_, i) => (
@@ -99,7 +96,33 @@ export default function ProductDetailsPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       <Navbar activeRoute="/" />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      {/* Loading State */}
+      {loading && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Loading product...</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+            <p className="text-red-600 mb-4">{error}</p>
+            <Link href="/" className="text-blue-600 hover:underline">
+              Go back to home
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Product Content */}
+      {product && !loading && (
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <nav className="flex mb-8" aria-label="Breadcrumb">
           <ol className="inline-flex items-center space-x-1 md:space-x-3">
@@ -113,7 +136,7 @@ export default function ProductDetailsPage() {
                 <svg className="w-4 h-4 text-gray-400 mx-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                 </svg>
-                <span className="text-gray-500">{tProducts(`productNames.${product.nameKey}`)}</span>
+                <span className="text-gray-500">{product.name}</span>
               </div>
             </li>
           </ol>
@@ -123,35 +146,43 @@ export default function ProductDetailsPage() {
           {/* Product Images */}
           <div className="space-y-4">
             <div className="aspect-square bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
-              <Image
-                src={product.images[selectedImageIndex]}
-                alt={tProducts(`productNames.${product.nameKey}`)}
-                width={600}
-                height={600}
-                className="w-full h-full object-cover"
-              />
+              {product.images && product.images.length > 0 ? (
+                <Image
+                  src={product.images[selectedImageIndex]}
+                  alt={product.name}
+                  width={600}
+                  height={600}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-100">
+                  <span className="text-gray-400">No image available</span>
+                </div>
+              )}
             </div>
-            <div className="grid grid-cols-4 gap-4">
-              {product.images.map((image, index) => (
-                <button
-                  key={index}
-                  onClick={() => setSelectedImageIndex(index)}
-                  className={`aspect-square bg-white rounded-lg shadow-md overflow-hidden border-2 transition-all ${
-                    selectedImageIndex === index 
-                      ? 'border-blue-500 ring-2 ring-blue-200' 
-                      : 'border-gray-200 hover:border-gray-300'
-                  }`}
-                >
-                  <Image
-                    src={image}
-                    alt={`${tProducts(`productNames.${product.nameKey}`)} ${index + 1}`}
-                    width={150}
-                    height={150}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+            {product.images && product.images.length > 1 && (
+              <div className="grid grid-cols-4 gap-4">
+                {product.images.map((image, index) => (
+                  <button
+                    key={index}
+                    onClick={() => setSelectedImageIndex(index)}
+                    className={`aspect-square bg-white rounded-lg shadow-md overflow-hidden border-2 transition-all ${
+                      selectedImageIndex === index 
+                        ? 'border-blue-500 ring-2 ring-blue-200' 
+                        : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <Image
+                      src={image}
+                      alt={`${product.name} ${index + 1}`}
+                      width={150}
+                      height={150}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -159,53 +190,55 @@ export default function ProductDetailsPage() {
             {/* Product Header */}
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                  {tProducts(`categories.${product.categoryKey}`)}
-                </span>
-                {product.originalPrice && (
+                {product.category && (
+                  <span className="text-sm font-medium text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
+                    {product.category.name}
+                  </span>
+                )}
+                {product.compareAtPrice && (
                   <span className="bg-red-100 text-red-600 text-xs font-semibold px-2 py-1 rounded">
-                    -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                    -{Math.round(((parseFloat(product.compareAtPrice) - parseFloat(product.price)) / parseFloat(product.compareAtPrice)) * 100)}%
                   </span>
                 )}
               </div>
               <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                {tProducts(`productNames.${product.nameKey}`)}
+                {product.name}
               </h1>
               
-              {/* Rating and Reviews */}
+              {/* Rating and Reviews - Placeholder for now */}
               <div className="flex items-center gap-4 mb-4">
                 <div className="flex items-center gap-2">
                   <div className="flex items-center">
-                    {renderStars(product.rating)}
+                    {renderStars(4.5)}
                   </div>
                   <span className="text-lg font-medium text-gray-700">
-                    {product.rating.toFixed(1)}
+                    4.5
                   </span>
                 </div>
                 <div className="flex items-center gap-1 text-gray-600">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
-                  <span>{formatBuyersCount(product.buyersCount)} {t('bought')}</span>
+                  <span>100+ {t('bought')}</span>
                 </div>
               </div>
             </div>
 
             {/* Price */}
             <div className="flex items-center gap-4">
-              <span className="text-4xl font-bold text-gray-900">${product.price}</span>
-              {product.originalPrice && (
-                <span className="text-2xl text-gray-500 line-through">${product.originalPrice}</span>
+              <span className="text-4xl font-bold text-gray-900">{parseFloat(product.price).toLocaleString('en-US', {style: 'currency', currency: 'USD'})}</span>
+              {product.compareAtPrice && (
+                <span className="text-2xl text-gray-500 line-through">{parseFloat(product.compareAtPrice).toLocaleString('en-US', {style: 'currency', currency: 'USD'})}</span>
               )}
             </div>
 
             {/* Stock Status */}
             <div className="flex items-center gap-2">
-              {product.inStock ? (
+              {product.isActive && (product.inventoryQuantity === undefined || product.inventoryQuantity > 0) ? (
                 <>
                   <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                   <span className="text-green-600 font-medium">
-                    {t('inStock')} ({product.stockCount} {t('available')})
+                    {t('inStock')} {product.inventoryQuantity !== undefined && `(${product.inventoryQuantity} ${t('available')})`}
                   </span>
                 </>
               ) : (
@@ -220,7 +253,7 @@ export default function ProductDetailsPage() {
             <div>
               <h3 className="text-lg font-semibold text-gray-900 mb-2">{t('description')}</h3>
               <p className="text-gray-600 leading-relaxed">
-                {t(`descriptions.${product.descriptionKey}`)}
+                {product.description}
               </p>
             </div>
 
@@ -278,7 +311,7 @@ export default function ProductDetailsPage() {
                   </button>
                   <span className="text-lg font-medium w-12 text-center">{quantity}</span>
                   <button
-                    onClick={() => setQuantity(Math.min(product.stockCount, quantity + 1))}
+                    onClick={() => setQuantity(Math.min(product.inventoryQuantity || 99, quantity + 1))}
                     className="w-10 h-10 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors flex items-center justify-center"
                   >
                     +
@@ -289,7 +322,9 @@ export default function ProductDetailsPage() {
 
             {/* Action Buttons */}
             <div className="space-y-3">
-              <button className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+              <button                 onClick={handleAddToCart}                disabled={!product.isActive || (product.inventoryQuantity !== undefined && product.inventoryQuantity <= 0)}
+                className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:shadow-lg transition-all duration-200 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              >
                 {t('addToCart')}
               </button>
               <button className="w-full border-2 border-gray-300 text-gray-700 py-4 px-6 rounded-xl font-semibold text-lg hover:border-blue-500 hover:text-blue-600 transition-colors">
@@ -303,10 +338,17 @@ export default function ProductDetailsPage() {
                 <span>{t('sku')}:</span>
                 <span className="font-medium">{product.sku}</span>
               </div>
-              <div className="flex justify-between">
-                <span>{t('brand')}:</span>
-                <span className="font-medium">{product.brand}</span>
-              </div>
+              {product.store && (
+                <div className="flex justify-between">
+                  <span>Store:</span>
+                  <Link 
+                    href={`/?storeId=${product.storeId}`}
+                    className="font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+                  >
+                    {product.store.name}
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -317,14 +359,14 @@ export default function ProductDetailsPage() {
             <div className="border-b border-gray-200">
               <nav className="flex">
                 <button 
-                  onClick={() => setActiveTab('features')}
+                  onClick={() => setActiveTab('description')}
                   className={`px-8 py-4 text-sm font-medium transition-colors ${
-                    activeTab === 'features' 
+                    activeTab === 'description' 
                       ? 'text-blue-600 border-b-2 border-blue-600' 
                       : 'text-gray-500 hover:text-gray-700'
                   }`}
                 >
-                  {t('features')}
+                  {t('description')}
                 </button>
                 <button 
                   onClick={() => setActiveTab('specifications')}
@@ -349,33 +391,58 @@ export default function ProductDetailsPage() {
               </nav>
             </div>
             <div className="p-8">
-              {/* Features Tab */}
-              {activeTab === 'features' && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {product.features.map((feature, index) => (
-                    <div key={index} className="flex items-start gap-3">
-                      <div className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
+              {/* Description Tab */}
+              {activeTab === 'description' && (
+                <div className="prose max-w-none">
+                  <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">
+                    {product.description}
+                  </p>
+                  {product.tags && product.tags.length > 0 && (
+                    <div className="mt-6">
+                      <h4 className="font-semibold text-gray-900 mb-3">Tags:</h4>
+                      <div className="flex flex-wrap gap-2">
+                        {product.tags.map((tag, index) => (
+                          <span key={index} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm">
+                            {tag}
+                          </span>
+                        ))}
                       </div>
-                      <span className="text-gray-700">{t(`featuresList.${feature}`)}</span>
                     </div>
-                  ))}
+                  )}
                 </div>
               )}
 
               {/* Specifications Tab */}
               {activeTab === 'specifications' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  {Object.entries(product.specifications).map(([key, value]) => (
-                    <div key={key} className="flex justify-between items-center py-3 border-b border-gray-100 last:border-b-0">
-                      <span className="font-medium text-gray-900 capitalize">
-                        {t(`specLabels.${key}`, { fallback: key.replace(/([A-Z])/g, ' $1').trim() })}
-                      </span>
-                      <span className="text-gray-600">{value}</span>
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span className="font-medium text-gray-900">SKU</span>
+                    <span className="text-gray-600">{product.sku}</span>
+                  </div>
+                  {product.barcode && (
+                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                      <span className="font-medium text-gray-900">Barcode</span>
+                      <span className="text-gray-600">{product.barcode}</span>
                     </div>
-                  ))}
+                  )}
+                  {product.weight && (
+                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                      <span className="font-medium text-gray-900">Weight</span>
+                      <span className="text-gray-600">{product.weight}g</span>
+                    </div>
+                  )}
+                  {product.dimensions && (
+                    <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                      <span className="font-medium text-gray-900">Dimensions</span>
+                      <span className="text-gray-600">
+                        {product.dimensions.length} x {product.dimensions.width} x {product.dimensions.height} {product.dimensions.unit}
+                      </span>
+                    </div>
+                  )}
+                  <div className="flex justify-between items-center py-3 border-b border-gray-100">
+                    <span className="font-medium text-gray-900">Status</span>
+                    <span className="text-gray-600 capitalize">{product.isActive}</span>
+                  </div>
                 </div>
               )}
 
@@ -385,11 +452,11 @@ export default function ProductDetailsPage() {
                   {/* Reviews Summary */}
                   <div className="flex items-center gap-8 pb-8 border-b border-gray-200">
                     <div className="text-center">
-                      <div className="text-4xl font-bold text-gray-900 mb-2">{product.rating}</div>
+                      <div className="text-4xl font-bold text-gray-900 mb-2">4.5</div>
                       <div className="flex items-center justify-center mb-2">
-                        {renderStars(product.rating)}
+                        {renderStars(4.5)}
                       </div>
-                      <div className="text-sm text-gray-600">{formatBuyersCount(product.buyersCount)} {t('reviews')}</div>
+                      <div className="text-sm text-gray-600">100+ {t('reviews')}</div>
                     </div>
                     <div className="flex-1 space-y-2">
                       {[5, 4, 3, 2, 1].map((stars) => {
@@ -412,48 +479,7 @@ export default function ProductDetailsPage() {
 
                   {/* Individual Reviews */}
                   <div className="space-y-6">
-                    {[
-                      {
-                        id: 1,
-                        author: 'Sarah Johnson',
-                        rating: 5,
-                        date: '2024-11-10',
-                        title: 'Amazing sound quality!',
-                        content: 'These headphones exceeded my expectations. The noise cancellation is fantastic and the battery life is exactly as advertised. Perfect for long flights and daily commuting.'
-                      },
-                      {
-                        id: 2,
-                        author: 'Mike Chen',
-                        rating: 4,
-                        date: '2024-11-08',
-                        title: 'Great value for money',
-                        content: 'Really impressed with the build quality and comfort. The only minor issue is that they can feel a bit tight after wearing for several hours, but overall very satisfied.'
-                      },
-                      {
-                        id: 3,
-                        author: 'Emma Wilson',
-                        rating: 5,
-                        date: '2024-11-05',
-                        title: 'Perfect for work from home',
-                        content: 'The noise cancellation is a game-changer for video calls. Crystal clear audio and my colleagues say I sound much better on calls now. Highly recommend!'
-                      }
-                    ].map((review) => (
-                      <div key={review.id} className="bg-gray-50 rounded-xl p-6">
-                        <div className="flex items-start justify-between mb-4">
-                          <div>
-                            <h4 className="font-semibold text-gray-900 mb-1">{review.title}</h4>
-                            <div className="flex items-center gap-2 mb-2">
-                              <div className="flex items-center">
-                                {renderStars(review.rating)}
-                              </div>
-                              <span className="text-sm text-gray-600">by {review.author}</span>
-                            </div>
-                          </div>
-                          <span className="text-sm text-gray-500">{review.date}</span>
-                        </div>
-                        <p className="text-gray-700 leading-relaxed">{review.content}</p>
-                      </div>
-                    ))}
+                    <p className="text-gray-600 text-center">No reviews yet. Be the first to review this product!</p>
                   </div>
 
                   {/* Write Review Button */}
@@ -467,7 +493,8 @@ export default function ProductDetailsPage() {
             </div>
           </div>
         </div>
-      </div>
+        </div>
+      )}
 
       <Footer activeRoute="/products" />
     </div>
