@@ -106,6 +106,18 @@ export default function Navbar({ activeRoute }: NavbarProps) {
                   </span>
                 )}
               </div>
+              {isAuthenticated && (
+                <Link 
+                  href="/orders" 
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/orders')
+                      ? 'text-blue-600'
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
+                  {t('orders') || 'Orders'}
+                </Link>
+              )}
               <Link 
                 href="/about" 
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
