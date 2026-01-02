@@ -158,6 +158,11 @@ export default function ProductDetailsPage() {
                   width={600}
                   height={600}
                   className="w-full h-full object-cover"
+                  unoptimized={product.images[selectedImageIndex].src?.includes('cloudinary.com')}
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                  }}
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-100">
@@ -183,6 +188,11 @@ export default function ProductDetailsPage() {
                       width={150}
                       height={150}
                       className="w-full h-full object-cover"
+                      unoptimized={image.src?.includes('cloudinary.com')}
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = 'none';
+                      }}
                     />
                   </button>
                 ))}

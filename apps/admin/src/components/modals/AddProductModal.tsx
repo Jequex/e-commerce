@@ -158,6 +158,7 @@ export default function AddProductModal({
               onImagesChange={setImages}
               maxImages={5}
               maxSizeMB={5}
+              storeName={pageData?.store?.name}
             />
           </div>
 

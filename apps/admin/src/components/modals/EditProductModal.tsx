@@ -8,6 +8,7 @@ import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
 import { toast } from 'react-toastify';
 import ImageUpload from '@/components/ImageUpload';
+import { usePageStore } from '@/stores/use-page-store';
 
 interface Category {
   id: number;
@@ -63,6 +64,7 @@ export default function EditProductModal({
   const [images, setImages] = useState<string[]>([]);
   const t = useTranslations('products');
   const common = useTranslations('common');
+  const { data: pageData } = usePageStore.getState();
 
   useEffect(() => {
     if (isOpen && product) {
@@ -203,6 +205,7 @@ export default function EditProductModal({
               onImagesChange={setImages}
               maxImages={5}
               maxSizeMB={5}
+              storeName={pageData?.store?.name}
             />
           </div>
 

@@ -45,6 +45,12 @@ export default function SearchPage() {
   }, [query]);
 
   const handleAddToCart = async (product: Product) => {
+    // Extract image URL safely
+    const firstImage = product.images?.[0];
+    const imageUrl = typeof firstImage === 'string' 
+      ? firstImage 
+      : firstImage?.src;
+
     try {
       await addItem({
         id: product.id,
@@ -53,7 +59,7 @@ export default function SearchPage() {
         price: parseFloat(product.price),
         sku: product.sku || '',
         quantity: 1,
-        image: product.images?.[0],
+        image: imageUrl,
         maxQuantity: product.inventoryQuantity || 999,
       });
       toast.success(`${product.name} added to cart!`);
@@ -158,10 +164,20 @@ export default function SearchPage() {
                     <div className="relative h-64 overflow-hidden bg-gray-100">
                       {product.images && product.images.length > 0 ? (
                         <Image
-                          src={product.images[0]}
+                          src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0].src}
                           alt={product.name}
                           fill
                           className="object-cover group-hover:scale-110 transition-transform duration-300"
+                          unoptimized={
+                            (typeof product.images[0] === 'string' 
+                              ? product.images[0] 
+                              : product.images[0].src
+                            )?.includes('cloudinary.com')
+                          }
+                          onError={(e) => {
+                            const target = e.target as HTMLImageElement;
+                            target.style.display = 'none';
+                          }}
                         />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-blue-100 to-purple-100">
