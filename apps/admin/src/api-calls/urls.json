@@ -43,9 +43,9 @@
     "removeStaff": "localhost:3007/api/v1/stores/:storeId/staff/:staffId"
   },
   "customers": {
-    "getAll": "localhost:3001/api/users",
-    "getOne": "localhost:3001/api/users/:id",
-    "update": "localhost:3001/api/users/:id",
-    "delete": "localhost:3001/api/users/:id"
+    "getAll": "localhost:3001/api/auth/users",
+    "getOne": "localhost:3001/api/auth/users/:id",
+    "update": "localhost:3001/api/auth/users/:id",
+    "delete": "localhost:3001/api/auth/users/:id"
   }
 }

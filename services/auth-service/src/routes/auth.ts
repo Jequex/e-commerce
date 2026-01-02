@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { AuthController } from '../controllers/authController';
 import { validateRequest } from '../middleware/validate-request';
+import { jwtAuthMiddleware } from '../middleware/auth';
 
 // Define schemas locally since @ecommerce/utils is not available
 const schemas = {
@@ -115,6 +116,9 @@ router.post('/resend-verification', authController.resendVerificationEmail.bind(
 
 // Get user by ID (for inter-service communication)
 router.get('/user/:userId', authController.getUserById.bind(authController));
+
+// Get all users (for admin use)
+router.get('/users', jwtAuthMiddleware, authController.getAllUsers.bind(authController));
 
 // Admin routes
 // Admin register

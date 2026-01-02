@@ -9,7 +9,7 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
-// Mock authentication middleware for order service
+// Authentication middleware for order service
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -71,5 +71,5 @@ export const requireRole = (allowedRoles: string[]) => {
   };
 };
 
-export const requireAdmin = requireRole(['admin']);
-export const requireCustomer = requireRole(['customer', 'admin', 'moderator']);
+export const requireAdmin = requireRole(['admin', 'super_admin']);
+export const requireCustomer = requireRole(['customer', 'admin', 'moderator', 'super_admin']);

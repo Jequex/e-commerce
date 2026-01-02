@@ -451,7 +451,9 @@ export class OrderController {
   async getAllOrders(req: AuthenticatedRequest, res: Response) {
     try {
       // Check if user is admin
-      if (req.user?.role !== 'admin') {
+      console.log(req.user);
+      
+      if (req.user?.role !== 'admin' && req.user?.role !== 'super_admin') {
         return res.status(403).json({
           error: 'Admin access required',
           code: 'ADMIN_REQUIRED'

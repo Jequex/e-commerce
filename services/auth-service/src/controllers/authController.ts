@@ -1031,6 +1031,45 @@ export class AuthController {
     }
   }
 
+  // Get all users (for admin use)
+  async getAllUsers(req: AuthenticatedRequest, res: Response) {
+    try {
+      console.log(req.user);
+      
+      if (!req.user || !['admin', 'super_admin'].includes(req.user.role || '')) {
+        return res.status(403).json({
+          error: 'Access denied',
+          code: 'ACCESS_DENIED'
+        });
+      }
+
+      const allUsers = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          status: users.status,
+          emailVerified: users.emailVerified,
+          createdAt: users.createdAt
+        })
+        .from(users)
+        .orderBy(desc(users.createdAt));
+
+      res.json({
+        users: allUsers
+      });
+
+    } catch (error) {
+      console.error('Get all users error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
   // Helper method to log user activities
   private async logUserActivity(
     userId: string, 

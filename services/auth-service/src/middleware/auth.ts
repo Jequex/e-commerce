@@ -19,6 +19,48 @@ export interface AuthenticatedRequest extends Request {
   };
 }
 
+// JWT Authentication middleware for auth service
+export const jwtAuthMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
+
+  if (!token) {
+    return res.status(401).json({
+      error: 'Authentication required',
+      code: 'NO_TOKEN'
+    });
+  }
+
+  // Verify JWT token
+  const jwtSecret = process.env.JWT_SECRET;
+  if (!jwtSecret) {
+    console.error('JWT_SECRET not configured');
+    return res.status(500).json({
+      error: 'Server configuration error',
+      code: 'CONFIG_ERROR'
+    });
+  }
+  
+  try {
+    const decoded = jwt.verify(token, jwtSecret) as any;
+    
+    // Attach user info to request
+    req.user = {
+      id: decoded.userId || decoded.id,
+      email: decoded.email,
+      role: decoded.role
+    };
+
+  } catch (error) {
+    return res.status(401).json({
+      error: 'Invalid token',
+      code: 'INVALID_TOKEN'
+    });
+  }
+
+  next();
+};
+
 export const authMiddleware = async (
   req: AuthenticatedRequest,
   res: Response,
