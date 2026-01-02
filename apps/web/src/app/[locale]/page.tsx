@@ -1,16 +1,21 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Navbar, Footer } from '@/components/layout';
 import { ProductCard } from '@/components/ui';
 import { useTranslations } from 'next-intl';
 import { getProducts } from '@/api-calls/products';
 import { Product } from '@/types/products';
+import { useAuth } from '@/providers';
+import { toast } from 'react-toastify';
+import callApi from '@/api-calls/callApi';
 
 export default function ProductsPage() {
   const t = useTranslations('products');
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { login } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,8 +23,44 @@ export default function ProductsPage() {
   const [hasMore, setHasMore] = useState(false);
 
   useEffect(() => {
+    // Handle OAuth callback token
+    const token = searchParams.get('token');
+    const authError = searchParams.get('auth_error');
+    
+    if (token) {
+      handleOAuthToken(token);
+    } else if (authError) {
+      toast.error(decodeURIComponent(authError));
+      // Clean URL
+      router.replace('/');
+    }
+    
     fetchProducts();
   }, [searchParams]);
+
+  const handleOAuthToken = async (token: string) => {
+    try {
+      // Verify token and get user data
+      const response = await callApi('http://localhost:3001/api/auth/verify', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.user) {
+        login(token, response.user);
+        toast.success('Successfully signed in!');
+      }
+      
+      // Clean URL
+      router.replace('/');
+    } catch (error) {
+      console.error('OAuth token verification error:', error);
+      toast.error('Authentication failed');
+      router.replace('/');
+    }
+  };
 
   const fetchProducts = async (loadMore = false) => {
     try {

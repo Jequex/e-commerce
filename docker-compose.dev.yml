@@ -79,6 +79,11 @@ services:
       - JWT_SECRET=your-super-secret-jwt-key-here-make-it-long-and-random
       - EMAIL_SERVICE_URL=http://email-service:3005
       - FRONTEND_URL=http://localhost:3000
+      - AUTH_SERVICE_URL=http://localhost:3001
+      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - FACEBOOK_APP_ID=${FACEBOOK_APP_ID}
+      - FACEBOOK_APP_SECRET=${FACEBOOK_APP_SECRET}
     ports:
       - "3001:3001"
     volumes:

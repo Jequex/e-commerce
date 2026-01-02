@@ -1,6 +1,12 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { AuthController } from '../controllers/authController';
+import { 
+  googleAuthInit, 
+  googleAuthCallback, 
+  facebookAuthInit, 
+  facebookAuthCallback 
+} from '../controllers/oauth.controller';
 import { validateRequest } from '../middleware/validate-request';
 import { jwtAuthMiddleware } from '../middleware/auth';
 
@@ -134,5 +140,14 @@ router.post(
   validateRequest(adminLoginSchema),
   authController.adminLogin.bind(authController)
 );
+
+// OAuth routes
+// Google OAuth
+router.get('/google', googleAuthInit);
+router.get('/google/callback', googleAuthCallback);
+
+// Facebook OAuth
+router.get('/facebook', facebookAuthInit);
+router.get('/facebook/callback', facebookAuthCallback);
 
 export { router as authRoutes };
