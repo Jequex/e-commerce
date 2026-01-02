@@ -7,6 +7,7 @@ import * as Icons from '@radix-ui/react-icons';
 import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
 import { toast } from 'react-toastify';
+import ImageUpload from '@/components/ImageUpload';
 
 interface Category {
   id: number;
@@ -36,7 +37,7 @@ interface Product {
   inventoryQuantity: number;
   category: Category | null;
   categoryId: number | null;
-  images: string[] | null;
+  images: { src: string; position?: number }[] | null;
   isFeatured: boolean;
   isActive: boolean;
   createdAt: string;
@@ -59,14 +60,21 @@ export default function EditProductModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
+  const [images, setImages] = useState<string[]>([]);
   const t = useTranslations('products');
   const common = useTranslations('common');
 
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && product) {
       fetchCategories();
+      // Initialize images from product data
+      // Extract URLs from image objects or use as-is if already strings
+      const imageUrls = product.images 
+        ? product.images.map((img: any) => typeof img === 'string' ? img : img.src)
+        : [];
+      setImages(imageUrls);
     }
-  }, [isOpen]);
+  }, [isOpen, product]);
 
   const fetchCategories = async () => {
     try {
@@ -110,6 +118,10 @@ export default function EditProductModal({
       trackQuantity: formData.get('trackQuantity') === 'on',
       isActive: formData.get('isActive') === 'on',
       isFeatured: formData.get('isFeatured') === 'on',
+      images: images.map((url, index) => ({
+        src: url,
+        position: index,
+      })),
     };
 
     try {
@@ -178,6 +190,19 @@ export default function EditProductModal({
               defaultValue={product.description || ''}
               className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               placeholder="Enter product description"
+            />
+          </div>
+
+          {/* Product Images */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Product Images
+            </label>
+            <ImageUpload
+              images={images}
+              onImagesChange={setImages}
+              maxImages={5}
+              maxSizeMB={5}
             />
           </div>
 

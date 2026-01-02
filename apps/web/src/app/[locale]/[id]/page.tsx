@@ -51,13 +51,18 @@ export default function ProductDetailsPage() {
   const handleAddToCart = () => {
     if (!product) return;
     
+    const firstImage = product.images?.[0];
+    const imageSrc = typeof firstImage === 'string' 
+      ? firstImage 
+      : firstImage?.src || '';
+    
     addToCart({
       id: product.id,
       productId: product.id,
       name: product.name,
       price: parseFloat(product.price),
       sku: product.sku,
-      image: product.images?.[0],
+      image: imageSrc,
       maxQuantity: product.inventoryQuantity,
       quantity: quantity,
     });
@@ -148,7 +153,7 @@ export default function ProductDetailsPage() {
             <div className="aspect-square bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
               {product.images && product.images.length > 0 ? (
                 <Image
-                  src={product.images[selectedImageIndex]}
+                  src={product.images[selectedImageIndex].src}
                   alt={product.name}
                   width={600}
                   height={600}
@@ -173,7 +178,7 @@ export default function ProductDetailsPage() {
                     }`}
                   >
                     <Image
-                      src={image}
+                      src={image.src}
                       alt={`${product.name} ${index + 1}`}
                       width={150}
                       height={150}

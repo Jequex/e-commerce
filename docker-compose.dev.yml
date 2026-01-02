@@ -275,6 +275,8 @@ services:
     environment:
       - NODE_ENV=development
       - NEXT_PUBLIC_API_URL=http://localhost:8080
+      - NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=dbfto5osq
+      - NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET=dbfto5osq_products_preset
     ports:
       - "3006:3006"
     volumes:

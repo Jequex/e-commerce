@@ -3,7 +3,7 @@
 import { Link, useRouter } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { LanguageSelector } from '@/components/common';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/providers';
 import { useCartStore } from '@/stores/use-cart-store';
 
@@ -18,7 +18,12 @@ export default function Navbar({ activeRoute }: NavbarProps) {
   const { openAuthModal, user, isAuthenticated, logout } = useAuth();
   const isActive = (route: string) => activeRoute === route;
   const totalItems = useCartStore((state) => state.getTotalItems());
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,21 +89,23 @@ export default function Navbar({ activeRoute }: NavbarProps) {
               >
                 {t('categories')}
               </Link>
-              <Link 
-                href="/cart" 
-                className={`relative px-3 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isActive('/cart')
-                    ? 'text-blue-600'
-                    : 'text-gray-700 hover:text-blue-600'
-                }`}
-              >
-                {t('cart')}
-                {totalItems > 0 && (
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
+              <div className="relative">
+                <Link 
+                  href="/cart" 
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                    isActive('/cart')
+                      ? 'text-blue-600'
+                      : 'text-gray-700 hover:text-blue-600'
+                  }`}
+                >
+                  {t('cart')}
+                </Link>
+                {mounted && totalItems > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center pointer-events-none">
                     {totalItems}
                   </span>
                 )}
-              </Link>
+              </div>
               <Link 
                 href="/about" 
                 className={`px-3 py-2 rounded-md text-sm font-medium transition-colors ${

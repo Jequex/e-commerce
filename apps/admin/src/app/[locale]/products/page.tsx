@@ -42,7 +42,7 @@ interface Product {
   inventoryQuantity: number;
   category: Category | null;
   categoryId: number | null;
-  images: string[] | null;
+  images: { src: string; position?: number }[] | null;
   isFeatured: boolean;
   isActive: boolean;
   createdAt: string;
@@ -326,7 +326,7 @@ export default function ProductsPage() {
                         <div className="flex items-center">
                           <div className="flex-shrink-0 h-10 w-10 bg-gray-200 dark:bg-gray-600 rounded-lg flex items-center justify-center">
                             {product.images && product.images.length > 0 ? (
-                              <img src={product.images[0]} alt={product.name} className="h-10 w-10 rounded-lg object-cover" />
+                              <img src={product.images[0].src} alt={product.name} className="h-10 w-10 rounded-lg object-cover" />
                             ) : (
                               <Icons.ImageIcon className="h-5 w-5 text-gray-400" />
                             )}

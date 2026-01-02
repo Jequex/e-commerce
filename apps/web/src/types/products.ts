@@ -9,7 +9,7 @@ export interface Product {
   trackQuantity: boolean;
   inventoryQuantity?: number;
   lowStockThreshold?: number;
-  images: string[];
+  images: { src: string; position?: number }[];
   categoryId?: string;
   category?: {
     id: string;

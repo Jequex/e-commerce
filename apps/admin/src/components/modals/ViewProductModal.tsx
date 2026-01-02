@@ -32,7 +32,7 @@ interface Product {
   trackQuantity: boolean;
   inventoryQuantity: number;
   category: Category | null;
-  images: string[] | null;
+  images: { src: string; position?: number }[] | null;
   isFeatured: boolean;
   isActive: boolean;
   createdAt: string;
@@ -110,7 +110,7 @@ export default function ViewProductModal({
                 {product.images.map((image, index) => (
                   <img
                     key={index}
-                    src={image}
+                    src={image.src}
                     alt={`${product.name} ${index + 1}`}
                     className="h-32 w-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
                   />
