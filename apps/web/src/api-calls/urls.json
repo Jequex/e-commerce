@@ -1,6 +1,7 @@
 {
   "auth": {
-    "login": "localhost:3001/api/auth/admin-login"
+    "login": "localhost:3001/api/auth/admin-login",
+    "verifyEmail": "localhost:3001/api/auth/verify-email"
   },
   "products": {
     "getAll": "localhost:3002/api/products",
