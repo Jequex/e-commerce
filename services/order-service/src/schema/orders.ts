@@ -19,6 +19,15 @@ export const orders = pgTable('orders', {
   totalDiscounts: decimal('total_discounts', { precision: 10, scale: 2 }).default('0.00'),
   totalPrice: decimal('total_price', { precision: 10, scale: 2 }).notNull(),
   
+  // Store & Profit Attribution
+  storeId: uuid('store_id'),
+  platformMarkupRate: decimal('platform_markup_rate', { precision: 5, scale: 2 }).default('0.00'),
+  platformMarkupAmount: decimal('platform_markup_amount', { precision: 10, scale: 2 }).default('0.00'),
+  superAdminDiscountAmount: decimal('super_admin_discount_amount', { precision: 10, scale: 2 }).default('0.00'),
+  adminDiscountAmount: decimal('admin_discount_amount', { precision: 10, scale: 2 }).default('0.00'),
+  platformNetProfit: decimal('platform_net_profit', { precision: 10, scale: 2 }).default('0.00'),
+  storeNetPayout: decimal('store_net_payout', { precision: 10, scale: 2 }).default('0.00'),
+  
   // Currency and locale
   currency: text('currency').default('USD'),
   locale: text('locale').default('en'),
@@ -37,7 +46,7 @@ export const orders = pgTable('orders', {
   
   // Notes and attributes
   notes: text('notes'),
-  tags: jsonb('tags').$type<string[]>().default([]),
+  tags: text('tags').array(),
   attributes: jsonb('attributes').$type<Record<string, any>>(),
   
   // Tracking
@@ -60,9 +69,18 @@ export const orderLineItems = pgTable('order_line_items', {
   orderId: uuid('order_id').references(() => orders.id, { onDelete: 'cascade' }).notNull(),
   productId: uuid('product_id').notNull(), // Reference to product service
   variantId: uuid('variant_id'), // Reference to product variant
+  storeId: uuid('store_id'),
+  categoryId: uuid('category_id'),
   quantity: integer('quantity').notNull(),
   price: decimal('price', { precision: 10, scale: 2 }).notNull(),
   compareAtPrice: decimal('compare_at_price', { precision: 10, scale: 2 }),
+  costPrice: decimal('cost_price', { precision: 10, scale: 2 }),
+  markupPercentage: decimal('markup_percentage', { precision: 5, scale: 2 }).default('0.00'),
+  markupAmount: decimal('markup_amount', { precision: 10, scale: 2 }).default('0.00'),
+  discountAmount: decimal('discount_amount', { precision: 10, scale: 2 }).default('0.00'),
+  discountFundedBy: text('discount_funded_by').default('none'), // 'platform', 'store', 'none'
+  storePayout: decimal('store_payout', { precision: 10, scale: 2 }).default('0.00'),
+  platformProfit: decimal('platform_profit', { precision: 10, scale: 2 }).default('0.00'),
   totalPrice: decimal('total_price', { precision: 10, scale: 2 }).notNull(),
   
   // Product info (snapshot at time of order)
@@ -145,6 +163,12 @@ export const orderDiscounts = pgTable('order_discounts', {
   
   title: text('title').notNull(),
   description: text('description'),
+  
+  createdById: uuid('created_by_id'),
+  createdByRole: text('created_by_role').default('admin'), // 'super_admin' or 'admin'
+  createdByName: text('created_by_name'),
+  storeId: uuid('store_id'),
+  fundedBy: text('funded_by').default('store'), // 'platform' (if created by super admin) or 'store' (if created by admin)
   
   createdAt: timestamp('created_at').defaultNow(),
 });
@@ -326,9 +350,12 @@ export const addressSchema = z.object({
 export const createOrderSchema = z.object({
   userId: z.string().uuid(),
   email: z.string().email(),
+  storeId: z.string().uuid().optional(),
   lineItems: z.array(z.object({
     productId: z.string().uuid(),
     variantId: z.string().uuid().optional(),
+    storeId: z.string().uuid().optional(),
+    categoryId: z.string().uuid().optional(),
     quantity: z.number().int().positive(),
     price: z.number().positive(),
     properties: z.record(z.string()).optional(),
@@ -347,6 +374,11 @@ export const createOrderSchema = z.object({
     value: z.number(),
     title: z.string(),
     description: z.string().optional(),
+    createdById: z.string().uuid().optional(),
+    createdByRole: z.enum(['super_admin', 'admin']).optional(),
+    createdByName: z.string().optional(),
+    storeId: z.string().uuid().optional(),
+    fundedBy: z.enum(['platform', 'store']).optional(),
   })).default([]),
   notes: z.string().optional(),
   tags: z.array(z.string()).default([]),

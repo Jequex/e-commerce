@@ -53,5 +53,8 @@
     "create": "localhost:3002/api/products/coupons",
     "update": "localhost:3002/api/products/coupons/:id",
     "delete": "localhost:3002/api/products/coupons/:id"
+  },
+  "reports": {
+    "getStoreReports": "localhost:3003/api/orders/admin/store-reports"
   }
 }

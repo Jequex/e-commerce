@@ -21,14 +21,7 @@ import {
 } from '../schema/orders';
 import { eq, and, desc, asc, sql, inArray } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
-
-export interface AuthenticatedRequest extends Request {
-  user?: {
-    id: string;
-    email: string;
-    role: string;
-  };
-}
+import { AuthenticatedRequest } from '../middleware/auth';
 
 export class OrderController {
   // Generate unique order number
@@ -43,28 +36,68 @@ export class OrderController {
     try {
       const validatedData = createOrderSchema.parse(req.body);
 
-      // Calculate totals
+      // 1. Calculate subtotal & platform markup
       let subtotalPrice = 0;
-      let totalDiscounts = 0;
+      let platformMarkupAmount = 0;
+      const defaultPlatformMarkupRate = 15.0; // 15% platform markup default
 
-      // Calculate subtotal from line items
       for (const item of validatedData.lineItems) {
-        subtotalPrice += item.price * item.quantity;
+        const itemTotal = item.price * item.quantity;
+        subtotalPrice += itemTotal;
+        const itemMarkup = (itemTotal * defaultPlatformMarkupRate) / 100;
+        platformMarkupAmount += itemMarkup;
       }
 
-      // Calculate discount amount
+      // 2. Calculate discounts and attribute deductions to creator:
+      // - If created by super admin: Jequex bears the cost from our platform markup.
+      // - If created by admin: The store bears the cost from their store payout.
+      let superAdminDiscountAmount = 0;
+      let adminDiscountAmount = 0;
+      const processedDiscounts: any[] = [];
+
       for (const discount of validatedData.discounts) {
+        let amount = 0;
         if (discount.type === 'percentage') {
-          totalDiscounts += (subtotalPrice * discount.value) / 100;
+          amount = (subtotalPrice * discount.value) / 100;
         } else if (discount.type === 'fixed_amount') {
-          totalDiscounts += discount.value;
+          amount = discount.value;
         }
+
+        const isSuperAdmin = discount.createdByRole === 'super_admin' || discount.fundedBy === 'platform';
+        const fundedBy = isSuperAdmin ? 'platform' : 'store';
+        const createdByRole = isSuperAdmin ? 'super_admin' : 'admin';
+
+        if (isSuperAdmin) {
+          superAdminDiscountAmount += amount;
+        } else {
+          adminDiscountAmount += amount;
+        }
+
+        processedDiscounts.push({
+          code: discount.code,
+          type: discount.type,
+          value: discount.value,
+          amount,
+          title: discount.title,
+          description: discount.description,
+          createdById: discount.createdById,
+          createdByRole,
+          createdByName: discount.createdByName,
+          storeId: discount.storeId || validatedData.storeId,
+          fundedBy,
+        });
       }
 
-      // For now, assume no tax or shipping - these would be calculated by external services
+      const totalDiscounts = superAdminDiscountAmount + adminDiscountAmount;
       const totalTax = 0;
       const totalShipping = 0;
-      const totalPrice = subtotalPrice + totalTax + totalShipping - totalDiscounts;
+      const totalPrice = Math.max(0, subtotalPrice + totalTax + totalShipping - totalDiscounts);
+
+      // Financial balance formulas:
+      // Jequex Net Profit = Markup - Super Admin Discounts
+      // Store Net Payout = (Subtotal - Markup) - Admin Discounts
+      const platformNetProfit = Math.max(0, platformMarkupAmount - superAdminDiscountAmount);
+      const storeNetPayout = Math.max(0, (subtotalPrice - platformMarkupAmount) - adminDiscountAmount);
 
       // Generate order number
       const orderNumber = this.generateOrderNumber();
@@ -76,6 +109,13 @@ export class OrderController {
           orderNumber,
           userId: validatedData.userId,
           email: validatedData.email,
+          storeId: validatedData.storeId,
+          platformMarkupRate: defaultPlatformMarkupRate.toFixed(2),
+          platformMarkupAmount: platformMarkupAmount.toFixed(2),
+          superAdminDiscountAmount: superAdminDiscountAmount.toFixed(2),
+          adminDiscountAmount: adminDiscountAmount.toFixed(2),
+          platformNetProfit: platformNetProfit.toFixed(2),
+          storeNetPayout: storeNetPayout.toFixed(2),
           subtotalPrice: subtotalPrice.toFixed(2),
           totalTax: totalTax.toFixed(2),
           totalShipping: totalShipping.toFixed(2),
@@ -90,41 +130,47 @@ export class OrderController {
         
         const [newOrder] = await tx.insert(orders).values(orderData).returning();
 
-        // Create line items
-        const lineItemsData = validatedData.lineItems.map(item => ({
-          orderId: newOrder.id,
-          productId: item.productId,
-          variantId: item.variantId,
-          quantity: item.quantity,
-          price: item.price.toFixed(2),
-          totalPrice: (item.price * item.quantity).toFixed(2),
-          productTitle: 'Product Title', // Would be fetched from product service
-          variantTitle: item.variantId ? 'Variant Title' : null,
-          properties: item.properties,
-        }));
+        // Create line items with profit attribution
+        const lineItemsData = validatedData.lineItems.map(item => {
+          const itemTotal = item.price * item.quantity;
+          const itemMarkup = (itemTotal * defaultPlatformMarkupRate) / 100;
+          return {
+            orderId: newOrder.id,
+            productId: item.productId,
+            variantId: item.variantId,
+            storeId: item.storeId || validatedData.storeId,
+            categoryId: item.categoryId,
+            quantity: item.quantity,
+            price: item.price.toFixed(2),
+            totalPrice: itemTotal.toFixed(2),
+            markupPercentage: defaultPlatformMarkupRate.toFixed(2),
+            markupAmount: itemMarkup.toFixed(2),
+            storePayout: (itemTotal - itemMarkup).toFixed(2),
+            platformProfit: itemMarkup.toFixed(2),
+            productTitle: 'Product Title',
+            variantTitle: item.variantId ? 'Variant Title' : null,
+            properties: item.properties,
+          };
+        });
 
         const newLineItems = await tx.insert(orderLineItems).values(lineItemsData).returning();
 
-        // Create discounts
-        if (validatedData.discounts.length > 0) {
-          const discountsData = validatedData.discounts.map(discount => {
-            let amount = 0;
-            if (discount.type === 'percentage') {
-              amount = (subtotalPrice * discount.value) / 100;
-            } else if (discount.type === 'fixed_amount') {
-              amount = discount.value;
-            }
-
-            return {
-              orderId: newOrder.id,
-              code: discount.code,
-              type: discount.type,
-              value: discount.value.toFixed(2),
-              amount: amount.toFixed(2),
-              title: discount.title,
-              description: discount.description,
-            };
-          });
+        // Create discounts with creator & funder attribution
+        if (processedDiscounts.length > 0) {
+          const discountsData = processedDiscounts.map(discount => ({
+            orderId: newOrder.id,
+            code: discount.code,
+            type: discount.type,
+            value: discount.value.toFixed(2),
+            amount: discount.amount.toFixed(2),
+            title: discount.title,
+            description: discount.description,
+            createdById: discount.createdById,
+            createdByRole: discount.createdByRole,
+            createdByName: discount.createdByName,
+            storeId: discount.storeId,
+            fundedBy: discount.fundedBy,
+          }));
 
           await tx.insert(orderDiscounts).values(discountsData);
         }
@@ -823,6 +869,209 @@ export class OrderController {
         error: 'Internal server error',
         code: 'INTERNAL_ERROR'
       });
+    }
+  }
+
+  // ==================== FINANCIAL REPORTS & PROFIT TRACKING ====================
+
+  // Super Admin: Jequex Platform Financial & Profit Reports
+  async getPlatformReports(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (req.user?.role !== 'super_admin') {
+        return res.status(403).json({
+          error: 'Super Admin access required',
+          code: 'SUPER_ADMIN_REQUIRED'
+        });
+      }
+
+      const { startDate, endDate, storeId } = req.query;
+      const conditions = [];
+
+      if (storeId && typeof storeId === 'string') {
+        conditions.push(eq(orders.storeId, storeId));
+      }
+      if (startDate && typeof startDate === 'string') {
+        conditions.push(sql`${orders.createdAt} >= ${new Date(startDate)}`);
+      }
+      if (endDate && typeof endDate === 'string') {
+        conditions.push(sql`${orders.createdAt} <= ${new Date(endDate)}`);
+      }
+
+      const allOrders = await db.query.orders.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        with: {
+          lineItems: true,
+          discounts: true,
+        },
+        orderBy: desc(orders.createdAt),
+      });
+
+      let totalGrossSales = 0;
+      let totalSubtotal = 0;
+      let totalPlatformMarkup = 0;
+      let totalSuperAdminDiscounts = 0;
+      let totalAdminDiscounts = 0;
+      let netPlatformProfit = 0;
+      let totalStorePayouts = 0;
+
+      const storeAgg: Record<string, {
+        storeId: string;
+        ordersCount: number;
+        grossSales: number;
+        platformMarkup: number;
+        superAdminDiscounts: number;
+        adminDiscounts: number;
+        netPlatformProfit: number;
+        netStorePayout: number;
+      }> = {};
+
+      for (const ord of allOrders) {
+        const subtotal = Number(ord.subtotalPrice || 0);
+        const gross = Number(ord.totalPrice || 0);
+        const markup = Number(ord.platformMarkupAmount || (subtotal * 0.15));
+        const superDiscount = Number(ord.superAdminDiscountAmount || 0);
+        const adminDiscount = Number(ord.adminDiscountAmount || 0);
+        const platProfit = Number(ord.platformNetProfit || Math.max(0, markup - superDiscount));
+        const storePayout = Number(ord.storeNetPayout || Math.max(0, (subtotal - markup) - adminDiscount));
+
+        totalSubtotal += subtotal;
+        totalGrossSales += gross;
+        totalPlatformMarkup += markup;
+        totalSuperAdminDiscounts += superDiscount;
+        totalAdminDiscounts += adminDiscount;
+        netPlatformProfit += platProfit;
+        totalStorePayouts += storePayout;
+
+        const sId = ord.storeId || 'general-store';
+        if (!storeAgg[sId]) {
+          storeAgg[sId] = {
+            storeId: sId,
+            ordersCount: 0,
+            grossSales: 0,
+            platformMarkup: 0,
+            superAdminDiscounts: 0,
+            adminDiscounts: 0,
+            netPlatformProfit: 0,
+            netStorePayout: 0,
+          };
+        }
+        storeAgg[sId].ordersCount += 1;
+        storeAgg[sId].grossSales += gross;
+        storeAgg[sId].platformMarkup += markup;
+        storeAgg[sId].superAdminDiscounts += superDiscount;
+        storeAgg[sId].adminDiscounts += adminDiscount;
+        storeAgg[sId].netPlatformProfit += platProfit;
+        storeAgg[sId].netStorePayout += storePayout;
+      }
+
+      res.json({
+        summary: {
+          totalOrders: allOrders.length,
+          totalGrossSales: Math.round(totalGrossSales * 100) / 100,
+          totalSubtotal: Math.round(totalSubtotal * 100) / 100,
+          totalPlatformMarkup: Math.round(totalPlatformMarkup * 100) / 100,
+          superAdminDiscountsFunded: Math.round(totalSuperAdminDiscounts * 100) / 100,
+          adminDiscountsFunded: Math.round(totalAdminDiscounts * 100) / 100,
+          netPlatformProfit: Math.round(netPlatformProfit * 100) / 100,
+          totalStorePayouts: Math.round(totalStorePayouts * 100) / 100,
+          platformMarginRate: totalSubtotal > 0 ? ((netPlatformProfit / totalSubtotal) * 100).toFixed(2) + '%' : '0.00%',
+        },
+        storeBreakdowns: Object.values(storeAgg),
+        recentOrders: allOrders.slice(0, 50).map(o => ({
+          id: o.id,
+          orderNumber: o.orderNumber,
+          createdAt: o.createdAt,
+          subtotalPrice: o.subtotalPrice,
+          totalPrice: o.totalPrice,
+          platformMarkupAmount: o.platformMarkupAmount,
+          superAdminDiscountAmount: o.superAdminDiscountAmount,
+          adminDiscountAmount: o.adminDiscountAmount,
+          platformNetProfit: o.platformNetProfit,
+          storeNetPayout: o.storeNetPayout,
+          discounts: o.discounts,
+        }))
+      });
+    } catch (error) {
+      console.error('Get platform reports error:', error);
+      res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
+    }
+  }
+
+  // Merchant / Admin: Store-Specific Profit & Payout Reports
+  async getStoreReports(req: AuthenticatedRequest, res: Response) {
+    try {
+      const user = req.user;
+      if (!user || !['admin', 'super_admin'].includes(user.role)) {
+        return res.status(403).json({ error: 'Admin access required', code: 'ADMIN_REQUIRED' });
+      }
+
+      // If regular admin, strictly restrict to their storeId
+      const targetStoreId = user.role === 'super_admin' ? (req.query.storeId as string) : user.storeId;
+      const conditions = [];
+
+      if (targetStoreId) {
+        conditions.push(eq(orders.storeId, targetStoreId));
+      }
+
+      const storeOrders = await db.query.orders.findMany({
+        where: conditions.length > 0 ? and(...conditions) : undefined,
+        with: {
+          lineItems: true,
+          discounts: true,
+        },
+        orderBy: desc(orders.createdAt),
+      });
+
+      let totalGrossSales = 0;
+      let totalSubtotal = 0;
+      let totalPlatformFees = 0;
+      let totalStoreDiscounts = 0;
+      let totalJequexSponsoredDiscounts = 0;
+      let netStorePayout = 0;
+
+      for (const ord of storeOrders) {
+        const subtotal = Number(ord.subtotalPrice || 0);
+        const gross = Number(ord.totalPrice || 0);
+        const fee = Number(ord.platformMarkupAmount || (subtotal * 0.15));
+        const storeDisc = Number(ord.adminDiscountAmount || 0);
+        const jequexDisc = Number(ord.superAdminDiscountAmount || 0);
+        const payout = Number(ord.storeNetPayout || Math.max(0, (subtotal - fee) - storeDisc));
+
+        totalSubtotal += subtotal;
+        totalGrossSales += gross;
+        totalPlatformFees += fee;
+        totalStoreDiscounts += storeDisc;
+        totalJequexSponsoredDiscounts += jequexDisc;
+        netStorePayout += payout;
+      }
+
+      res.json({
+        summary: {
+          storeId: targetStoreId || 'all_stores',
+          totalOrders: storeOrders.length,
+          totalGrossSales: Math.round(totalGrossSales * 100) / 100,
+          totalSubtotal: Math.round(totalSubtotal * 100) / 100,
+          totalPlatformFees: Math.round(totalPlatformFees * 100) / 100,
+          totalStoreDiscounts: Math.round(totalStoreDiscounts * 100) / 100,
+          totalJequexSponsoredDiscounts: Math.round(totalJequexSponsoredDiscounts * 100) / 100,
+          netStorePayout: Math.round(netStorePayout * 100) / 100,
+        },
+        orders: storeOrders.map(o => ({
+          id: o.id,
+          orderNumber: o.orderNumber,
+          createdAt: o.createdAt,
+          subtotalPrice: o.subtotalPrice,
+          totalPrice: o.totalPrice,
+          platformFee: o.platformMarkupAmount,
+          storeDiscount: o.adminDiscountAmount,
+          jequexSponsoredDiscount: o.superAdminDiscountAmount,
+          netPayout: o.storeNetPayout,
+          discounts: o.discounts,
+        }))
+      });
+    } catch (error) {
+      console.error('Get store reports error:', error);
+      res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
     }
   }
 }

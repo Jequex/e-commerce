@@ -103,12 +103,12 @@ const Sidebar: React.FC = () => {
       href: '/staff',
       // badge: 2,
     },
-    // {
-    //   id: 'reports',
-    //   label: t('reports'),
-    //   icon: MdBarChart,
-    //   href: '/reports',
-    // },
+    {
+      id: 'reports',
+      label: 'Profits & Reports',
+      icon: MdAnalytics,
+      href: '/reports',
+    },
     // {
     //   id: 'analytics',
     //   label: t('analytics'),

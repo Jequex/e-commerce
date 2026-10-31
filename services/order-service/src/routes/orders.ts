@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { OrderController } from '../controllers/orderController';
-import { authMiddleware, requireAdmin, requireCustomer } from '../middleware/auth';
+import { authMiddleware, requireAdmin, requireCustomer, requireSuperAdmin } from '../middleware/auth';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -49,6 +49,8 @@ router.get('/:id', orderController.getOrder.bind(orderController));
 router.put('/:id/cancel', orderController.cancelOrder.bind(orderController));
 
 // Admin-only routes
+router.get('/admin/platform-reports', requireSuperAdmin, orderController.getPlatformReports.bind(orderController));
+router.get('/admin/store-reports', requireAdmin, orderController.getStoreReports.bind(orderController));
 router.get('/admin/all', requireAdmin, orderController.getAllOrders.bind(orderController));
 router.put('/admin/:id', requireAdmin, orderController.updateOrder.bind(orderController));
 

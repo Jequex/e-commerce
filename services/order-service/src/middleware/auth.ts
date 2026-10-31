@@ -6,6 +6,7 @@ export interface AuthenticatedRequest extends Request {
     id: string;
     email: string;
     role: string;
+    storeId?: string;
   };
 }
 
@@ -38,7 +39,8 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     req.user = {
       id: decoded.userId || decoded.id,
       email: decoded.email,
-      role: decoded.role
+      role: decoded.role,
+      storeId: decoded.storeId
     };
 
   } catch (error) {
@@ -71,5 +73,6 @@ export const requireRole = (allowedRoles: string[]) => {
   };
 };
 
+export const requireSuperAdmin = requireRole(['super_admin']);
 export const requireAdmin = requireRole(['admin', 'super_admin']);
 export const requireCustomer = requireRole(['customer', 'admin', 'moderator', 'super_admin']);

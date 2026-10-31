@@ -17,6 +17,7 @@ const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: Icons.DashboardIcon },
   { name: 'Customers & Purchases', href: '/customers', icon: Icons.AvatarIcon, badge: 'Purchases' },
   { name: 'Profit Markups', href: '/markups', icon: Icons.BarChartIcon, badge: 'Super Admin' },
+  { name: 'Platform Profits & Reports', href: '/reports', icon: Icons.PieChartIcon, badge: 'Financials' },
   { name: 'Coupons & Promo', href: '/coupons', icon: Icons.TokensIcon },
   { name: 'Categories', href: '/categories', icon: Icons.ComponentInstanceIcon, badge: 'Super Admin' },
   { name: 'Products', href: '/products', icon: Icons.CubeIcon },
