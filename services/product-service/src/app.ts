@@ -17,12 +17,23 @@ const PORT = process.env.PORT || 3002;
 app.use(helmet());
 
 // CORS configuration
-const corsOrigin = process.env.CORS_ORIGIN
-  ? process.env.CORS_ORIGIN.split(',')
-  : ['http://localhost:3000', 'http://localhost:3006'];
+const allowedProductOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3006',
+  'http://localhost:3008',
+  'http://localhost:8080',
+  'http://localhost:8081',
+  'http://localhost:19006',
+  ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [])
+];
 
 app.use(cors({
-  origin: corsOrigin,
+  origin: (origin, callback) => {
+    if (!origin || allowedProductOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
   credentials: true,
   exposedHeaders: ['Content-Range', 'X-Content-Range'],
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

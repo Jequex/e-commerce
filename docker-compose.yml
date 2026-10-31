@@ -27,7 +27,7 @@ services:
 
   # Message Queue
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.0
     container_name: ecommerce-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -36,7 +36,7 @@ services:
       - ecommerce-network
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.0
     container_name: ecommerce-kafka
     depends_on:
       - zookeeper

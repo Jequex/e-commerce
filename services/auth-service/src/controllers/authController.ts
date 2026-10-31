@@ -6,12 +6,13 @@ import {
   passwordResets, 
   emailVerifications, 
   userActivities,
+  userLegalConsents,
   insertUserSchema,
   loginSchema,
   resetPasswordSchema,
   changePasswordSchema
 } from '../schema/auth';
-import { eq, and, desc } from 'drizzle-orm';
+import { eq, and, desc, inArray } from 'drizzle-orm';
 import jwt from 'jsonwebtoken';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
@@ -82,6 +83,45 @@ export class AuthController {
 
       // Log activity
       await this.logUserActivity(newUser.id, 'user_registered', req);
+
+      // Record legal consents if accepted
+      try {
+        const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.ip || 'unknown';
+        const userAgent = req.get('user-agent') || 'unknown';
+        const consentList: { documentType: string; versionNumber: string }[] = [];
+
+        if (req.body.acceptedTerms) {
+          consentList.push({ documentType: 'terms_conditions', versionNumber: req.body.termsVersion || '1.0' });
+        }
+        if (req.body.acceptedPrivacyPolicy || req.body.acceptedTerms) {
+          consentList.push({ documentType: 'privacy_policy', versionNumber: req.body.privacyVersion || '1.0' });
+        }
+        if (req.body.acceptedCancellationRefund) {
+          consentList.push({ documentType: 'cancellation_refund', versionNumber: req.body.cancellationRefundVersion || '1.0' });
+        }
+        if (Array.isArray(req.body.consents)) {
+          for (const c of req.body.consents) {
+            if (c.documentType && c.versionNumber) {
+              consentList.push({ documentType: c.documentType, versionNumber: c.versionNumber });
+            }
+          }
+        }
+
+        for (const consent of consentList) {
+          await db.insert(userLegalConsents).values({
+            id: uuidv4(),
+            userId: newUser.id,
+            documentType: consent.documentType,
+            versionNumber: consent.versionNumber,
+            ipAddress: ip,
+            userAgent: userAgent,
+            acceptedAt: new Date(),
+            createdAt: new Date()
+          });
+        }
+      } catch (consentErr) {
+        console.error('Failed to record legal consent:', consentErr);
+      }
 
       // TODO: Send verification email
       await this.sendWelcomeEmail(newUser.email, newUser.firstName, verificationToken);
@@ -861,6 +901,42 @@ export class AuthController {
       // Log admin creation activity
       await this.logUserActivity(newUser.id, 'ADMIN_REGISTER', req);
 
+      // Record legal consents if accepted
+      try {
+        const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.ip || 'unknown';
+        const userAgent = req.get('user-agent') || 'unknown';
+        const consentList: { documentType: string; versionNumber: string }[] = [];
+
+        if (req.body.acceptedTerms) {
+          consentList.push({ documentType: 'terms_conditions', versionNumber: req.body.termsVersion || '1.0' });
+        }
+        if (req.body.acceptedPrivacyPolicy || req.body.acceptedTerms) {
+          consentList.push({ documentType: 'privacy_policy', versionNumber: req.body.privacyVersion || '1.0' });
+        }
+        if (Array.isArray(req.body.consents)) {
+          for (const c of req.body.consents) {
+            if (c.documentType && c.versionNumber) {
+              consentList.push({ documentType: c.documentType, versionNumber: c.versionNumber });
+            }
+          }
+        }
+
+        for (const consent of consentList) {
+          await db.insert(userLegalConsents).values({
+            id: uuidv4(),
+            userId: newUser.id,
+            documentType: consent.documentType,
+            versionNumber: consent.versionNumber,
+            ipAddress: ip,
+            userAgent: userAgent,
+            acceptedAt: new Date(),
+            createdAt: new Date()
+          });
+        }
+      } catch (consentErr) {
+        console.error('Failed to record admin legal consent:', consentErr);
+      }
+
       res.status(201).json({
         message: 'Admin user created successfully',
         admin: {
@@ -1066,6 +1142,155 @@ export class AuthController {
       res.status(500).json({
         error: 'Internal server error',
         code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // Super Admin: Get all admins
+  async getAdmins(req: AuthenticatedRequest, res: Response) {
+    try {
+      const adminList = await db
+        .select({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          status: users.status,
+          emailVerified: users.emailVerified,
+          lastLoginAt: users.lastLoginAt,
+          createdAt: users.createdAt,
+          metadata: users.metadata
+        })
+        .from(users)
+        .where(inArray(users.role, ['admin', 'super_admin']))
+        .orderBy(desc(users.createdAt));
+
+      res.json({
+        admins: adminList
+      });
+    } catch (error) {
+      console.error('Get admins error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch admin users',
+        code: 'GET_ADMINS_FAILED'
+      });
+    }
+  }
+
+  // Super Admin: Update admin account
+  async updateAdmin(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { firstName, lastName, role, status, permissions, password } = req.body;
+
+      const updateData: any = {
+        updatedAt: new Date()
+      };
+
+      if (firstName !== undefined) updateData.firstName = firstName;
+      if (lastName !== undefined) updateData.lastName = lastName;
+      if (role && ['admin', 'super_admin'].includes(role)) updateData.role = role;
+      if (status && ['active', 'inactive', 'suspended'].includes(status)) updateData.status = status;
+      if (permissions) updateData.metadata = { permissions };
+      if (password) {
+        updateData.passwordHash = await bcrypt.hash(password, 14);
+      }
+
+      const [updatedUser] = await db
+        .update(users)
+        .set(updateData)
+        .where(eq(users.id, id))
+        .returning({
+          id: users.id,
+          email: users.email,
+          firstName: users.firstName,
+          lastName: users.lastName,
+          role: users.role,
+          status: users.status,
+          updatedAt: users.updatedAt
+        });
+
+      if (!updatedUser) {
+        return res.status(404).json({
+          error: 'Admin user not found',
+          code: 'ADMIN_NOT_FOUND'
+        });
+      }
+
+      await this.logUserActivity(id, 'ADMIN_UPDATED', req);
+
+      res.json({
+        message: 'Admin updated successfully',
+        admin: updatedUser
+      });
+    } catch (error) {
+      console.error('Update admin error:', error);
+      res.status(500).json({
+        error: 'Failed to update admin user',
+        code: 'UPDATE_ADMIN_FAILED'
+      });
+    }
+  }
+
+  // Super Admin: Delete admin account
+  async deleteAdmin(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const [deletedUser] = await db
+        .delete(users)
+        .where(and(eq(users.id, id), inArray(users.role, ['admin'])))
+        .returning({ id: users.id, email: users.email });
+
+      if (!deletedUser) {
+        return res.status(404).json({
+          error: 'Admin not found or cannot delete super admin',
+          code: 'CANNOT_DELETE_ADMIN'
+        });
+      }
+
+      await this.logUserActivity(id, 'ADMIN_DELETED', req);
+
+      res.json({
+        message: 'Admin user removed successfully'
+      });
+    } catch (error) {
+      console.error('Delete admin error:', error);
+      res.status(500).json({
+        error: 'Failed to delete admin',
+        code: 'DELETE_ADMIN_FAILED'
+      });
+    }
+  }
+
+  // Super Admin: Get all legal consents history
+  async getLegalConsents(req: Request, res: Response) {
+    try {
+      const consents = await db
+        .select({
+          id: userLegalConsents.id,
+          userId: userLegalConsents.userId,
+          userEmail: users.email,
+          userName: users.firstName,
+          documentType: userLegalConsents.documentType,
+          versionNumber: userLegalConsents.versionNumber,
+          acceptedAt: userLegalConsents.acceptedAt,
+          ipAddress: userLegalConsents.ipAddress,
+          userAgent: userLegalConsents.userAgent
+        })
+        .from(userLegalConsents)
+        .leftJoin(users, eq(userLegalConsents.userId, users.id))
+        .orderBy(desc(userLegalConsents.acceptedAt));
+
+      res.json({
+        consents
+      });
+    } catch (error) {
+      console.error('Get legal consents error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch legal consents',
+        code: 'GET_CONSENTS_FAILED'
       });
     }
   }

@@ -18,11 +18,18 @@ export default function DashboardLayoutClient({
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
   
-  // Check if current route is login
-  const isLoginPage = pathname?.endsWith('/login');
+  // Check if current route is public (landing, login, register)
+  const isPublicPage =
+    !pathname ||
+    pathname === '/' ||
+    pathname.endsWith('/login') ||
+    pathname.endsWith('/register') ||
+    pathname.endsWith('/forgot-password') ||
+    pathname.endsWith('/reset-password') ||
+    Boolean(pathname.match(/^\/[a-z]{2}\/?$/));
   
-  // If it's the login page, render children without sidebar and header
-  if (isLoginPage) {
+  // If it's a public page, render children without sidebar and header
+  if (isPublicPage) {
     return <>{children}</>;
   }
   

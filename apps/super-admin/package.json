@@ -1,0 +1,37 @@
+{
+  "name": "@ecommerce/super-admin",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Super Admin Portal for e-commerce platform",
+  "scripts": {
+    "build": "next build",
+    "dev": "next dev -p 3008",
+    "start": "next start -p 3008",
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next dist"
+  },
+  "dependencies": {
+    "@radix-ui/react-icons": "^1.3.0",
+    "axios": "^1.5.1",
+    "clsx": "^2.0.0",
+    "date-fns": "^2.30.0",
+    "framer-motion": "^10.16.4",
+    "next": "^14.2.33",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-hot-toast": "^2.4.1",
+    "tailwind-merge": "^1.14.0",
+    "zustand": "^4.5.7"
+  },
+  "devDependencies": {
+    "@types/node": "^20.8.0",
+    "@types/react": "^18.2.25",
+    "@types/react-dom": "^18.2.10",
+    "autoprefixer": "^10.4.16",
+    "postcss": "^8.4.31",
+    "tailwindcss": "^3.3.3",
+    "typescript": "^5.2.2"
+  }
+}
+

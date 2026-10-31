@@ -20,6 +20,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     confirmPassword: '',
     firstName: '',
     lastName: '',
+    acceptedLegal: false,
   });
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -67,7 +68,14 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           return;
         }
 
-        // Register new user
+        // Validate legal consent accepted
+        if (!formData.acceptedLegal) {
+          setError('You must accept the Terms & Conditions and Privacy Policy to create an account.');
+          setIsLoading(false);
+          return;
+        }
+
+        // Register new user with legal consent tracking
         const registerResponse = await callApi('http://localhost:3001/api/auth/register', {
           method: 'POST',
           body: JSON.stringify({
@@ -75,6 +83,12 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             password: formData.password,
             firstName: formData.firstName,
             lastName: formData.lastName,
+            acceptedTerms: true,
+            acceptedPrivacyPolicy: true,
+            acceptedCancellationRefund: true,
+            termsVersion: '1.0',
+            privacyVersion: '1.0',
+            cancellationRefundVersion: '1.0'
           }),
         });
 
@@ -106,7 +120,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
         toast.success('Welcome back! Your cart has been synced.');
       }
       
-      setFormData({ email: '', password: '', confirmPassword: '', firstName: '', lastName: '' });
+      setFormData({ email: '', password: '', confirmPassword: '', firstName: '', lastName: '', acceptedLegal: false });
       
     } catch (err: any) {
       console.error('Auth error:', err);
@@ -119,7 +133,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
 
   const toggleMode = () => {
     setMode(mode === 'signin' ? 'signup' : 'signin');
-    setFormData({ email: '', password: '', confirmPassword: '', firstName: '', lastName: '' });
+    setFormData({ email: '', password: '', confirmPassword: '', firstName: '', lastName: '', acceptedLegal: false });
     setError('');
   };
 
@@ -314,21 +328,38 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </div>
 
             {mode === 'signup' && (
-              <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
-                  {t('confirmPassword')}
-                </label>
-                <input
-                  id="confirmPassword"
-                  name="confirmPassword"
-                  type="password"
-                  required
-                  value={formData.confirmPassword}
-                  onChange={handleInputChange}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
-                  placeholder={t('confirmPasswordPlaceholder')}
-                />
-              </div>
+              <>
+                <div>
+                  <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('confirmPassword')}
+                  </label>
+                  <input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type="password"
+                    required
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white/50 backdrop-blur-sm"
+                    placeholder={t('confirmPasswordPlaceholder')}
+                  />
+                </div>
+
+                <div className="flex items-start space-x-2 pt-2">
+                  <input
+                    id="acceptedLegal"
+                    name="acceptedLegal"
+                    type="checkbox"
+                    required
+                    checked={formData.acceptedLegal}
+                    onChange={(e) => setFormData(prev => ({ ...prev, acceptedLegal: e.target.checked }))}
+                    className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
+                  />
+                  <label htmlFor="acceptedLegal" className="text-xs text-gray-600 leading-relaxed cursor-pointer">
+                    I agree to the <span className="text-blue-600 font-medium">Terms & Conditions</span>, <span className="text-blue-600 font-medium">Privacy Policy</span> (v1.0), and <span className="text-blue-600 font-medium">Cancellation & Refund Policy</span>.
+                  </label>
+                </div>
+              </>
             )}
 
             <button

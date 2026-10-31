@@ -32,6 +32,11 @@
   "auth": {
     "login": "Admin Login",
     "loginSubtitle": "Sign in to your admin dashboard",
+    "register": "Create Admin Account",
+    "registerSubtitle": "Register your store and start managing products",
+    "signUp": "Create Account",
+    "haveAccount": "Already have an account? Sign in",
+    "noAccount": "Don't have an admin account? Sign up here",
     "email": "Email address",
     "password": "Password",
     "showPassword": "Show password",

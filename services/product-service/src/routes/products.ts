@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { ProductController } from '../controllers/productController';
-import { authMiddleware, requireStoreOwnerOrAdmin, requireCustomer } from '../middleware/auth';
+import { authMiddleware, requireStoreOwnerOrAdmin, requireCustomer, requireSuperAdmin } from '../middleware/auth';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
@@ -52,9 +52,9 @@ router.post('/', requireStoreOwnerOrAdmin, productController.createProduct.bind(
 router.put('/:id', requireStoreOwnerOrAdmin, productController.updateProduct.bind(productController));
 router.delete('/:id', requireStoreOwnerOrAdmin, productController.deleteProduct.bind(productController));
 
-// Admin-only routes for categories
-router.post('/categories', requireStoreOwnerOrAdmin, productController.createCategory.bind(productController));
-router.put('/categories/:id', requireStoreOwnerOrAdmin, productController.updateCategory.bind(productController));
-router.delete('/categories/:id', requireStoreOwnerOrAdmin, productController.deleteCategory.bind(productController));
+// Super Admin only routes for categories
+router.post('/categories', requireSuperAdmin, productController.createCategory.bind(productController));
+router.put('/categories/:id', requireSuperAdmin, productController.updateCategory.bind(productController));
+router.delete('/categories/:id', requireSuperAdmin, productController.deleteCategory.bind(productController));
 
 export default router;

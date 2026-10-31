@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
@@ -42,17 +42,22 @@ export default function LoginPage() {
       localStorage.setItem('sessionId', data.sessionId);
       localStorage.setItem('admin', JSON.stringify(data.admin));
 
-      const stores = await callApi(`http://${urls.store.getUserStores}`, {
-        method: 'GET',
-      });
+      try {
+        const stores = await callApi(`http://${urls.store.getUserStores}`, {
+          method: 'GET',
+        });
 
-      setUserStores(stores.stores);
+        setUserStores(stores.stores || []);
 
-      const allData = await callApi(`http://${urls.store.getAllData}/${stores.stores[0].storeId}/complete`, {
-        method: 'GET',
-      });
-
-      setData(allData);
+        if (stores.stores && stores.stores.length > 0 && stores.stores[0].storeId) {
+          const allData = await callApi(`http://${urls.store.getAllData}/${stores.stores[0].storeId}/complete`, {
+            method: 'GET',
+          });
+          setData(allData);
+        }
+      } catch (storeErr) {
+        console.warn('Could not load store data on login', storeErr);
+      }
 
       // Redirect to dashboard
       router.push('/dashboard');
@@ -202,6 +207,21 @@ export default function LoginPage() {
               )}
             </motion.button>
           </motion.form>
+
+          {/* Sign up prompt & back to home */}
+          <div className="mt-6 pt-4 border-t border-gray-100 dark:border-gray-700 text-center text-xs text-gray-500 dark:text-gray-400 space-y-2">
+            <p>
+              {t('noAccount')}{' '}
+              <Link href="/register" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
+                {t('register')}
+              </Link>
+            </p>
+            <p>
+              <Link href="/" className="hover:text-blue-600 dark:hover:text-blue-400 transition">
+                &larr; Back to Portal Overview
+              </Link>
+            </p>
+          </div>
         </div>
       </motion.div>
     </div>

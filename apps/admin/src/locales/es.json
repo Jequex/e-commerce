@@ -32,6 +32,11 @@
   "auth": {
     "login": "Inicio de Sesión Admin",
     "loginSubtitle": "Inicia sesión en tu panel de administración",
+    "register": "Crear Cuenta de Administrador",
+    "registerSubtitle": "Registre su tienda y comience a administrar productos",
+    "signUp": "Crear Cuenta",
+    "haveAccount": "¿Ya tiene una cuenta? Inicie sesión",
+    "noAccount": "¿No tiene una cuenta? Regístrese aquí",
     "email": "Dirección de email",
     "password": "Contraseña",
     "showPassword": "Mostrar contraseña",

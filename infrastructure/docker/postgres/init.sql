@@ -8,6 +8,7 @@ CREATE DATABASE ecommerce_notifications;
 CREATE DATABASE ecommerce_users;
 CREATE DATABASE ecommerce_inventory;
 CREATE DATABASE ecommerce_analytics;
+CREATE DATABASE ecommerce_store;
 
 -- Create users for each service (optional, for better security)
 CREATE USER auth_user WITH PASSWORD 'auth_password';
@@ -41,3 +42,4 @@ GRANT ALL PRIVILEGES ON DATABASE ecommerce_notifications TO ecommerce;
 GRANT ALL PRIVILEGES ON DATABASE ecommerce_users TO ecommerce;
 GRANT ALL PRIVILEGES ON DATABASE ecommerce_inventory TO ecommerce;
 GRANT ALL PRIVILEGES ON DATABASE ecommerce_analytics TO ecommerce;
+GRANT ALL PRIVILEGES ON DATABASE ecommerce_store TO ecommerce;

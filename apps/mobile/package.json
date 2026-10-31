@@ -1,0 +1,35 @@
+{
+  "name": "@ecommerce/mobile",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Customer mobile application for e-commerce platform",
+  "main": "index.js",
+  "scripts": {
+    "dev": "expo start",
+    "start": "expo start",
+    "android": "PATH=$PATH:$HOME/Library/Android/sdk/platform-tools:$HOME/Library/Android/sdk/emulator ANDROID_HOME=$HOME/Library/Android/sdk bash -c 'adb reverse tcp:8081 tcp:8081 2>/dev/null || true; adb reverse tcp:8080 tcp:8080 2>/dev/null || true; expo start --android'",
+    "ios": "expo start --ios",
+    "web": "expo start --web"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~3.2.3",
+    "@expo/vector-icons": "^14.0.0",
+    "@react-navigation/bottom-tabs": "^6.5.11",
+    "@react-navigation/native": "^6.1.9",
+    "@react-navigation/native-stack": "^6.9.17",
+    "axios": "^1.5.1",
+    "expo": "~51.0.0",
+    "expo-constants": "~16.0.2",
+    "expo-status-bar": "~1.12.1",
+    "react": "^18.2.0",
+    "react-native": "0.74.5",
+    "react-native-safe-area-context": "4.10.5",
+    "react-native-screens": "3.31.1",
+    "react-native-web": "^0.19.13"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.20.0",
+    "@types/react": "~18.2.45",
+    "typescript": "~5.3.3"
+  }
+}

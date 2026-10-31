@@ -8,6 +8,7 @@ import { testConnection } from './config/database';
 import { storeRoutes } from './routes/store';
 import roleRoutes from './routes/role.routes';
 import permissionRoutes from './routes/permission.routes';
+import { legalAndSettingsRoutes } from './routes/legalAndSettings.routes';
 import { errorHandler, notFoundHandler } from './middleware/errorHandler';
 import { generalLimiter } from './middleware/rateLimiter';
 
@@ -30,8 +31,23 @@ app.use(helmet({
   },
 }));
 
+const allowedStoreOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3006',
+  'http://localhost:3008',
+  'http://localhost:8080',
+  'http://localhost:8081',
+  'http://localhost:19006',
+  ...(process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : [])
+];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN ? process.env.CORS_ORIGIN.split(',') : ['http://localhost:3000', 'http://localhost:3006'],
+  origin: (origin, callback) => {
+    if (!origin || allowedStoreOrigins.includes(origin) || origin.startsWith('http://localhost:')) {
+      return callback(null, true);
+    }
+    return callback(null, false);
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
@@ -111,6 +127,8 @@ app.get('/live', (req, res) => {
 
 // API routes
 app.use('/api/v1/stores', storeRoutes);
+app.use('/api/v1/stores', legalAndSettingsRoutes);
+app.use('/api/v1', legalAndSettingsRoutes);
 app.use('/api/v1/roles', roleRoutes);
 app.use('/api/v1/permissions', permissionRoutes);
 

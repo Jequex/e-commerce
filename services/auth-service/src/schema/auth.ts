@@ -108,6 +108,18 @@ export const apiKeys = pgTable('api_keys', {
   createdAt: timestamp('created_at').defaultNow().notNull(),
 });
 
+// User Legal Consents table (Audit trail of accepted policies)
+export const userLegalConsents = pgTable('user_legal_consents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  documentType: varchar('document_type', { length: 50 }).notNull(), // privacy_policy, terms_conditions, cancellation_refund
+  versionNumber: varchar('version_number', { length: 20 }).notNull(),
+  acceptedAt: timestamp('accepted_at').defaultNow().notNull(),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: text('user_agent'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
 // Zod schemas for validation
 export const insertUserSchema = z.object({
   email: z.string().email(),

@@ -2,6 +2,7 @@
 
 import { Link } from '@/i18n/navigation';
 import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
 
 interface FooterProps {
   activeRoute?: string;
@@ -10,6 +11,28 @@ interface FooterProps {
 export default function Footer({ activeRoute }: FooterProps) {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
+  const [adminUrl, setAdminUrl] = useState('http://localhost:3006');
+  const [contactData, setContactData] = useState<{ phone?: string; email?: string; address?: string } | null>(null);
+
+  useEffect(() => {
+    fetch('http://localhost:8080/api/store/settings/contact')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.admin_app_url || data.adminAppUrl) {
+          setAdminUrl(data.admin_app_url || data.adminAppUrl);
+        }
+        if (data.phone || data.email || data.address) {
+          setContactData({
+            phone: data.phone,
+            email: data.email,
+            address: data.address,
+          });
+        }
+      })
+      .catch(() => {
+        // Fallback default
+      });
+  }, []);
 
   const isActive = (route: string) => activeRoute === route;
 
@@ -120,6 +143,19 @@ export default function Footer({ activeRoute }: FooterProps) {
                   {t('faq')}
                 </Link>
               </li>
+              <li>
+                <a 
+                  href={adminUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-amber-400 hover:text-amber-300 font-semibold transition-colors mt-2"
+                >
+                  <span>Merchant & Admin Portal</span>
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -131,20 +167,20 @@ export default function Footer({ activeRoute }: FooterProps) {
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clipRule="evenodd" />
                 </svg>
-                123 Commerce St, City, State
+                {contactData?.address || '123 Commerce St, City, State'}
               </li>
               <li className="flex items-center">
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2 3a1 1 0 011-1h2.153a1 1 0 01.986.836l.74 4.435a1 1 0 01-.54 1.06l-1.548.773a11.037 11.037 0 006.105 6.105l.774-1.548a1 1 0 011.059-.54l4.435.74a1 1 0 01.836.986V17a1 1 0 01-1 1h-2C7.82 18 2 12.18 2 5V3z" />
                 </svg>
-                +234 814 167 6170
+                {contactData?.phone || '+234 814 167 6170'}
               </li>
               <li className="flex items-center">
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" />
                   <path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" />
                 </svg>
-                support@jequex.com
+                {contactData?.email || 'support@jequex.com'}
               </li>
             </ul>
           </div>
@@ -156,7 +192,7 @@ export default function Footer({ activeRoute }: FooterProps) {
             <p className="text-gray-400 text-sm mb-4 md:mb-0">
               © 2025 {tCommon('title')}. {tCommon('allRightsReserved')}
             </p>
-            <div className="flex space-x-6 text-sm">
+            <div className="flex space-x-6 text-sm items-center">
               <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
                 {t('privacyPolicy')}
               </Link>
@@ -166,6 +202,14 @@ export default function Footer({ activeRoute }: FooterProps) {
               <Link href="/cookies" className="text-gray-400 hover:text-white transition-colors">
                 {t('cookiePolicy')}
               </Link>
+              <a 
+                href={adminUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-amber-400 hover:text-amber-300 font-medium transition-colors border-l border-gray-700 pl-4"
+              >
+                Admin App ↗
+              </a>
             </div>
           </div>
         </div>

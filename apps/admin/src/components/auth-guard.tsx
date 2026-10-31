@@ -8,27 +8,27 @@ interface AuthGuardProps {
   children: React.ReactNode;
 }
 
-const publicRoutes = ['/login', '/forgot-password', '/reset-password'];
+const publicRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 export function AuthGuard({ children }: AuthGuardProps) {
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, isHydrated } = useAuthStore();
 
+  const isPublicRoute =
+    pathname === '/' ||
+    pathname === '' ||
+    publicRoutes.some((route) => pathname.startsWith(route));
+
   useEffect(() => {
     // Only check auth after hydration is complete
     if (!isHydrated) return;
-
-    // Check if current route is public
-    const isPublicRoute = publicRoutes.some((route) =>
-      pathname.startsWith(route)
-    );
 
     // Redirect to login if not authenticated and not on public route
     if (!isAuthenticated && !isPublicRoute) {
       router.push('/login');
     }
-  }, [isAuthenticated, isHydrated, pathname, router]);
+  }, [isAuthenticated, isHydrated, isPublicRoute, router]);
 
   // Show loading while hydrating
   if (!isHydrated) {
@@ -36,7 +36,6 @@ export function AuthGuard({ children }: AuthGuardProps) {
   }
 
   // Show loading while redirecting unauthenticated users
-  const isPublicRoute = publicRoutes.some((route) => pathname.startsWith(route));
   if (!isAuthenticated && !isPublicRoute) {
     return null;
   }

@@ -105,6 +105,9 @@ export const requireRole = (allowedRoles: string[]) => {
 // Admin-only middleware
 export const requireAdmin = requireRole(['admin', 'super_admin']);
 
+// Super admin only middleware (e.g. for category management)
+export const requireSuperAdmin = requireRole(['super_admin']);
+
 // Store owner or admin middleware
 export const requireStoreOwnerOrAdmin = (
   req: AuthenticatedRequest,

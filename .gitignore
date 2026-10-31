@@ -64,3 +64,10 @@ temp/
 
 # Turbo cookies
 .turbo/cookies
+
+# TypeScript build info
+*.tsbuildinfo
+
+# Expo & Mobile
+.expo/
+apps/mobile/dist/

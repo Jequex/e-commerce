@@ -127,6 +127,15 @@ router.get('/user/:userId', authController.getUserById.bind(authController));
 router.get('/users', jwtAuthMiddleware, authController.getAllUsers.bind(authController));
 
 // Admin routes
+// Admin list & management
+router.get('/admins', authController.getAdmins.bind(authController));
+router.post('/admins', validateRequest(adminRegisterSchema), authController.adminRegister.bind(authController));
+router.put('/admins/:id', authController.updateAdmin.bind(authController));
+router.delete('/admins/:id', authController.deleteAdmin.bind(authController));
+
+// Legal consents audit route
+router.get('/legal-consents', authController.getLegalConsents.bind(authController));
+
 // Admin register
 router.post(
   '/admin-register',

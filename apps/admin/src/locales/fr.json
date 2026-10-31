@@ -32,6 +32,11 @@
   "auth": {
     "login": "Connexion Admin",
     "loginSubtitle": "Connectez-vous à votre tableau de bord admin",
+    "register": "Créer un Compte Administrateur",
+    "registerSubtitle": "Enregistrez votre boutique et commencez à gérer",
+    "signUp": "Créer un Compte",
+    "haveAccount": "Vous avez déjà un compte ? Se connecter",
+    "noAccount": "Pas encore de compte ? S'inscrire ici",
     "email": "Adresse email",
     "password": "Mot de passe",
     "showPassword": "Afficher le mot de passe",

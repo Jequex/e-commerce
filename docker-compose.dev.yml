@@ -27,7 +27,7 @@ services:
 
   # Message Queue
   zookeeper:
-    image: confluentinc/cp-zookeeper:latest
+    image: confluentinc/cp-zookeeper:7.4.0
     container_name: ecommerce-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -36,7 +36,7 @@ services:
       - ecommerce-network
 
   kafka:
-    image: confluentinc/cp-kafka:latest
+    image: confluentinc/cp-kafka:7.4.0
     container_name: ecommerce-kafka
     depends_on:
       - zookeeper
@@ -294,6 +294,29 @@ services:
       - ./apps/admin/tailwind.config.js:/app/tailwind.config.js
       - ./apps/admin/tsconfig.json:/app/tsconfig.json
       - ./apps/admin/next-env.d.ts:/app/next-env.d.ts
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - ecommerce-network
+    command: npm run dev
+
+  super-admin:
+    build:
+      context: ./apps/super-admin
+      dockerfile: Dockerfile.dev
+    container_name: ecommerce-super-admin
+    environment:
+      - NODE_ENV=development
+      - PORT=3008
+      - NEXT_PUBLIC_API_URL=http://localhost:8080
+    ports:
+      - "3008:3008"
+    volumes:
+      - ./apps/super-admin/src:/app/src
+      - ./apps/super-admin/package.json:/app/package.json
+      - ./apps/super-admin/next.config.js:/app/next.config.js
+      - ./apps/super-admin/tailwind.config.js:/app/tailwind.config.js
+      - ./apps/super-admin/tsconfig.json:/app/tsconfig.json
       - /app/node_modules
       - /app/.next
     networks:

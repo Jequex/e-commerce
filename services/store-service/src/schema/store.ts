@@ -455,3 +455,55 @@ export type StoreAnalytics = typeof storeAnalytics.$inferSelect;
 export type Permission = typeof permissions.$inferSelect;
 export type Role = typeof roles.$inferSelect;
 export type RolePermission = typeof rolePermissions.$inferSelect;
+
+// Site Contact & Settings table
+export const siteSettings = pgTable('site_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  phone: varchar('phone', { length: 50 }),
+  email: varchar('email', { length: 255 }),
+  address: text('address'),
+  city: varchar('city', { length: 100 }),
+  state: varchar('state', { length: 100 }),
+  postal_code: varchar('postal_code', { length: 20 }),
+  country: varchar('country', { length: 100 }),
+  business_hours: text('business_hours'),
+  support_hours: text('support_hours'),
+  social_facebook: varchar('social_facebook', { length: 255 }),
+  social_twitter: varchar('social_twitter', { length: 255 }),
+  social_instagram: varchar('social_instagram', { length: 255 }),
+  social_linkedin: varchar('social_linkedin', { length: 255 }),
+  admin_app_url: varchar('admin_app_url', { length: 500 }).default('http://localhost:3006'),
+  updated_by_id: uuid('updated_by_id'),
+  updated_by_name: varchar('updated_by_name', { length: 255 }),
+  updated_at: timestamp('updated_at').defaultNow().notNull()
+});
+
+// Legal Documents table
+export const legalDocuments = pgTable('legal_documents', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  type: varchar('type', { length: 50 }).unique().notNull(), // privacy_policy, terms_conditions, cancellation_refund
+  title: varchar('title', { length: 200 }).notNull(),
+  description: text('description'),
+  current_version: varchar('current_version', { length: 20 }).default('1.0').notNull(),
+  updated_at: timestamp('updated_at').defaultNow().notNull()
+});
+
+// Legal Document Versions (Full change history audit log)
+export const legalDocumentVersions = pgTable('legal_document_versions', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  document_type: varchar('document_type', { length: 50 }).notNull(),
+  version: varchar('version', { length: 20 }).notNull(),
+  title: varchar('title', { length: 200 }).notNull(),
+  content: text('content').notNull(),
+  change_summary: text('change_summary'),
+  effective_date: timestamp('effective_date').defaultNow().notNull(),
+  created_at: timestamp('created_at').defaultNow().notNull(),
+  created_by_id: uuid('created_by_id'),
+  created_by_name: varchar('created_by_name', { length: 255 }),
+  created_by_email: varchar('created_by_email', { length: 255 }),
+  is_active: boolean('is_active').default(true).notNull()
+});
+
+export type SiteSettings = typeof siteSettings.$inferSelect;
+export type LegalDocument = typeof legalDocuments.$inferSelect;
+export type LegalDocumentVersion = typeof legalDocumentVersions.$inferSelect;
