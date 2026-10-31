@@ -31,6 +31,24 @@ const Sidebar: React.FC = () => {
   const pathname = usePathname();
   const t = useTranslations('sidebar');
   const [isCollapsed, setIsCollapsed] = useState(false);
+  const [branding, setBranding] = useState<{ appName: string; appLogoUrl: string }>({
+    appName: 'Jequex E-Commerce',
+    appLogoUrl: '',
+  });
+
+  React.useEffect(() => {
+    fetch('http://localhost:3007/api/v1/settings/contact')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data) {
+          setBranding({
+            appName: data.app_name || data.appName || 'Jequex E-Commerce',
+            appLogoUrl: data.app_logo_url || data.appLogoUrl || '',
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const sidebarItems: SidebarItem[] = [
     {
@@ -58,6 +76,12 @@ const Sidebar: React.FC = () => {
       label: 'Categories',
       icon: MdBarChart,
       href: '/categories',
+    },
+    {
+      id: 'coupons',
+      label: 'Coupons & Promo',
+      icon: MdBarChart,
+      href: '/coupons',
     },
     {
       id: 'orders',
@@ -127,15 +151,22 @@ const Sidebar: React.FC = () => {
                 transition={{ duration: 0.2 }}
                 className="flex items-center space-x-3"
               >
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
-                  <MdRocket className="w-4 h-4 text-white" />
-                </div>
-                <div>
-                  <h1 className="text-lg font-bold text-gray-900 dark:text-white">
-                    Admin
+                {branding.appLogoUrl ? (
+                  <div className="w-8 h-8 rounded-lg bg-gray-100 dark:bg-gray-800 p-0.5 flex items-center justify-center overflow-hidden shrink-0">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={branding.appLogoUrl} alt="" className="max-h-full max-w-full object-contain" />
+                  </div>
+                ) : (
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-lg flex items-center justify-center shrink-0">
+                    <MdRocket className="w-4 h-4 text-white" />
+                  </div>
+                )}
+                <div className="min-w-0">
+                  <h1 className="text-sm font-bold text-gray-900 dark:text-white truncate" title={branding.appName}>
+                    {branding.appName || 'Admin'}
                   </h1>
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Dashboard
+                  <p className="text-[10px] text-gray-500 dark:text-gray-400">
+                    Merchant Portal
                   </p>
                 </div>
               </motion.div>

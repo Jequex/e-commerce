@@ -114,25 +114,12 @@ export const orderFulfillments = pgTable('order_fulfillments', {
   id: uuid('id').primaryKey().defaultRandom(),
   orderId: uuid('order_id').references(() => orders.id, { onDelete: 'cascade' }).notNull(),
   status: text('status').default('pending'), // pending, open, success, cancelled, error, failure
-  
-  // Tracking info
+  trackingCompany: text('tracking_company'),
   trackingNumber: text('tracking_number'),
-  trackingUrls: jsonb('tracking_urls').$type<string[]>(),
-  carrier: text('carrier'),
-  service: text('service'),
-  
-  // Shipping info
-  shipmentStatus: text('shipment_status'), // label_printed, in_transit, out_for_delivery, delivered, exception
-  estimatedDelivery: timestamp('estimated_delivery'),
-  actualDelivery: timestamp('actual_delivery'),
-  
-  // Location info
-  originAddress: jsonb('origin_address').$type<Address>(),
-  destinationAddress: jsonb('destination_address').$type<Address>(),
-  
-  // Notification settings
+  trackingUrl: text('tracking_url'),
+  shipmentStatus: text('shipment_status'),
+  estimatedDeliveryDate: timestamp('estimated_delivery_date'),
   notifyCustomer: boolean('notify_customer').default(true),
-  
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });

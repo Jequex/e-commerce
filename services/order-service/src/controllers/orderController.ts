@@ -466,7 +466,8 @@ export class OrderController {
         status,
         financialStatus,
         fulfillmentStatus,
-        search
+        search,
+        userId
       } = req.query;
 
       const pageNum = parseInt(page as string, 10);
@@ -475,6 +476,10 @@ export class OrderController {
 
       // Build where conditions
       const conditions = [];
+
+      if (userId) {
+        conditions.push(eq(orders.userId, userId as string));
+      }
 
       if (status) {
         conditions.push(eq(orders.status, status as string));

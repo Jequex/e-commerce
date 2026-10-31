@@ -15,10 +15,13 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { name: 'Dashboard', href: '/', icon: Icons.DashboardIcon },
+  { name: 'Customers & Purchases', href: '/customers', icon: Icons.AvatarIcon, badge: 'Purchases' },
+  { name: 'Profit Markups', href: '/markups', icon: Icons.BarChartIcon, badge: 'Super Admin' },
+  { name: 'Coupons & Promo', href: '/coupons', icon: Icons.TokensIcon },
   { name: 'Categories', href: '/categories', icon: Icons.ComponentInstanceIcon, badge: 'Super Admin' },
   { name: 'Products', href: '/products', icon: Icons.CubeIcon },
   { name: 'Manage Admins', href: '/admins', icon: Icons.PersonIcon, badge: 'Super Admin' },
-  { name: 'Contact & Settings', href: '/settings', icon: Icons.GearIcon, badge: 'Super Admin' },
+  { name: 'App Branding & Settings', href: '/settings', icon: Icons.GearIcon, badge: 'Super Admin' },
   { name: 'Legal Policies CMS', href: '/legal', icon: Icons.FileTextIcon, badge: 'Audit Trail' },
   { name: 'Consent Log', href: '/consents', icon: Icons.CheckCircledIcon },
 ];
@@ -28,9 +31,24 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [branding, setBranding] = useState<{ appName: string; appLogoUrl: string }>({
+    appName: 'Jequex E-Commerce',
+    appLogoUrl: '',
+  });
 
   useEffect(() => {
     setMounted(true);
+    fetch('/api/store/settings/contact')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data) {
+          setBranding({
+            appName: data.app_name || data.appName || 'Jequex E-Commerce',
+            appLogoUrl: data.app_logo_url || data.appLogoUrl || '',
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -55,13 +73,22 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
     <div className="min-h-screen flex bg-slate-950 text-slate-100">
       {/* Sidebar */}
       <aside className="w-64 bg-slate-900/90 border-r border-slate-800 flex flex-col fixed inset-y-0 z-30">
-        <div className="p-6 border-b border-slate-800 flex items-center gap-3">
-          <div className="h-9 w-9 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20">
-            SA
-          </div>
-          <div>
-            <h1 className="font-bold text-sm tracking-wide text-white">SUPER ADMIN</h1>
-            <p className="text-[10px] text-slate-400 font-medium">Platform Governance</p>
+        <div className="p-5 border-b border-slate-800 flex items-center gap-3">
+          {branding.appLogoUrl ? (
+            <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 p-1 flex items-center justify-center overflow-hidden shrink-0">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={branding.appLogoUrl} alt="" className="max-h-full max-w-full object-contain" />
+            </div>
+          ) : (
+            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20 shrink-0">
+              SA
+            </div>
+          )}
+          <div className="min-w-0">
+            <h1 className="font-bold text-xs tracking-wide text-white truncate" title={branding.appName}>
+              {branding.appName || 'SUPER ADMIN'}
+            </h1>
+            <p className="text-[10px] text-amber-400 font-medium">Super Admin Console</p>
           </div>
         </div>
 

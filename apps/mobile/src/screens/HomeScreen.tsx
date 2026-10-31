@@ -10,28 +10,39 @@ import {
   ScrollView,
   Image,
 } from 'react-native';
-import { PRODUCTS_API_URL } from '../config/api';
+import { PRODUCTS_API_URL, STORE_SETTINGS_API_URL } from '../config/api';
 import { useCart } from '../context/CartContext';
 
 export default function HomeScreen({ navigation }: any) {
   const [products, setProducts] = useState<any[]>([]);
   const [categories, setCategories] = useState<any[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [branding, setBranding] = useState<{ appName: string; appLogoUrl: string | null }>({
+    appName: 'JEQUEX STORE',
+    appLogoUrl: null,
+  });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const { addToCart } = useCart();
 
   const loadData = async () => {
     try {
-      const [prodRes, catRes] = await Promise.all([
-        fetch(`${PRODUCTS_API_URL}?limit=30`).then((r) => r.json()),
-        fetch(`${PRODUCTS_API_URL}/categories`).then((r) => r.json()),
+      const [prodRes, catRes, settingsRes] = await Promise.all([
+        fetch(`${PRODUCTS_API_URL}?limit=30`).then((r) => r.json()).catch(() => ({})),
+        fetch(`${PRODUCTS_API_URL}/categories`).then((r) => r.json()).catch(() => ({})),
+        fetch(STORE_SETTINGS_API_URL).then((r) => r.json()).catch(() => ({})),
       ]);
 
       setProducts(prodRes.products || []);
       setCategories(catRes.categories || []);
+      if (settingsRes && (settingsRes.app_name || settingsRes.appName)) {
+        setBranding({
+          appName: settingsRes.app_name || settingsRes.appName || 'JEQUEX STORE',
+          appLogoUrl: settingsRes.app_logo_url || settingsRes.appLogoUrl || null,
+        });
+      }
     } catch (e) {
-      console.error('Failed to load mobile products', e);
+      console.error('Failed to load mobile products or settings', e);
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -50,8 +61,19 @@ export default function HomeScreen({ navigation }: any) {
     <View style={styles.container}>
       {/* Header Banner */}
       <View style={styles.headerBanner}>
-        <Text style={styles.storeTitle}>JEQUEX STORE</Text>
-        <Text style={styles.storeSubtitle}>Official Customer Mobile App</Text>
+        <View style={styles.brandRow}>
+          {branding.appLogoUrl ? (
+            <Image
+              source={{ uri: branding.appLogoUrl }}
+              style={styles.brandLogo}
+              resizeMode="contain"
+            />
+          ) : null}
+          <View style={styles.brandTextWrapper}>
+            <Text style={styles.storeTitle}>{branding.appName.toUpperCase()}</Text>
+            <Text style={styles.storeSubtitle}>Official Customer Mobile App</Text>
+          </View>
+        </View>
       </View>
 
       {/* Category Pills Scroller */}
@@ -129,13 +151,27 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#f8fafc' },
   headerBanner: {
     backgroundColor: '#0f172a',
-    paddingVertical: 18,
+    paddingVertical: 16,
     paddingHorizontal: 20,
     borderBottomLeftRadius: 16,
     borderBottomRightRadius: 16,
   },
-  storeTitle: { fontSize: 20, fontWeight: 'bold', color: '#ffffff', letterSpacing: 1 },
-  storeSubtitle: { fontSize: 12, color: '#94a3b8', marginTop: 2 },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  brandLogo: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    backgroundColor: '#1e293b',
+  },
+  brandTextWrapper: {
+    flex: 1,
+  },
+  storeTitle: { fontSize: 18, fontWeight: 'bold', color: '#ffffff', letterSpacing: 0.5 },
+  storeSubtitle: { fontSize: 11, color: '#94a3b8', marginTop: 2 },
   categoryScrollerWrapper: { backgroundColor: '#ffffff', borderBottomWidth: 1, borderBottomColor: '#e2e8f0' },
   categoryContainer: { paddingHorizontal: 16, paddingVertical: 12, gap: 8 },
   categoryChip: {

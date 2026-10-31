@@ -2,3 +2,4 @@
 \c ecommerce_products;
 
 ALTER TABLE products ADD COLUMN IF NOT EXISTS demo_video text;
+

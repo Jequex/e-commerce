@@ -55,6 +55,21 @@ router.get('/store/:storeId', productController.getProductsByStore.bind(productC
 router.get('/store/:storeId/stats', productController.getStoreProductStats.bind(productController));
 router.get('/store/:storeId/featured', productController.getStoreFeaturedProducts.bind(productController));
 
+// Public routes - Coupons validation
+router.post('/coupons/validate', productController.validateCoupon.bind(productController));
+
+// Coupons management (Admin & Super Admin)
+router.get('/coupons', authMiddleware, requireStoreOwnerOrAdmin, productController.getCoupons.bind(productController));
+router.post('/coupons', authMiddleware, requireStoreOwnerOrAdmin, productController.createCoupon.bind(productController));
+router.put('/coupons/:id', authMiddleware, requireStoreOwnerOrAdmin, productController.updateCoupon.bind(productController));
+router.delete('/coupons/:id', authMiddleware, requireStoreOwnerOrAdmin, productController.deleteCoupon.bind(productController));
+
+// Markups management (Super Admin)
+router.get('/markups', authMiddleware, requireSuperAdmin, productController.getCategoryMarkups.bind(productController));
+router.put('/markups/category/:id', authMiddleware, requireSuperAdmin, productController.updateCategoryDefaultMarkup.bind(productController));
+router.post('/markups/admin', authMiddleware, requireSuperAdmin, productController.setAdminCategoryMarkup.bind(productController));
+router.delete('/markups/admin/:id', authMiddleware, requireSuperAdmin, productController.deleteAdminCategoryMarkup.bind(productController));
+
 // General product routes (public)
 router.get('/', productController.getProducts.bind(productController));
 router.get('/:id', productController.getProduct.bind(productController));

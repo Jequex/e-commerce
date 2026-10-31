@@ -6,11 +6,14 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import toast from 'react-hot-toast';
 
 export default function SiteContactSettingsPage() {
-  const { user } = useAuthStore();
+  const { user, token } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
 
   const [formData, setFormData] = useState({
+    appName: 'Jequex E-Commerce',
+    appLogoUrl: '',
     phone: '',
     email: '',
     address: '',
@@ -35,6 +38,8 @@ export default function SiteContactSettingsPage() {
         const res = await fetch('/api/store/settings/contact');
         const data = await res.json();
         setFormData({
+          appName: data.app_name || data.appName || 'Jequex E-Commerce',
+          appLogoUrl: data.app_logo_url || data.appLogoUrl || '',
           phone: data.phone || '',
           email: data.email || '',
           address: data.address || '',
@@ -61,6 +66,40 @@ export default function SiteContactSettingsPage() {
 
     loadSettings();
   }, []);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    try {
+      const fd = new FormData();
+      fd.append('files', file);
+
+      const res = await fetch('/api/products/upload', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        body: fd,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to upload logo');
+      }
+
+      const logoUrl = data.url || (data.urls && data.urls[0]) || (data.files && data.files[0]?.url);
+      if (logoUrl) {
+        setFormData((prev) => ({ ...prev, appLogoUrl: logoUrl }));
+        toast.success('App logo uploaded to local MinIO successfully');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Logo upload failed');
+    } finally {
+      setUploadingLogo(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,6 +164,107 @@ export default function SiteContactSettingsPage() {
         )}
 
         <form onSubmit={handleSubmit} className="bg-slate-900 border border-slate-800 rounded-2xl p-6 space-y-6">
+          {/* App Branding & Logo */}
+          <div className="pb-6 border-b border-slate-800">
+            <h2 className="text-sm font-bold uppercase tracking-wider text-amber-400 mb-2">Application Branding & Identity</h2>
+            <p className="text-xs text-slate-400 mb-4">
+              Customize the platform name and official brand logo. This updates dynamically across the Web storefront, Mobile app, and Admin portals.
+            </p>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+              <div>
+                <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                  Application Name
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.appName}
+                  onChange={(e) => setFormData({ ...formData, appName: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-sm focus:border-amber-500 focus:outline-none"
+                  placeholder="e.g. Jequex E-Commerce"
+                />
+                <p className="text-[11px] text-slate-500 mt-1">
+                  Displayed in navigation headers, footer, browser title, and mobile app screens.
+                </p>
+
+                <div className="mt-4">
+                  <label className="block text-xs font-semibold text-slate-300 uppercase mb-1">
+                    Logo Image URL
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.appLogoUrl}
+                    onChange={(e) => setFormData({ ...formData, appLogoUrl: e.target.value })}
+                    className="w-full px-3 py-2 bg-slate-800 border border-slate-700 rounded-xl text-white text-xs font-mono focus:border-amber-500 focus:outline-none"
+                    placeholder="http://localhost:8080/media/logo.png"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-slate-800/50 border border-slate-700/60 rounded-xl p-4">
+                <label className="block text-xs font-semibold text-slate-300 uppercase mb-2">
+                  Upload Logo (MinIO Storage)
+                </label>
+                
+                <div className="flex items-center gap-4">
+                  {formData.appLogoUrl ? (
+                    <div className="relative group w-20 h-20 bg-slate-900 border border-slate-700 rounded-xl p-2 flex items-center justify-center overflow-hidden">
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={formData.appLogoUrl}
+                        alt="App Logo Preview"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setFormData({ ...formData, appLogoUrl: '' })}
+                        className="absolute inset-0 bg-rose-900/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-xs font-bold"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="w-20 h-20 bg-slate-900 border-2 border-dashed border-slate-700 rounded-xl flex items-center justify-center text-slate-500 text-xs font-bold">
+                      No Logo
+                    </div>
+                  )}
+
+                  <div className="flex-1 space-y-2">
+                    <label className={`inline-block px-3 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold rounded-lg cursor-pointer transition ${
+                      uploadingLogo ? 'opacity-50 pointer-events-none' : ''
+                    }`}>
+                      {uploadingLogo ? 'Uploading to MinIO...' : 'Choose Logo File'}
+                      <input
+                        type="file"
+                        accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                        onChange={handleLogoUpload}
+                        className="hidden"
+                        disabled={uploadingLogo}
+                      />
+                    </label>
+                    <p className="text-[11px] text-slate-400">
+                      Recommended: Transparent PNG, SVG, or WebP. Stored locally in MinIO bucket.
+                    </p>
+                  </div>
+                </div>
+
+                {formData.appName && (
+                  <div className="mt-4 pt-3 border-t border-slate-700/50 flex items-center gap-2">
+                    <span className="text-[11px] text-slate-400">Preview:</span>
+                    <div className="flex items-center gap-2 px-2.5 py-1 bg-slate-900 rounded-lg border border-slate-700">
+                      {formData.appLogoUrl && (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={formData.appLogoUrl} alt="" className="w-5 h-5 object-contain" />
+                      )}
+                      <span className="text-xs font-bold text-white">{formData.appName}</span>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
           {/* Primary Contact Details */}
           <div>
             <h2 className="text-sm font-bold uppercase tracking-wider text-indigo-400 mb-4">Direct Communication</h2>

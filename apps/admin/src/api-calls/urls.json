@@ -47,5 +47,11 @@
     "getOne": "localhost:3001/api/auth/users/:id",
     "update": "localhost:3001/api/auth/users/:id",
     "delete": "localhost:3001/api/auth/users/:id"
+  },
+  "coupons": {
+    "getAll": "localhost:3002/api/products/coupons",
+    "create": "localhost:3002/api/products/coupons",
+    "update": "localhost:3002/api/products/coupons/:id",
+    "delete": "localhost:3002/api/products/coupons/:id"
   }
 }

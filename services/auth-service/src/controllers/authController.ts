@@ -1119,19 +1119,29 @@ export class AuthController {
         });
       }
 
-      const allUsers = await db
+      const { role } = req.query;
+
+      let query = db
         .select({
           id: users.id,
           email: users.email,
           firstName: users.firstName,
           lastName: users.lastName,
+          phone: users.phone,
+          avatar: users.avatar,
           role: users.role,
           status: users.status,
           emailVerified: users.emailVerified,
+          lastLoginAt: users.lastLoginAt,
           createdAt: users.createdAt
         })
-        .from(users)
-        .orderBy(desc(users.createdAt));
+        .from(users);
+
+      if (role && typeof role === 'string') {
+        query = query.where(eq(users.role, role)) as any;
+      }
+
+      const allUsers = await query.orderBy(desc(users.createdAt));
 
       res.json({
         users: allUsers

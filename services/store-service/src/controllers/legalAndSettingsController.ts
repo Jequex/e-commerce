@@ -25,7 +25,9 @@ export class LegalAndSettingsController {
           socialTwitter: 'https://twitter.com',
           socialInstagram: 'https://instagram.com',
           socialLinkedin: 'https://linkedin.com',
-          admin_app_url: 'http://localhost:3006'
+          admin_app_url: 'http://localhost:3006',
+          app_name: 'Jequex E-Commerce',
+          app_logo_url: ''
         });
         return;
       }
@@ -56,11 +58,17 @@ export class LegalAndSettingsController {
         socialLinkedin,
         adminAppUrl,
         admin_app_url,
+        appName,
+        app_name,
+        appLogoUrl,
+        app_logo_url,
         updatedById,
         updatedByName
       } = req.body;
 
       const finalAdminAppUrl = adminAppUrl || admin_app_url;
+      const finalAppName = appName || app_name || 'Jequex E-Commerce';
+      const finalAppLogoUrl = appLogoUrl !== undefined ? appLogoUrl : app_logo_url;
       const existing = await db.query.siteSettings.findFirst();
 
       let result;
@@ -82,6 +90,8 @@ export class LegalAndSettingsController {
             social_instagram: socialInstagram,
             social_linkedin: socialLinkedin,
             admin_app_url: finalAdminAppUrl,
+            app_name: finalAppName,
+            app_logo_url: finalAppLogoUrl,
             updated_by_id: updatedById,
             updated_by_name: updatedByName,
             updated_at: new Date()
@@ -106,6 +116,8 @@ export class LegalAndSettingsController {
             social_instagram: socialInstagram,
             social_linkedin: socialLinkedin,
             admin_app_url: finalAdminAppUrl || 'http://localhost:3006',
+            app_name: finalAppName,
+            app_logo_url: finalAppLogoUrl || '',
             updated_by_id: updatedById,
             updated_by_name: updatedByName,
             updated_at: new Date()

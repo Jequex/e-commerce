@@ -473,6 +473,8 @@ export const siteSettings = pgTable('site_settings', {
   social_instagram: varchar('social_instagram', { length: 255 }),
   social_linkedin: varchar('social_linkedin', { length: 255 }),
   admin_app_url: varchar('admin_app_url', { length: 500 }).default('http://localhost:3006'),
+  app_name: varchar('app_name', { length: 255 }).default('Jequex E-Commerce'),
+  app_logo_url: varchar('app_logo_url', { length: 500 }),
   updated_by_id: uuid('updated_by_id'),
   updated_by_name: varchar('updated_by_name', { length: 255 }),
   updated_at: timestamp('updated_at').defaultNow().notNull()

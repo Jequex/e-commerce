@@ -5,13 +5,19 @@ import {
   productVariants,
   categories,
   productReviews,
+  adminCategoryMarkups,
+  coupons,
   createProductSchema,
   updateProductSchema,
-  createCategorySchema
+  createCategorySchema,
+  createCouponSchema,
+  updateCouponSchema,
+  adminMarkupSchema
 } from '../schema/products';
-import { eq, and, desc, asc, ilike, sql, or } from 'drizzle-orm';
+import { eq, and, desc, asc, ilike, sql, or, isNull } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadFileToMinio } from '../config/minio';
+import { AuthenticatedRequest } from '../middleware/auth';
 
 export class ProductController {
   // Upload images or demo videos directly to MinIO
@@ -481,6 +487,7 @@ export class ProductController {
       const [newCategory] = await db.insert(categories).values({
         id: uuidv4(),
         ...validatedData,
+        defaultMarkupPercentage: validatedData.defaultMarkupPercentage !== undefined ? String(validatedData.defaultMarkupPercentage) : undefined,
         createdAt: new Date(),
         updatedAt: new Date()
       }).returning();
@@ -616,6 +623,7 @@ export class ProductController {
         .update(categories)
         .set({
           ...validatedData,
+          defaultMarkupPercentage: validatedData.defaultMarkupPercentage !== undefined ? String(validatedData.defaultMarkupPercentage) : undefined,
           updatedAt: new Date()
         })
         .where(eq(categories.id, id))
@@ -1011,6 +1019,468 @@ export class ProductController {
 
     } catch (error) {
       console.error('Get store featured products error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // ==================== COUPONS & PROMOTIONS ====================
+
+  async getCoupons(req: AuthenticatedRequest, res: Response) {
+    try {
+      const user = req.user;
+      let queryConditions = [];
+
+      // If user is a regular admin with a specific storeId, filter to their store or storeId null
+      if (user?.role === 'admin' && user?.storeId) {
+        queryConditions.push(or(eq(coupons.storeId, user.storeId), isNull(coupons.storeId)));
+      }
+
+      const allCoupons = await db
+        .select()
+        .from(coupons)
+        .where(queryConditions.length > 0 ? and(...queryConditions) : undefined)
+        .orderBy(desc(coupons.createdAt));
+
+      res.json({
+        coupons: allCoupons
+      });
+    } catch (error) {
+      console.error('Get coupons error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async createCoupon(req: AuthenticatedRequest, res: Response) {
+    try {
+      const user = req.user;
+      const validatedData = createCouponSchema.parse(req.body);
+      const normalizedCode = validatedData.code.trim().toUpperCase();
+
+      // Check if code exists
+      const existing = await db.query.coupons.findFirst({
+        where: eq(coupons.code, normalizedCode)
+      });
+
+      if (existing) {
+        return res.status(409).json({
+          error: 'Coupon code already exists',
+          code: 'CODE_EXISTS'
+        });
+      }
+
+      const [newCoupon] = await db.insert(coupons).values({
+        id: uuidv4(),
+        code: normalizedCode,
+        description: validatedData.description,
+        discountType: validatedData.discountType,
+        discountValue: String(validatedData.discountValue),
+        appliesTo: validatedData.appliesTo,
+        productIds: validatedData.productIds,
+        minPurchaseAmount: String(validatedData.minPurchaseAmount || 0),
+        maxDiscountAmount: validatedData.maxDiscountAmount ? String(validatedData.maxDiscountAmount) : null,
+        usageLimit: validatedData.usageLimit || null,
+        startDate: validatedData.startDate ? new Date(validatedData.startDate) : null,
+        endDate: validatedData.endDate ? new Date(validatedData.endDate) : null,
+        isActive: validatedData.isActive !== false,
+        storeId: validatedData.storeId || user?.storeId || null,
+        createdById: user?.id || null,
+        createdByName: user?.email || null,
+        createdByRole: user?.role || null,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      }).returning();
+
+      res.status(201).json({
+        message: 'Coupon created successfully',
+        coupon: newCoupon
+      });
+    } catch (error) {
+      console.error('Create coupon error:', error);
+      if (error instanceof Error && error.name === 'ZodError') {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.message,
+          code: 'VALIDATION_ERROR'
+        });
+      }
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async updateCoupon(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const validatedData = updateCouponSchema.parse(req.body);
+
+      const existing = await db.query.coupons.findFirst({
+        where: eq(coupons.id, id)
+      });
+
+      if (!existing) {
+        return res.status(404).json({
+          error: 'Coupon not found',
+          code: 'NOT_FOUND'
+        });
+      }
+
+      let normalizedCode = existing.code;
+      if (validatedData.code) {
+        normalizedCode = validatedData.code.trim().toUpperCase();
+        if (normalizedCode !== existing.code) {
+          const codeTaken = await db.query.coupons.findFirst({
+            where: and(eq(coupons.code, normalizedCode), sql`${coupons.id} != ${id}`)
+          });
+          if (codeTaken) {
+            return res.status(409).json({
+              error: 'Coupon code already in use',
+              code: 'CODE_EXISTS'
+            });
+          }
+        }
+      }
+
+      const updatePayload: Record<string, any> = {
+        updatedAt: new Date()
+      };
+
+      if (validatedData.code) updatePayload.code = normalizedCode;
+      if (validatedData.description !== undefined) updatePayload.description = validatedData.description;
+      if (validatedData.discountType !== undefined) updatePayload.discountType = validatedData.discountType;
+      if (validatedData.discountValue !== undefined) updatePayload.discountValue = String(validatedData.discountValue);
+      if (validatedData.appliesTo !== undefined) updatePayload.appliesTo = validatedData.appliesTo;
+      if (validatedData.productIds !== undefined) updatePayload.productIds = validatedData.productIds;
+      if (validatedData.minPurchaseAmount !== undefined) updatePayload.minPurchaseAmount = String(validatedData.minPurchaseAmount);
+      if (validatedData.maxDiscountAmount !== undefined) {
+        updatePayload.maxDiscountAmount = validatedData.maxDiscountAmount ? String(validatedData.maxDiscountAmount) : null;
+      }
+      if (validatedData.usageLimit !== undefined) updatePayload.usageLimit = validatedData.usageLimit;
+      if (validatedData.startDate !== undefined) {
+        updatePayload.startDate = validatedData.startDate ? new Date(validatedData.startDate) : null;
+      }
+      if (validatedData.endDate !== undefined) {
+        updatePayload.endDate = validatedData.endDate ? new Date(validatedData.endDate) : null;
+      }
+      if (validatedData.isActive !== undefined) updatePayload.isActive = validatedData.isActive;
+
+      const [updated] = await db
+        .update(coupons)
+        .set(updatePayload)
+        .where(eq(coupons.id, id))
+        .returning();
+
+      res.json({
+        message: 'Coupon updated successfully',
+        coupon: updated
+      });
+    } catch (error) {
+      console.error('Update coupon error:', error);
+      if (error instanceof Error && error.name === 'ZodError') {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.message,
+          code: 'VALIDATION_ERROR'
+        });
+      }
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async deleteCoupon(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const [deleted] = await db.delete(coupons).where(eq(coupons.id, id)).returning();
+      if (!deleted) {
+        return res.status(404).json({
+          error: 'Coupon not found',
+          code: 'NOT_FOUND'
+        });
+      }
+      res.json({
+        message: 'Coupon deleted successfully'
+      });
+    } catch (error) {
+      console.error('Delete coupon error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async validateCoupon(req: Request, res: Response) {
+    try {
+      const { code, cartTotal = 0, productIds = [] } = req.body;
+
+      if (!code || typeof code !== 'string') {
+        return res.status(400).json({
+          valid: false,
+          message: 'Coupon code is required'
+        });
+      }
+
+      const normalizedCode = code.trim().toUpperCase();
+      const coupon = await db.query.coupons.findFirst({
+        where: eq(coupons.code, normalizedCode)
+      });
+
+      if (!coupon || !coupon.isActive) {
+        return res.status(404).json({
+          valid: false,
+          message: 'Invalid or expired coupon code'
+        });
+      }
+
+      const now = new Date();
+      if (coupon.startDate && new Date(coupon.startDate) > now) {
+        return res.status(400).json({
+          valid: false,
+          message: 'This coupon is not active yet'
+        });
+      }
+
+      if (coupon.endDate && new Date(coupon.endDate) < now) {
+        return res.status(400).json({
+          valid: false,
+          message: 'This coupon has expired'
+        });
+      }
+
+      if (coupon.usageLimit && (coupon.timesUsed || 0) >= coupon.usageLimit) {
+        return res.status(400).json({
+          valid: false,
+          message: 'This coupon has reached its maximum usage limit'
+        });
+      }
+
+      const total = Number(cartTotal);
+      const minPurchase = Number(coupon.minPurchaseAmount || 0);
+      if (total < minPurchase) {
+        return res.status(400).json({
+          valid: false,
+          message: `Minimum order amount of $${minPurchase.toFixed(2)} required for this coupon`
+        });
+      }
+
+      if (coupon.appliesTo === 'specific_products') {
+        const couponProducts = Array.isArray(coupon.productIds) ? coupon.productIds : [];
+        const hasMatchingProduct = Array.isArray(productIds) && productIds.some(pId => couponProducts.includes(pId));
+        if (!hasMatchingProduct) {
+          return res.status(400).json({
+            valid: false,
+            message: 'Coupon does not apply to any products in your cart'
+          });
+        }
+      }
+
+      let discountAmount = 0;
+      const discountVal = Number(coupon.discountValue);
+
+      if (coupon.discountType === 'percentage') {
+        discountAmount = (total * discountVal) / 100;
+        if (coupon.maxDiscountAmount) {
+          const maxDisc = Number(coupon.maxDiscountAmount);
+          if (discountAmount > maxDisc) {
+            discountAmount = maxDisc;
+          }
+        }
+      } else {
+        discountAmount = discountVal;
+      }
+
+      if (discountAmount > total) {
+        discountAmount = total;
+      }
+
+      discountAmount = Math.round(discountAmount * 100) / 100;
+      const finalTotal = Math.max(0, Math.round((total - discountAmount) * 100) / 100);
+
+      res.json({
+        valid: true,
+        coupon: {
+          id: coupon.id,
+          code: coupon.code,
+          description: coupon.description,
+          discountType: coupon.discountType,
+          discountValue: coupon.discountValue,
+        },
+        discountAmount,
+        finalTotal
+      });
+    } catch (error) {
+      console.error('Validate coupon error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  // ==================== PROFIT MARKUPS ====================
+
+  async getCategoryMarkups(req: AuthenticatedRequest, res: Response) {
+    try {
+      const allCategories = await db
+        .select({
+          id: categories.id,
+          name: categories.name,
+          slug: categories.slug,
+          defaultMarkupPercentage: categories.defaultMarkupPercentage,
+          sortOrder: categories.sortOrder,
+          isActive: categories.isActive
+        })
+        .from(categories)
+        .orderBy(asc(categories.name));
+
+      const adminMarkups = await db
+        .select()
+        .from(adminCategoryMarkups)
+        .orderBy(desc(adminCategoryMarkups.updatedAt));
+
+      res.json({
+        categories: allCategories,
+        adminMarkups
+      });
+    } catch (error) {
+      console.error('Get category markups error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async updateCategoryDefaultMarkup(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { defaultMarkupPercentage } = req.body;
+
+      if (defaultMarkupPercentage === undefined || isNaN(Number(defaultMarkupPercentage))) {
+        return res.status(400).json({
+          error: 'Valid defaultMarkupPercentage number is required',
+          code: 'INVALID_MARKUP'
+        });
+      }
+
+      const markupVal = Math.max(0, Math.min(1000, Number(defaultMarkupPercentage)));
+
+      const [updated] = await db
+        .update(categories)
+        .set({
+          defaultMarkupPercentage: markupVal.toFixed(2),
+          updatedAt: new Date()
+        })
+        .where(eq(categories.id, id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({
+          error: 'Category not found',
+          code: 'NOT_FOUND'
+        });
+      }
+
+      res.json({
+        message: 'Default category markup updated successfully',
+        category: updated
+      });
+    } catch (error) {
+      console.error('Update category default markup error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async setAdminCategoryMarkup(req: AuthenticatedRequest, res: Response) {
+    try {
+      const validatedData = adminMarkupSchema.parse(req.body);
+
+      // Check if override already exists for this (adminId, categoryId)
+      const existing = await db.query.adminCategoryMarkups.findFirst({
+        where: and(
+          eq(adminCategoryMarkups.adminId, validatedData.adminId),
+          eq(adminCategoryMarkups.categoryId, validatedData.categoryId)
+        )
+      });
+
+      let result;
+      if (existing) {
+        const [updated] = await db
+          .update(adminCategoryMarkups)
+          .set({
+            markupPercentage: validatedData.markupPercentage.toFixed(2),
+            adminName: validatedData.adminName || existing.adminName,
+            adminEmail: validatedData.adminEmail || existing.adminEmail,
+            updatedAt: new Date()
+          })
+          .where(eq(adminCategoryMarkups.id, existing.id))
+          .returning();
+        result = updated;
+      } else {
+        const [inserted] = await db
+          .insert(adminCategoryMarkups)
+          .values({
+            id: uuidv4(),
+            adminId: validatedData.adminId,
+            adminName: validatedData.adminName || null,
+            adminEmail: validatedData.adminEmail || null,
+            categoryId: validatedData.categoryId,
+            markupPercentage: validatedData.markupPercentage.toFixed(2),
+            createdAt: new Date(),
+            updatedAt: new Date()
+          })
+          .returning();
+        result = inserted;
+      }
+
+      res.json({
+        message: 'Admin category markup saved successfully',
+        markup: result
+      });
+    } catch (error) {
+      console.error('Set admin category markup error:', error);
+      if (error instanceof Error && error.name === 'ZodError') {
+        return res.status(400).json({
+          error: 'Validation failed',
+          details: error.message,
+          code: 'VALIDATION_ERROR'
+        });
+      }
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
+
+  async deleteAdminCategoryMarkup(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const [deleted] = await db.delete(adminCategoryMarkups).where(eq(adminCategoryMarkups.id, id)).returning();
+      if (!deleted) {
+        return res.status(404).json({
+          error: 'Admin markup override not found',
+          code: 'NOT_FOUND'
+        });
+      }
+      res.json({
+        message: 'Admin markup override removed successfully'
+      });
+    } catch (error) {
+      console.error('Delete admin category markup error:', error);
       res.status(500).json({
         error: 'Internal server error',
         code: 'INTERNAL_ERROR'

@@ -21,6 +21,10 @@ const nextConfig = {
         destination: 'http://product-service:3002/api/products/:path*',
       },
       {
+        source: '/api/orders/:path*',
+        destination: 'http://order-service:3003/api/orders/:path*',
+      },
+      {
         source: '/api/stores/:path*',
         destination: 'http://store-service:3007/api/v1/stores/:path*',
       },

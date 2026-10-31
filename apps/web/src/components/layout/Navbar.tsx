@@ -19,10 +19,25 @@ export default function Navbar({ activeRoute }: NavbarProps) {
   const isActive = (route: string) => activeRoute === route;
   const totalItems = useCartStore((state) => state.getTotalItems());
   const [mounted, setMounted] = useState(false);
+  const [branding, setBranding] = useState<{ appName: string; appLogoUrl: string }>({
+    appName: '',
+    appLogoUrl: '',
+  });
   const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
+    fetch('/api/store/settings/contact')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data) {
+          setBranding({
+            appName: data.app_name || data.appName || '',
+            appLogoUrl: data.app_logo_url || data.appLogoUrl || '',
+          });
+        }
+      })
+      .catch(() => {});
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -39,10 +54,14 @@ export default function Navbar({ activeRoute }: NavbarProps) {
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <Link href="/">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer">
-                  {tCommon('title')}
-                </h1>
+              <Link href="/" className="flex items-center gap-2.5">
+                {branding.appLogoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={branding.appLogoUrl} alt={branding.appName || 'Logo'} className="h-8 max-w-[120px] object-contain" />
+                ) : null}
+                <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent cursor-pointer">
+                  {branding.appName || tCommon('title')}
+                </span>
               </Link>
             </div>
           </div>

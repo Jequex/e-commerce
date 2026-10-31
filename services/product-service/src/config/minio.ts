@@ -92,3 +92,4 @@ export async function uploadFileToMinio(
     size: buffer.length,
   };
 }
+

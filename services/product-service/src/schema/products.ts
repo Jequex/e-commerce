@@ -80,6 +80,43 @@ export const categories = pgTable('categories', {
   sortOrder: integer('sort_order').default(0),
   metaTitle: text('meta_title'),
   metaDescription: text('meta_description'),
+  defaultMarkupPercentage: decimal('default_markup_percentage', { precision: 5, scale: 2 }).default('0.00'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Admin Category Markups table
+export const adminCategoryMarkups = pgTable('admin_category_markups', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  adminId: uuid('admin_id').notNull(),
+  adminName: text('admin_name'),
+  adminEmail: text('admin_email'),
+  categoryId: uuid('category_id').references(() => categories.id, { onDelete: 'cascade' }).notNull(),
+  markupPercentage: decimal('markup_percentage', { precision: 5, scale: 2 }).notNull(),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Coupons / Promotions table
+export const coupons = pgTable('coupons', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  code: text('code').unique().notNull(),
+  description: text('description'),
+  discountType: text('discount_type').notNull().default('percentage'), // 'percentage' or 'fixed_amount'
+  discountValue: decimal('discount_value', { precision: 10, scale: 2 }).notNull(),
+  appliesTo: text('applies_to').notNull().default('all_products'), // 'all_products' or 'specific_products'
+  productIds: jsonb('product_ids').$type<string[]>().default([]),
+  minPurchaseAmount: decimal('min_purchase_amount', { precision: 10, scale: 2 }).default('0.00'),
+  maxDiscountAmount: decimal('max_discount_amount', { precision: 10, scale: 2 }),
+  usageLimit: integer('usage_limit'),
+  timesUsed: integer('times_used').default(0),
+  startDate: timestamp('start_date'),
+  endDate: timestamp('end_date'),
+  isActive: boolean('is_active').default(true),
+  storeId: uuid('store_id'),
+  createdById: uuid('created_by_id'),
+  createdByName: text('created_by_name'),
+  createdByRole: text('created_by_role'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -224,11 +261,38 @@ export const createCategorySchema = z.object({
   image: z.string().url().optional(),
   isActive: z.boolean().default(true),
   sortOrder: z.number().int().default(0),
+  defaultMarkupPercentage: z.union([z.number(), z.string()]).transform(val => typeof val === 'string' ? parseFloat(val) : val).optional(),
   metaTitle: z.string().optional(),
   metaDescription: z.string().optional(),
 });
 
 export const updateCategorySchema = createCategorySchema.partial();
+
+export const createCouponSchema = z.object({
+  code: z.string().min(2).max(50),
+  description: z.string().optional(),
+  discountType: z.enum(['percentage', 'fixed_amount']).default('percentage'),
+  discountValue: z.union([z.number(), z.string()]).transform(val => typeof val === 'string' ? parseFloat(val) : val),
+  appliesTo: z.enum(['all_products', 'specific_products']).default('all_products'),
+  productIds: z.array(z.string()).default([]),
+  minPurchaseAmount: z.union([z.number(), z.string()]).transform(val => typeof val === 'string' ? parseFloat(val) : val).default(0),
+  maxDiscountAmount: z.union([z.number(), z.string()]).transform(val => typeof val === 'string' ? parseFloat(val) : val).optional().nullable(),
+  usageLimit: z.number().int().min(1).optional().nullable(),
+  startDate: z.string().optional().nullable(),
+  endDate: z.string().optional().nullable(),
+  isActive: z.boolean().default(true),
+  storeId: z.string().uuid().optional().nullable(),
+});
+
+export const updateCouponSchema = createCouponSchema.partial();
+
+export const adminMarkupSchema = z.object({
+  adminId: z.string().uuid(),
+  adminName: z.string().optional(),
+  adminEmail: z.string().email().optional(),
+  categoryId: z.string().uuid(),
+  markupPercentage: z.union([z.number(), z.string()]).transform(val => typeof val === 'string' ? parseFloat(val) : val),
+});
 
 export const createReviewSchema = z.object({
   productId: z.string().uuid(),

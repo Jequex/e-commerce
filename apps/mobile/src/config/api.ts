@@ -14,3 +14,4 @@ export const API_BASE_URL = `http://${HOST}:8080`;
 export const AUTH_API_URL = `${API_BASE_URL}/api/auth`;
 export const PRODUCTS_API_URL = `${API_BASE_URL}/api/products`;
 export const STORES_API_URL = `${API_BASE_URL}/api/stores`;
+export const STORE_SETTINGS_API_URL = `${API_BASE_URL}/api/store/settings/contact`;
