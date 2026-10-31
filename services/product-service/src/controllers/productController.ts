@@ -14,12 +14,44 @@ import {
   updateCouponSchema,
   adminMarkupSchema
 } from '../schema/products';
-import { eq, and, desc, asc, ilike, sql, or, isNull } from 'drizzle-orm';
+import { eq, and, desc, asc, ilike, sql, or, isNull, inArray } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
 import { uploadFileToMinio } from '../config/minio';
 import { AuthenticatedRequest } from '../middleware/auth';
 
 export class ProductController {
+  // Helper to verify if user owns a specific store
+  private async isUserStoreOwner(userId: string, storeId?: string | null, role?: string): Promise<boolean> {
+    if (role === 'super_admin') return true;
+    if (!storeId || !userId) return false;
+    try {
+      const storeServiceUrl = process.env.STORE_SERVICE_URL || 'http://store-service:3007';
+      const res = await fetch(`${storeServiceUrl}/api/v1/stores/${storeId}`);
+      if (!res.ok) return false;
+      const data = await res.json();
+      const store = data.store || data;
+      return store && store.ownerId === userId;
+    } catch (e) {
+      console.error('Error verifying store owner:', e);
+      return false;
+    }
+  }
+
+  // Helper to fetch all store IDs owned by user
+  private async getUserStoreIds(userId: string): Promise<string[]> {
+    try {
+      const storeServiceUrl = process.env.STORE_SERVICE_URL || 'http://store-service:3007';
+      const res = await fetch(`${storeServiceUrl}/api/v1/stores?ownerId=${userId}&limit=100`);
+      if (!res.ok) return [];
+      const data = await res.json();
+      const storeList = data.stores || [];
+      return storeList.map((s: any) => s.id);
+    } catch (e) {
+      console.error('Error getting user store IDs:', e);
+      return [];
+    }
+  }
+
   // Upload images or demo videos directly to MinIO
   async uploadMedia(req: Request, res: Response) {
     try {
@@ -76,9 +108,36 @@ export class ProductController {
   }
 
   // Product CRUD operations
-  async createProduct(req: Request, res: Response) {
+  async createProduct(req: AuthenticatedRequest, res: Response) {
     try {
       const validatedData = createProductSchema.parse(req.body);
+
+      // Verify that the user owns the target store (unless super_admin)
+      if (req.user && req.user.role !== 'super_admin') {
+        let storeId = validatedData.storeId;
+        if (storeId) {
+          const isOwner = await this.isUserStoreOwner(req.user.id, storeId, req.user.role);
+          if (!isOwner) {
+            return res.status(403).json({
+              error: 'Insufficient permissions',
+              code: 'INSUFFICIENT_PERMISSIONS',
+              message: 'You can only create products in your own stores'
+            });
+          }
+        } else {
+          // If no storeId passed, resolve default store for user
+          const userStoreIds = await this.getUserStoreIds(req.user.id);
+          if (userStoreIds.length === 0) {
+            return res.status(400).json({
+              error: 'No store found',
+              code: 'NO_STORE',
+              message: 'Please create a store before adding products'
+            });
+          }
+          storeId = userStoreIds[0];
+          validatedData.storeId = storeId;
+        }
+      }
 
       // Check if SKU already exists
       const existingProduct = await db.query.products.findFirst({
@@ -169,6 +228,11 @@ export class ProductController {
 
       if (storeId) {
         conditions.push(eq(products.storeId, storeId as string));
+      } else if (req.query.storeIds) {
+        const ids = (req.query.storeIds as string).split(',').map(s => s.trim()).filter(Boolean);
+        if (ids.length > 0) {
+          conditions.push(inArray(products.storeId, ids));
+        }
       }
 
       if (isActive !== undefined) {
@@ -345,7 +409,7 @@ export class ProductController {
     }
   }
 
-  async updateProduct(req: Request, res: Response) {
+  async updateProduct(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
       const validatedData = updateProductSchema.parse(req.body);
@@ -360,6 +424,29 @@ export class ProductController {
           error: 'Product not found',
           code: 'PRODUCT_NOT_FOUND'
         });
+      }
+
+      // Check if user is allowed to modify this product (must be super_admin or owner of the product's store)
+      if (req.user && req.user.role !== 'super_admin') {
+        const isOwner = await this.isUserStoreOwner(req.user.id, existingProduct.storeId, req.user.role);
+        if (!isOwner) {
+          return res.status(403).json({
+            error: 'Insufficient permissions',
+            code: 'INSUFFICIENT_PERMISSIONS',
+            message: 'You can only modify products in your own stores'
+          });
+        }
+
+        if (validatedData.storeId && validatedData.storeId !== existingProduct.storeId) {
+          const isTargetStoreOwner = await this.isUserStoreOwner(req.user.id, validatedData.storeId, req.user.role);
+          if (!isTargetStoreOwner) {
+            return res.status(403).json({
+              error: 'Insufficient permissions',
+              code: 'INSUFFICIENT_PERMISSIONS',
+              message: 'Target store does not belong to your account'
+            });
+          }
+        }
       }
 
       // Check SKU uniqueness if updating SKU
@@ -429,7 +516,7 @@ export class ProductController {
     }
   }
 
-  async deleteProduct(req: Request, res: Response) {
+  async deleteProduct(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
 
@@ -443,6 +530,18 @@ export class ProductController {
           error: 'Product not found',
           code: 'PRODUCT_NOT_FOUND'
         });
+      }
+
+      // Check if user is allowed to delete this product (must be super_admin or owner of the product's store)
+      if (req.user && req.user.role !== 'super_admin') {
+        const isOwner = await this.isUserStoreOwner(req.user.id, existingProduct.storeId, req.user.role);
+        if (!isOwner) {
+          return res.status(403).json({
+            error: 'Insufficient permissions',
+            code: 'INSUFFICIENT_PERMISSIONS',
+            message: 'You can only delete products in your own stores'
+          });
+        }
       }
 
       // Soft delete by setting isActive to false
@@ -840,6 +939,96 @@ export class ProductController {
         error: 'Internal server error',
         code: 'INTERNAL_ERROR'
       });
+    }
+  }
+
+  // Get products owned by the authenticated admin across their stores
+  async getMyProducts(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required', code: 'NO_AUTH' });
+      }
+
+      const { storeId, search, categoryId, isActive, sortBy = 'createdAt', sortOrder = 'desc', page = 1, limit = 50 } = req.query;
+
+      let targetStoreIds: string[] = [];
+
+      if (req.user.role === 'super_admin') {
+        if (storeId) targetStoreIds = [storeId as string];
+      } else {
+        const userStoreIds = await this.getUserStoreIds(req.user.id);
+        if (userStoreIds.length === 0) {
+          return res.json({ products: [], total: 0, page: 1, totalPages: 0 });
+        }
+        if (storeId && typeof storeId === 'string') {
+          if (!userStoreIds.includes(storeId)) {
+            return res.status(403).json({
+              error: 'Insufficient permissions',
+              code: 'INSUFFICIENT_PERMISSIONS',
+              message: 'You do not own this store'
+            });
+          }
+          targetStoreIds = [storeId];
+        } else {
+          targetStoreIds = userStoreIds;
+        }
+      }
+
+      const pageNum = parseInt(page as string, 10) || 1;
+      const limitNum = parseInt(limit as string, 10) || 50;
+      const offset = (pageNum - 1) * limitNum;
+
+      const conditions = [];
+      if (targetStoreIds.length > 0) {
+        conditions.push(inArray(products.storeId, targetStoreIds));
+      }
+
+      if (search) {
+        conditions.push(
+          or(
+            ilike(products.name, `%${search}%`),
+            ilike(products.description, `%${search}%`),
+            ilike(products.sku, `%${search}%`)
+          )
+        );
+      }
+
+      if (categoryId) {
+        conditions.push(eq(products.categoryId, categoryId as string));
+      }
+
+      if (isActive !== undefined) {
+        conditions.push(eq(products.isActive, isActive === 'true'));
+      }
+
+      const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+      const orderDirection = sortOrder === 'asc' ? asc : desc;
+
+      const [productList, totalCountResult] = await Promise.all([
+        db.query.products.findMany({
+          where: whereClause,
+          orderBy: orderDirection(products.createdAt),
+          limit: limitNum,
+          offset: offset,
+          with: {
+            category: true,
+            variants: true
+          }
+        }),
+        db.select({ count: sql<number>`count(*)` }).from(products).where(whereClause)
+      ]);
+
+      const total = Number(totalCountResult[0]?.count || 0);
+
+      return res.json({
+        products: productList,
+        total,
+        page: pageNum,
+        totalPages: Math.ceil(total / limitNum)
+      });
+    } catch (error) {
+      console.error('Get my products error:', error);
+      return res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
     }
   }
 

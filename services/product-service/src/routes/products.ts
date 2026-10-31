@@ -71,6 +71,9 @@ router.post('/markups/admin', authMiddleware, requireSuperAdmin, productControll
 router.put('/markups/admin/:id', authMiddleware, requireSuperAdmin, productController.updateAdminCategoryMarkupById.bind(productController));
 router.delete('/markups/admin/:id', authMiddleware, requireSuperAdmin, productController.deleteAdminCategoryMarkup.bind(productController));
 
+// Merchant admin scoped products route
+router.get('/admin/my-products', authMiddleware, requireStoreOwnerOrAdmin, productController.getMyProducts.bind(productController));
+
 // General product routes (public)
 router.get('/', productController.getProducts.bind(productController));
 router.get('/:id', productController.getProduct.bind(productController));

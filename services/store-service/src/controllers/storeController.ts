@@ -53,8 +53,8 @@ export class StoreController {
         });
       }
 
-      const storeOwnerId = (req.user.isAdmin && validatedData.ownerId) ? validatedData.ownerId : req.user.id;
-      const storeStatus = (req.user.isAdmin && validatedData.status) ? validatedData.status : 'pending_approval';
+      const storeOwnerId = (req.user.role === 'super_admin' && validatedData.ownerId) ? validatedData.ownerId : req.user.id;
+      const storeStatus = (req.user.isAdmin && validatedData.status) ? validatedData.status : 'active';
 
       // Create store
       const [newStore] = await db.insert(stores).values({
@@ -62,20 +62,20 @@ export class StoreController {
         ownerId: storeOwnerId,
         name: validatedData.name,
         slug: validatedData.slug,
-        description: validatedData.description,
+        description: validatedData.description || null,
         type: validatedData.type || 'physical',
         status: storeStatus,
-        email: validatedData.email,
-        phone: validatedData.phone,
-        website: validatedData.website,
-        categoryId: validatedData.categoryId,
+        email: validatedData.email || null,
+        phone: validatedData.phone || null,
+        website: validatedData.website || null,
+        categoryId: validatedData.categoryId || null,
         allowOnlineOrders: validatedData.allowOnlineOrders ?? true,
         allowPickup: validatedData.allowPickup ?? true,
         allowDelivery: validatedData.allowDelivery ?? true,
         deliveryRadius: validatedData.deliveryRadius,
         minOrderAmount: validatedData.minOrderAmount,
-        logo: validatedData.logo,
-        banner: validatedData.banner,
+        logo: validatedData.logo || null,
+        banner: validatedData.banner || null,
         images: validatedData.images,
         metadata: validatedData.metadata,
         createdAt: new Date(),
@@ -137,6 +137,7 @@ export class StoreController {
     try {
       const {
         query: searchQuery,
+        ownerId,
         category,
         type,
         status,
@@ -159,6 +160,10 @@ export class StoreController {
         conditions.push(
           like(stores.name, `%${searchQuery}%`)
         );
+      }
+
+      if (ownerId) {
+        conditions.push(eq(stores.ownerId, ownerId));
       }
       
       if (category) {
@@ -303,10 +308,15 @@ export class StoreController {
         ...validatedData,
         updatedAt: new Date()
       };
-      if (!req.user.isAdmin) {
+      if (req.user.role !== 'super_admin') {
         delete updateData.ownerId;
-        delete updateData.status;
       }
+      if (updateData.email === '') updateData.email = null;
+      if (updateData.phone === '') updateData.phone = null;
+      if (updateData.website === '') updateData.website = null;
+      if (updateData.logo === '') updateData.logo = null;
+      if (updateData.banner === '') updateData.banner = null;
+      if (updateData.categoryId === '') updateData.categoryId = null;
 
       const [updatedStore] = await db
         .update(stores)
@@ -1239,8 +1249,15 @@ export class StoreController {
 
       const userId = req.user.id;
 
-      // Get all stores where user is staff
-      const userStores = await db
+      // 1. Get all stores where user is the direct owner
+      const ownedStores = await db
+        .select()
+        .from(stores)
+        .where(eq(stores.ownerId, userId))
+        .orderBy(desc(stores.createdAt));
+
+      // 2. Get all stores where user is active staff
+      const staffStores = await db
         .select({
           staffId: storeStaff.id,
           storeId: stores.id,
@@ -1269,9 +1286,72 @@ export class StoreController {
         )
         .orderBy(desc(storeStaff.hiredAt));
 
+      // Format owned stores to match structure with full properties
+      const formattedOwnedStores = ownedStores.map(s => ({
+        id: s.id,
+        storeId: s.id,
+        name: s.name,
+        storeName: s.name,
+        slug: s.slug,
+        storeSlug: s.slug,
+        description: s.description,
+        storeDescription: s.description,
+        type: s.type,
+        storeType: s.type,
+        status: s.status,
+        storeStatus: s.status,
+        logo: s.logo,
+        storeLogo: s.logo,
+        banner: s.banner,
+        storeBanner: s.banner,
+        email: s.email,
+        phone: s.phone,
+        website: s.website,
+        categoryId: s.categoryId,
+        averageRating: s.averageRating,
+        totalOrders: s.totalOrders,
+        totalRevenue: s.totalRevenue,
+        roleName: 'Owner',
+        roleSlug: 'owner',
+        isActive: s.status === 'active',
+        ownerId: s.ownerId,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+      }));
+
+      // Combine owned stores with staff stores, preventing duplicates
+      const seenStoreIds = new Set(formattedOwnedStores.map(s => s.id));
+      const formattedStaffStores = staffStores
+        .filter(s => !seenStoreIds.has(s.storeId))
+        .map(s => ({
+          id: s.storeId,
+          storeId: s.storeId,
+          name: s.storeName,
+          storeName: s.storeName,
+          slug: s.storeSlug,
+          storeSlug: s.storeSlug,
+          description: s.storeDescription,
+          storeDescription: s.storeDescription,
+          type: s.storeType,
+          storeType: s.storeType,
+          status: s.storeStatus,
+          storeStatus: s.storeStatus,
+          logo: s.storeLogo,
+          storeLogo: s.storeLogo,
+          banner: s.storeBanner,
+          storeBanner: s.storeBanner,
+          roleId: s.roleId,
+          roleName: s.roleName,
+          roleSlug: s.roleSlug,
+          isActive: s.isActive,
+          createdAt: s.createdAt,
+        }));
+
+      const allUserStores = [...formattedOwnedStores, ...formattedStaffStores];
+
       return res.json({
-        stores: userStores,
-        count: userStores.length
+        stores: allUserStores,
+        count: allUserStores.length
       });
 
     } catch (error) {

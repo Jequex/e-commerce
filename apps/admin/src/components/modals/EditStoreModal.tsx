@@ -60,14 +60,22 @@ export default function EditStoreModal({
     setIsSubmitting(true);
 
     const formData = new FormData(e.currentTarget);
-    const storeData = {
-      name: formData.get('name') as string,
-      description: formData.get('description') as string,
-      category: formData.get('category') as string,
-      email: formData.get('email') as string,
-      phone: formData.get('phone') as string,
-      website: formData.get('website') as string,
-      isActive: formData.get('isActive') === 'on',
+    const name = (formData.get('name') as string)?.trim();
+    const description = (formData.get('description') as string)?.trim();
+    const email = (formData.get('email') as string)?.trim();
+    const phone = (formData.get('phone') as string)?.trim();
+    const website = (formData.get('website') as string)?.trim();
+    const logo = (formData.get('logo') as string)?.trim();
+    const isActive = formData.get('isActive') === 'on';
+
+    const storeData: any = {
+      name,
+      description: description || null,
+      email: email || null,
+      phone: phone || null,
+      website: website || null,
+      logo: logo || null,
+      status: isActive ? 'active' : 'inactive',
     };
 
     try {
@@ -186,18 +194,32 @@ export default function EditStoreModal({
             </div>
           </div>
 
-          {/* Website */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Website
-            </label>
-            <input
-              type="url"
-              name="website"
-              defaultValue={store.website || ''}
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
-              placeholder="https://example.com"
-            />
+          {/* Website & Logo */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Website URL
+              </label>
+              <input
+                type="url"
+                name="website"
+                defaultValue={store.website || ''}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="https://example.com"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Logo URL
+              </label>
+              <input
+                type="url"
+                name="logo"
+                defaultValue={store.logo || ''}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+                placeholder="https://.../logo.png"
+              />
+            </div>
           </div>
 
           {/* Active Status */}

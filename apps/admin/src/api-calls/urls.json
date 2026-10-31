@@ -14,6 +14,7 @@
   },
   "products": {
     "getAll": "localhost:3002/api/products",
+    "getMyProducts": "localhost:3002/api/products/admin/my-products",
     "getByStore": "localhost:3002/api/products/store",
     "getStoreStats": "localhost:3002/api/products/store/:storeId/stats",
     "getOne": "localhost:3002/api/products/:id",

@@ -323,19 +323,19 @@ export const insertStoreSchema = z.object({
   status: z.enum(['active', 'inactive', 'pending_approval', 'suspended', 'closed']).optional(),
   description: z.string().optional(),
   type: z.enum(['physical', 'online', 'hybrid']).optional(),
-  email: z.string().email().optional(),
-  phone: z.string().min(10).max(50).optional(),
-  website: z.string().url().optional(),
+  email: z.string().email().optional().or(z.literal('')),
+  phone: z.string().min(10).max(50).optional().or(z.literal('')),
+  website: z.string().url().optional().or(z.literal('')),
   businessLicense: z.string().optional(),
   taxId: z.string().optional(),
-  categoryId: z.string().uuid().optional(),
+  categoryId: z.string().uuid().optional().or(z.literal('')),
   allowOnlineOrders: z.boolean().optional(),
   allowPickup: z.boolean().optional(),
   allowDelivery: z.boolean().optional(),
   deliveryRadius: z.string().optional(),
   minOrderAmount: z.string().optional(),
-  logo: z.string().url().optional(),
-  banner: z.string().url().optional(),
+  logo: z.string().url().optional().or(z.literal('')),
+  banner: z.string().url().optional().or(z.literal('')),
   images: z.any().optional(),
   metadata: z.any().optional()
 });
@@ -432,6 +432,7 @@ export const updateRoleSchema = insertRoleSchema.partial();
 // Search and filter schemas
 export const storeSearchSchema = z.object({
   query: z.string().optional(),
+  ownerId: z.string().uuid().optional(),
   category: z.string().optional(),
   type: z.enum(['physical', 'online', 'hybrid']).optional(),
   status: z.enum(['active', 'inactive', 'pending_approval', 'suspended', 'closed']).optional(),

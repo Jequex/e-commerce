@@ -1012,3 +1012,4 @@ export default function StoresManagementPage() {
     </SuperAdminLayout>
   );
 }
+

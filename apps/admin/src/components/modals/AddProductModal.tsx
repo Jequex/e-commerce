@@ -15,18 +15,23 @@ interface AddProductModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (product: any) => void;
+  stores?: any[];
+  defaultStoreId?: string;
 }
 
 export default function AddProductModal({
   isOpen,
   onClose,
   onSuccess,
+  stores = [],
+  defaultStoreId,
 }: AddProductModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [images, setImages] = useState<string[]>([]);
   const [demoVideo, setDemoVideo] = useState<string | null>(null);
+  const [targetStoreId, setTargetStoreId] = useState<string>('');
   const t = useTranslations('products');
   const common = useTranslations('common');
   const { data: pageData } = usePageStore.getState();
@@ -37,8 +42,13 @@ export default function AddProductModal({
       // Reset images and demo video when modal opens
       setImages([]);
       setDemoVideo(null);
+      if (defaultStoreId && defaultStoreId !== 'all') {
+        setTargetStoreId(defaultStoreId);
+      } else if (stores && stores.length > 0) {
+        setTargetStoreId(stores[0].id || stores[0].storeId || '');
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, defaultStoreId, stores]);
 
   const fetchCategories = async () => {
     try {
@@ -77,7 +87,7 @@ export default function AddProductModal({
       trackQuantity: formData.get('trackQuantity') === 'on',
       isActive: formData.get('isActive') === 'on',
       isFeatured: formData.get('isFeatured') === 'on',
-      storeId: pageData?.store.id,
+      storeId: targetStoreId || stores?.[0]?.id || stores?.[0]?.storeId || pageData?.store?.id || null,
       demoVideo: demoVideo || null,
       images: images.map((url, index) => ({
         src: url,
@@ -125,6 +135,27 @@ export default function AddProductModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Target Store */}
+          {stores && stores.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Store <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={targetStoreId}
+                onChange={(e) => setTargetStoreId(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                {stores.map((s) => (
+                  <option key={s.id || s.storeId} value={s.id || s.storeId}>
+                    {s.name || s.storeName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Product Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

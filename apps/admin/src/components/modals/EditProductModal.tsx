@@ -52,6 +52,7 @@ interface EditProductModalProps {
   onClose: () => void;
   onSuccess: (product: Product) => void;
   product: Product | null;
+  stores?: any[];
 }
 
 export default function EditProductModal({
@@ -59,12 +60,14 @@ export default function EditProductModal({
   onClose,
   onSuccess,
   product,
+  stores = [],
 }: EditProductModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [images, setImages] = useState<string[]>([]);
   const [demoVideo, setDemoVideo] = useState<string | null>(null);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>('');
   const t = useTranslations('products');
   const common = useTranslations('common');
   const { data: pageData } = usePageStore.getState();
@@ -79,6 +82,7 @@ export default function EditProductModal({
         : [];
       setImages(imageUrls);
       setDemoVideo((product as any)?.demoVideo || null);
+      setSelectedStoreId((product as any)?.storeId || '');
     }
   }, [isOpen, product]);
 
@@ -124,6 +128,7 @@ export default function EditProductModal({
       trackQuantity: formData.get('trackQuantity') === 'on',
       isActive: formData.get('isActive') === 'on',
       isFeatured: formData.get('isFeatured') === 'on',
+      storeId: selectedStoreId || (product as any)?.storeId || null,
       demoVideo: demoVideo || null,
       images: images.map((url, index) => ({
         src: url,
@@ -171,6 +176,26 @@ export default function EditProductModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Store Selector */}
+          {stores && stores.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Store
+              </label>
+              <select
+                value={selectedStoreId}
+                onChange={(e) => setSelectedStoreId(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                {stores.map((s) => (
+                  <option key={s.id || s.storeId} value={s.id || s.storeId}>
+                    {s.name || s.storeName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Product Name */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

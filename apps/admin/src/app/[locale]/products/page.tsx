@@ -65,47 +65,46 @@ export default function ProductsPage() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [productToDelete, setProductToDelete] = useState<Product | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [userStores, setUserStores] = useState<any[]>([]);
+  const [selectedStoreId, setSelectedStoreId] = useState<string>('all');
   
   const t = useTranslations('products');
   const common = useTranslations('common');
-  const { data } = usePageStore.getState();
-  const store = data?.store;
-  const productPermissions = data?.permissionsByResource?.products;
   const router = useRouter();
 
   useEffect(() => {
-    fetchProducts();
+    loadStoresAndProducts();
   }, []);
 
-  const fetchProducts = async () => {
+  const loadStoresAndProducts = async (storeFilter = selectedStoreId) => {
     setLoading(true);
     setError('');
     
     try {
-      // 1. Resolve store ID from state, user stores, or API
-      let storeId = store?.id || usePageStore.getState().data?.store?.id;
-      if (!storeId) {
-        const userStores = usePageStore.getState().userStores;
-        if (userStores && userStores.length > 0) {
-          storeId = userStores[0].id;
-        }
+      // 1. Fetch user stores
+      let storesList: any[] = [];
+      try {
+        const storeRes = await callApi(`http://${urls.store.getUserStores}`);
+        storesList = storeRes.stores || (Array.isArray(storeRes) ? storeRes : storeRes?.data || []);
+        setUserStores(storesList);
+        usePageStore.getState().setUserStores(storesList);
+      } catch (storeErr) {
+        console.warn('Could not fetch user stores:', storeErr);
+        storesList = usePageStore.getState().userStores || [];
+        setUserStores(storesList);
       }
 
-      if (!storeId) {
-        try {
-          const storeRes = await callApi(`http://${urls.store.getUserStores}`);
-          const storesList = Array.isArray(storeRes) ? storeRes : storeRes?.data || [];
-          if (storesList.length > 0) {
-            storeId = storesList[0].id;
-          }
-        } catch (e) {
-          console.warn('Could not fetch user stores:', e);
-        }
+      // If user has no stores, set products to empty and stop (prevent showing all platform products!)
+      if (storesList.length === 0) {
+        setProducts([]);
+        setLoading(false);
+        return;
       }
 
-      let url = `http://${urls.products.getAll}`;
-      if (storeId) {
-        url = `http://${urls.products.getByStore}/${storeId}`;
+      // 2. Fetch scoped products belonging strictly to any of user's stores
+      let url = `http://${urls.products.getMyProducts}`;
+      if (storeFilter && storeFilter !== 'all') {
+        url += `?storeId=${storeFilter}`;
       }
 
       const data = await callApi(url, {
@@ -113,17 +112,18 @@ export default function ProductsPage() {
       });
 
       setProducts(data.products || data || []);
-    } catch (err) {
-      console.warn('Primary products fetch failed, falling back to all products:', err);
-      try {
-        const allData = await callApi(`http://${urls.products.getAll}`);
-        setProducts(allData.products || allData || []);
-      } catch (fallbackErr: any) {
-        setError(fallbackErr instanceof Error ? fallbackErr.message : 'Failed to load products');
-      }
+    } catch (err: any) {
+      console.warn('Could not load user products:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load products');
+      setProducts([]);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStoreFilterChange = (storeId: string) => {
+    setSelectedStoreId(storeId);
+    loadStoresAndProducts(storeId);
   };
 
   const handleDeleteClick = (product: Product) => {
@@ -224,17 +224,16 @@ export default function ProductsPage() {
             {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
           </p>
         </div>
-        {(!productPermissions || productPermissions.length === 0 || productPermissions.some((permission: { action: string }) => permission.action === 'create')) && (
-          <div className="mt-4 md:mt-0">
-            <button 
-              onClick={() => setIsAddModalOpen(true)}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 shadow-sm"
-            >
-              <Icons.PlusIcon className="w-4 h-4" />
-              <span>{t('addProduct')}</span>
-            </button>
-          </div>
-        )}
+        <div className="mt-4 md:mt-0">
+          <button 
+            onClick={() => setIsAddModalOpen(true)}
+            disabled={userStores.length === 0}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Icons.PlusIcon className="w-4 h-4" />
+            <span>{t('addProduct')}</span>
+          </button>
+        </div>
       </motion.div>
 
       {/* Error Message */}
@@ -249,6 +248,33 @@ export default function ProductsPage() {
         </motion.div>
       )}
 
+      {/* No Stores Warning Banner */}
+      {userStores.length === 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
+        >
+          <div className="flex items-center space-x-3">
+            <Icons.InfoCircledIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">
+                No Store Created Yet
+              </h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                You must create a store before you can add and manage products.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.push('/stores')}
+            className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+          >
+            Create Store
+          </button>
+        </motion.div>
+      )}
+
       {/* Filters */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -256,7 +282,7 @@ export default function ProductsPage() {
         transition={{ duration: 0.5, delay: 0.1 }}
         className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-4"
       >
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           {/* Search */}
           <div className="md:col-span-2">
             <div className="relative">
@@ -269,6 +295,22 @@ export default function ProductsPage() {
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
               />
             </div>
+          </div>
+
+          {/* Store Filter */}
+          <div>
+            <select
+              value={selectedStoreId}
+              onChange={(e) => handleStoreFilterChange(e.target.value)}
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+            >
+              <option value="all">All Stores ({userStores.length})</option>
+              {userStores.map((s) => (
+                <option key={s.id || s.storeId} value={s.id || s.storeId}>
+                  {s.name || s.storeName}
+                </option>
+              ))}
+            </select>
           </div>
 
           {/* Status Filter */}
@@ -402,33 +444,27 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
-                          {(!productPermissions || productPermissions.length === 0 || productPermissions.some((permission: { action: string }) => permission.action === 'view')) && (
-                            <button
-                              onClick={() => handleViewClick(product)}
-                              className="p-1.5 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
-                              title={common('view')}
-                            >
-                              <Icons.EyeOpenIcon className="h-5 w-5" />
-                            </button>
-                          )}
-                          {(!productPermissions || productPermissions.length === 0 || productPermissions.some((permission: { action: string }) => permission.action === 'update')) && (
-                            <button
-                              onClick={() => handleEditClick(product)}
-                              className="p-1.5 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
-                              title={common('edit')}
-                            >
-                              <Icons.Pencil1Icon className="h-5 w-5" />
-                            </button>
-                          )}
-                          {(!productPermissions || productPermissions.length === 0 || productPermissions.some((permission: { action: string }) => permission.action === 'delete')) && (
-                            <button
-                              onClick={() => handleDeleteClick(product)}
-                              className="p-1.5 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
-                              title={common('delete')}
-                            >
-                              <Icons.TrashIcon className="h-5 w-5" />
-                            </button>
-                          )}
+                          <button
+                            onClick={() => handleViewClick(product)}
+                            className="p-1.5 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                            title={common('view')}
+                          >
+                            <Icons.EyeOpenIcon className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleEditClick(product)}
+                            className="p-1.5 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+                            title={common('edit')}
+                          >
+                            <Icons.Pencil1Icon className="h-5 w-5" />
+                          </button>
+                          <button
+                            onClick={() => handleDeleteClick(product)}
+                            className="p-1.5 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                            title={common('delete')}
+                          >
+                            <Icons.TrashIcon className="h-5 w-5" />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -443,6 +479,8 @@ export default function ProductsPage() {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onSuccess={handleProductAdded}
+        stores={userStores}
+        defaultStoreId={selectedStoreId !== 'all' ? selectedStoreId : undefined}
       />
       <EditProductModal
         isOpen={isEditModalOpen}
@@ -452,6 +490,7 @@ export default function ProductsPage() {
         }}
         onSuccess={handleProductUpdated}
         product={selectedProduct}
+        stores={userStores}
       />
       <ViewProductModal
         isOpen={isViewModalOpen}

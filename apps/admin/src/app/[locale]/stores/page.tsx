@@ -9,9 +9,9 @@ import urls from '@/api-calls/urls.json';
 import { useAuthStore } from '@/stores/use-auth-store';
 import { usePageStore } from '@/stores/use-page-store';
 import { useRouter } from '@/i18n/navigation';
-import { permission } from 'process';
 import ViewStoreModal from '@/components/modals/ViewStoreModal';
 import EditStoreModal from '@/components/modals/EditStoreModal';
+import AddStoreModal from '@/components/modals/AddStoreModal';
 
 interface Store {
   id: string;
@@ -48,12 +48,12 @@ export default function StoresPage() {
   const [filterVerified, setFilterVerified] = useState<'all' | 'verified' | 'unverified'>('all');
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [selectedStore, setSelectedStore] = useState<Store | null>(null);
   
   const t = useTranslations('stores');
   const common = useTranslations('common');
   const { token } = useAuthStore();
-  const { data: {permissionsByResource : { stores : storePermissions } } } = usePageStore.getState();
   const router = useRouter();
 
   useEffect(() => {
@@ -65,7 +65,7 @@ export default function StoresPage() {
     setError('');
     
     try {
-      const url = `http://${urls.store.getAll}`;
+      const url = `http://${urls.store.getUserStores}`;
       
       const data = await callApi(url, {
         method: 'GET',
@@ -74,12 +74,34 @@ export default function StoresPage() {
         },
       });
 
-      setStores(data.stores || data || []);
+      const storeList = data.stores || data || [];
+      setStores(storeList);
+      usePageStore.getState().setUserStores(storeList);
+      if (storeList.length > 0 && !usePageStore.getState().data?.store) {
+        usePageStore.getState().setData({
+          ...usePageStore.getState().data,
+          store: storeList[0]
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load stores');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleStoreCreated = (newStore: any) => {
+    const updated = [newStore, ...stores];
+    setStores(updated);
+    usePageStore.getState().setUserStores(updated);
+    setIsAddModalOpen(false);
+  };
+
+  const handleStoreUpdated = (updatedStore: Store) => {
+    const updated = stores.map(s => s.id === updatedStore.id ? updatedStore : s);
+    setStores(updated);
+    usePageStore.getState().setUserStores(updated);
+    setSelectedStore(null);
   };
 
   const handleDelete = async (storeId: string) => {
@@ -108,11 +130,6 @@ export default function StoresPage() {
   const handleEditClick = (store: Store) => {
     setSelectedStore(store);
     setIsEditModalOpen(true);
-  };
-
-  const handleStoreUpdated = (updatedStore: Store) => {
-    setStores(stores.map(s => s.id === updatedStore.id ? updatedStore : s));
-    setSelectedStore(null);
   };
 
   const filteredStores = stores.filter((store) => {
@@ -162,15 +179,15 @@ export default function StoresPage() {
             {filteredStores.length} {filteredStores.length === 1 ? 'store' : 'stores'}
           </p>
         </div>
-        {storePermissions?.find((permission:{action: string}) => permission.action === 'create') && <div className="mt-4 md:mt-0">
+        <div className="mt-4 md:mt-0">
           <button 
-            onClick={() => router.push('/stores/new')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            onClick={() => setIsAddModalOpen(true)}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 shadow-sm"
           >
             <Icons.PlusIcon className="w-4 h-4" />
             <span>{t('addStore')}</span>
           </button>
-        </div>}
+        </div>
       </motion.div>
 
       {/* Error Message */}
@@ -366,29 +383,29 @@ export default function StoresPage() {
 
                   {/* Actions */}
                   <div className="flex items-center space-x-2 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    {storePermissions?.find((permission:{action: string}) => permission.action === 'view') && <button
+                    <button
                       onClick={() => handleViewClick(store)}
                       className="flex-1 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors flex items-center justify-center space-x-1"
                       title={common('view')}
                     >
                       <Icons.EyeOpenIcon className="h-4 w-4" />
                       <span>{common('view')}</span>
-                    </button>}
-                    {storePermissions?.find((permission:{action: string}) => permission.action === 'update') && <button
+                    </button>
+                    <button
                       onClick={() => handleEditClick(store)}
                       className="flex-1 px-3 py-2 text-sm text-gray-600 hover:bg-gray-50 dark:text-gray-400 dark:hover:bg-gray-700 rounded-lg transition-colors flex items-center justify-center space-x-1"
                       title={common('edit')}
                     >
                       <Icons.Pencil1Icon className="h-4 w-4" />
                       <span>{common('edit')}</span>
-                    </button>}
-                    {storePermissions?.find((permission:{action: string}) => permission.action === 'delete') && <button
+                    </button>
+                    <button
                       onClick={() => handleDelete(store.id)}
                       className="px-3 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                       title={common('delete')}
                     >
                       <Icons.TrashIcon className="h-4 w-4" />
-                    </button>}
+                    </button>
                   </div>
                 </div>
               </motion.div>
@@ -397,6 +414,13 @@ export default function StoresPage() {
         )}
       </motion.div>
       
+      {/* Add Store Modal */}
+      <AddStoreModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onSuccess={handleStoreCreated}
+      />
+
       {/* View Store Modal */}
       <ViewStoreModal
         isOpen={isViewModalOpen}
