@@ -1487,4 +1487,51 @@ export class ProductController {
       });
     }
   }
+
+  async updateAdminCategoryMarkupById(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+      const { markupPercentage, adminId, categoryId, adminName, adminEmail } = req.body;
+
+      if (markupPercentage === undefined || isNaN(Number(markupPercentage))) {
+        return res.status(400).json({
+          error: 'Valid markup percentage is required',
+          code: 'INVALID_MARKUP'
+        });
+      }
+
+      const updateFields: any = {
+        markupPercentage: Number(markupPercentage).toFixed(2),
+        updatedAt: new Date()
+      };
+      if (adminId) updateFields.adminId = adminId;
+      if (categoryId) updateFields.categoryId = categoryId;
+      if (adminName !== undefined) updateFields.adminName = adminName;
+      if (adminEmail !== undefined) updateFields.adminEmail = adminEmail;
+
+      const [updated] = await db
+        .update(adminCategoryMarkups)
+        .set(updateFields)
+        .where(eq(adminCategoryMarkups.id, id))
+        .returning();
+
+      if (!updated) {
+        return res.status(404).json({
+          error: 'Admin markup override not found',
+          code: 'NOT_FOUND'
+        });
+      }
+
+      res.json({
+        message: 'Admin markup override updated successfully',
+        markup: updated
+      });
+    } catch (error) {
+      console.error('Update admin markup override error:', error);
+      res.status(500).json({
+        error: 'Internal server error',
+        code: 'INTERNAL_ERROR'
+      });
+    }
+  }
 }

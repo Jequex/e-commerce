@@ -82,20 +82,45 @@ export default function ProductsPage() {
     setError('');
     
     try {
-      if (!store?.id) {
-        throw new Error('Store not found');
+      // 1. Resolve store ID from state, user stores, or API
+      let storeId = store?.id || usePageStore.getState().data?.store?.id;
+      if (!storeId) {
+        const userStores = usePageStore.getState().userStores;
+        if (userStores && userStores.length > 0) {
+          storeId = userStores[0].id;
+        }
       }
-      
-      // For now, fetch all products. You can add store filtering later
-      const url = `http://${urls.products.getByStore}/${store.id}`;
-      
+
+      if (!storeId) {
+        try {
+          const storeRes = await callApi(`http://${urls.store.getUserStores}`);
+          const storesList = Array.isArray(storeRes) ? storeRes : storeRes?.data || [];
+          if (storesList.length > 0) {
+            storeId = storesList[0].id;
+          }
+        } catch (e) {
+          console.warn('Could not fetch user stores:', e);
+        }
+      }
+
+      let url = `http://${urls.products.getAll}`;
+      if (storeId) {
+        url = `http://${urls.products.getByStore}/${storeId}`;
+      }
+
       const data = await callApi(url, {
         method: 'GET',
       });
 
       setProducts(data.products || data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load products');
+      console.warn('Primary products fetch failed, falling back to all products:', err);
+      try {
+        const allData = await callApi(`http://${urls.products.getAll}`);
+        setProducts(allData.products || allData || []);
+      } catch (fallbackErr: any) {
+        setError(fallbackErr instanceof Error ? fallbackErr.message : 'Failed to load products');
+      }
     } finally {
       setLoading(false);
     }
@@ -199,15 +224,17 @@ export default function ProductsPage() {
             {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'}
           </p>
         </div>
-        {productPermissions?.find((permission:{action: string}) => permission.action === 'create') && <div className="mt-4 md:mt-0">
-          <button 
-            onClick={() => setIsAddModalOpen(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
-          >
-            <Icons.PlusIcon className="w-4 h-4" />
-            <span>{t('addProduct')}</span>
-          </button>
-        </div>}
+        {(!productPermissions || productPermissions.length === 0 || productPermissions.some((permission: { action: string }) => permission.action === 'create')) && (
+          <div className="mt-4 md:mt-0">
+            <button 
+              onClick={() => setIsAddModalOpen(true)}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 shadow-sm"
+            >
+              <Icons.PlusIcon className="w-4 h-4" />
+              <span>{t('addProduct')}</span>
+            </button>
+          </div>
+        )}
       </motion.div>
 
       {/* Error Message */}
@@ -375,27 +402,33 @@ export default function ProductsPage() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                         <div className="flex items-center space-x-2">
-                          {productPermissions?.find((permission:{action: string}) => permission.action === 'view') && <button
-                            onClick={() => handleViewClick(product)}
-                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                            title={common('view')}
-                          >
-                            <Icons.EyeOpenIcon className="h-5 w-5" />
-                          </button>}
-                          {productPermissions?.find((permission:{action: string}) => permission.action === 'update') && <button
-                            onClick={() => handleEditClick(product)}
-                            className="text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300"
-                            title={common('edit')}
-                          >
-                            <Icons.Pencil1Icon className="h-5 w-5" />
-                          </button>}
-                          {productPermissions?.find((permission:{action: string}) => permission.action === 'delete') && <button
-                            onClick={() => handleDeleteClick(product)}
-                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                            title={common('delete')}
-                          >
-                            <Icons.TrashIcon className="h-5 w-5" />
-                          </button>}
+                          {(!productPermissions || productPermissions.length === 0 || productPermissions.some((permission: { action: string }) => permission.action === 'view')) && (
+                            <button
+                              onClick={() => handleViewClick(product)}
+                              className="p-1.5 text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition"
+                              title={common('view')}
+                            >
+                              <Icons.EyeOpenIcon className="h-5 w-5" />
+                            </button>
+                          )}
+                          {(!productPermissions || productPermissions.length === 0 || productPermissions.some((permission: { action: string }) => permission.action === 'update')) && (
+                            <button
+                              onClick={() => handleEditClick(product)}
+                              className="p-1.5 text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition"
+                              title={common('edit')}
+                            >
+                              <Icons.Pencil1Icon className="h-5 w-5" />
+                            </button>
+                          )}
+                          {(!productPermissions || productPermissions.length === 0 || productPermissions.some((permission: { action: string }) => permission.action === 'delete')) && (
+                            <button
+                              onClick={() => handleDeleteClick(product)}
+                              className="p-1.5 text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
+                              title={common('delete')}
+                            >
+                              <Icons.TrashIcon className="h-5 w-5" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

@@ -68,6 +68,7 @@ router.delete('/coupons/:id', authMiddleware, requireStoreOwnerOrAdmin, productC
 router.get('/markups', authMiddleware, requireSuperAdmin, productController.getCategoryMarkups.bind(productController));
 router.put('/markups/category/:id', authMiddleware, requireSuperAdmin, productController.updateCategoryDefaultMarkup.bind(productController));
 router.post('/markups/admin', authMiddleware, requireSuperAdmin, productController.setAdminCategoryMarkup.bind(productController));
+router.put('/markups/admin/:id', authMiddleware, requireSuperAdmin, productController.updateAdminCategoryMarkupById.bind(productController));
 router.delete('/markups/admin/:id', authMiddleware, requireSuperAdmin, productController.deleteAdminCategoryMarkup.bind(productController));
 
 // General product routes (public)

@@ -98,3 +98,4 @@ ALTER TABLE orders ADD COLUMN IF NOT EXISTS paid_out_at timestamp;
 
 CREATE INDEX IF NOT EXISTS idx_orders_payout_status ON orders(payout_status);
 CREATE INDEX IF NOT EXISTS idx_orders_store_payout ON orders(store_id, payout_status);
+

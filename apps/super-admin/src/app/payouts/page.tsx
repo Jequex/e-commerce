@@ -404,3 +404,4 @@ export default function SuperAdminPayoutsPage() {
     </SuperAdminLayout>
   );
 }
+

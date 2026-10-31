@@ -47,6 +47,7 @@ export default function MarkupsManagementPage() {
 
   // New admin override modal / form
   const [showOverrideModal, setShowOverrideModal] = useState(false);
+  const [editingOverride, setEditingOverride] = useState<AdminMarkup | null>(null);
   const [selectedAdminId, setSelectedAdminId] = useState('');
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
   const [overridePercentage, setOverridePercentage] = useState('10.00');
@@ -137,16 +138,24 @@ export default function MarkupsManagementPage() {
     setSavingOverride(true);
     try {
       const selectedAdmin = admins.find((a) => a.id === selectedAdminId);
-      const res = await fetch('/api/products/markups/admin', {
-        method: 'POST',
+      const adminName = selectedAdmin ? `${selectedAdmin.firstName || ''} ${selectedAdmin.lastName || ''}`.trim() : '';
+      const adminEmail = selectedAdmin?.email || '';
+
+      const url = editingOverride
+        ? `/api/products/markups/admin/${editingOverride.id}`
+        : '/api/products/markups/admin';
+      const method = editingOverride ? 'PUT' : 'POST';
+
+      const res = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           adminId: selectedAdminId,
-          adminName: selectedAdmin ? `${selectedAdmin.firstName || ''} ${selectedAdmin.lastName || ''}`.trim() : '',
-          adminEmail: selectedAdmin?.email || '',
+          adminName: adminName || (editingOverride?.adminName ?? ''),
+          adminEmail: adminEmail || (editingOverride?.adminEmail ?? ''),
           categoryId: selectedCategoryId,
           markupPercentage: parseFloat(overridePercentage),
         }),
@@ -157,8 +166,9 @@ export default function MarkupsManagementPage() {
         throw new Error(data.error || 'Failed to save admin markup override');
       }
 
-      toast.success('Individual admin markup override configured');
+      toast.success(editingOverride ? 'Profit markup override updated successfully' : 'Individual admin markup override configured');
       setShowOverrideModal(false);
+      setEditingOverride(null);
       fetchData();
     } catch (err: any) {
       toast.error(err.message || 'Save failed');
@@ -348,13 +358,28 @@ export default function MarkupsManagementPage() {
                           {m.updatedAt ? new Date(m.updatedAt).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="py-3.5 px-4 text-right">
-                          <button
-                            onClick={() => handleDeleteAdminOverride(m.id)}
-                            className="p-1.5 text-rose-400 hover:text-white hover:bg-rose-500/20 rounded-lg transition"
-                            title="Delete Override"
-                          >
-                            <Icons.TrashIcon className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-end gap-1.5">
+                            <button
+                              onClick={() => {
+                                setEditingOverride(m);
+                                setSelectedAdminId(m.adminId);
+                                setSelectedCategoryId(m.categoryId);
+                                setOverridePercentage(String(m.markupPercentage));
+                                setShowOverrideModal(true);
+                              }}
+                              className="p-1.5 text-indigo-400 hover:text-white hover:bg-indigo-500/20 rounded-lg transition"
+                              title="Edit / Update Override"
+                            >
+                              <Icons.Pencil1Icon className="w-4 h-4" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteAdminOverride(m.id)}
+                              className="p-1.5 text-rose-400 hover:text-white hover:bg-rose-500/20 rounded-lg transition"
+                              title="Delete Override"
+                            >
+                              <Icons.TrashIcon className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     );
@@ -370,9 +395,14 @@ export default function MarkupsManagementPage() {
           <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
             <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                <h3 className="font-bold text-lg text-white">Set Admin Category Markup Override</h3>
+                <h3 className="font-bold text-lg text-white">
+                  {editingOverride ? 'Update Profit Markup Override' : 'Set Admin Category Markup Override'}
+                </h3>
                 <button
-                  onClick={() => setShowOverrideModal(false)}
+                  onClick={() => {
+                    setShowOverrideModal(false);
+                    setEditingOverride(null);
+                  }}
                   className="text-slate-400 hover:text-white"
                 >
                   <Icons.Cross2Icon className="w-5 h-5" />
@@ -439,7 +469,10 @@ export default function MarkupsManagementPage() {
                 <div className="pt-4 border-t border-slate-800 flex justify-end gap-3">
                   <button
                     type="button"
-                    onClick={() => setShowOverrideModal(false)}
+                    onClick={() => {
+                      setShowOverrideModal(false);
+                      setEditingOverride(null);
+                    }}
                     className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold"
                   >
                     Cancel
@@ -447,9 +480,9 @@ export default function MarkupsManagementPage() {
                   <button
                     type="submit"
                     disabled={savingOverride}
-                    className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs"
+                    className="px-5 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold rounded-xl text-xs disabled:opacity-50"
                   >
-                    {savingOverride ? 'Saving...' : 'Apply Override'}
+                    {savingOverride ? 'Saving...' : editingOverride ? 'Update Override' : 'Save Override'}
                   </button>
                 </div>
               </form>

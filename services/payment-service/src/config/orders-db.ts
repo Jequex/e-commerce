@@ -9,3 +9,4 @@ export const ordersClient = postgres(ordersDbUrl, {
   connect_timeout: 10,
   onnotice: () => {},
 });
+

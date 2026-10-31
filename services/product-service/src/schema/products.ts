@@ -215,7 +215,7 @@ export const createProductSchema = z.object({
   description: z.string().optional(),
   shortDescription: z.string().max(500).optional(),
   barcode: z.string().optional(),
-  categoryId: z.string().uuid().optional(),
+  categoryId: z.string().uuid().optional().nullable(),
   compareAtPrice: z.number().positive().optional(),
   costPrice: z.number().positive().optional(),
   weight: z.number().positive().optional(),
