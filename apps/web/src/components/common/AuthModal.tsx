@@ -25,12 +25,39 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [error, setError] = useState('');
+  const [legalVersions, setLegalVersions] = useState<{
+    termsVersion: string;
+    privacyVersion: string;
+    cancellationRefundVersion: string;
+  }>({
+    termsVersion: '1.0',
+    privacyVersion: '1.0',
+    cancellationRefundVersion: '1.0',
+  });
 
   const t = useTranslations('auth');
   const { login } = useAuth();
 
   useEffect(() => {
     setMounted(true);
+    fetch('/api/store/legal')
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.documents && Array.isArray(data.documents)) {
+          const versions = {
+            termsVersion: '1.0',
+            privacyVersion: '1.0',
+            cancellationRefundVersion: '1.0',
+          };
+          data.documents.forEach((d: any) => {
+            if (d.type === 'terms_conditions') versions.termsVersion = d.current_version || '1.0';
+            if (d.type === 'privacy_policy') versions.privacyVersion = d.current_version || '1.0';
+            if (d.type === 'cancellation_refund') versions.cancellationRefundVersion = d.current_version || '1.0';
+          });
+          setLegalVersions(versions);
+        }
+      })
+      .catch(() => {});
     return () => setMounted(false);
   }, []);
 
@@ -86,9 +113,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             acceptedTerms: true,
             acceptedPrivacyPolicy: true,
             acceptedCancellationRefund: true,
-            termsVersion: '1.0',
-            privacyVersion: '1.0',
-            cancellationRefundVersion: '1.0'
+            termsVersion: legalVersions.termsVersion,
+            privacyVersion: legalVersions.privacyVersion,
+            cancellationRefundVersion: legalVersions.cancellationRefundVersion
           }),
         });
 
@@ -356,7 +383,19 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                     className="mt-1 h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded cursor-pointer"
                   />
                   <label htmlFor="acceptedLegal" className="text-xs text-gray-600 leading-relaxed cursor-pointer">
-                    I agree to the <span className="text-blue-600 font-medium">Terms & Conditions</span>, <span className="text-blue-600 font-medium">Privacy Policy</span> (v1.0), and <span className="text-blue-600 font-medium">Cancellation & Refund Policy</span>.
+                    I agree to the{' '}
+                    <a href="/terms" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium hover:text-blue-800">
+                      Terms & Conditions (v{legalVersions.termsVersion})
+                    </a>
+                    ,{' '}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium hover:text-blue-800">
+                      Privacy Policy (v{legalVersions.privacyVersion})
+                    </a>
+                    , and{' '}
+                    <a href="/cancellation-refund" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline font-medium hover:text-blue-800">
+                      Cancellation & Refund Policy (v{legalVersions.cancellationRefundVersion})
+                    </a>
+                    .
                   </label>
                 </div>
               </>

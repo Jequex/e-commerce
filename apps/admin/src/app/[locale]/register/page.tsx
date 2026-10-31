@@ -20,11 +20,81 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [branding, setBranding] = useState<{ appName: string; appLogoUrl: string }>({
+    appName: 'Jequex E-Commerce',
+    appLogoUrl: '',
+  });
+  const [legalVersions, setLegalVersions] = useState<{ termsVersion: string; privacyVersion: string }>({
+    termsVersion: '1.0',
+    privacyVersion: '1.0',
+  });
+  const [viewingDoc, setViewingDoc] = useState<{ title: string; content: string; version: string } | null>(null);
+  const [loadingDoc, setLoadingDoc] = useState(false);
 
   const router = useRouter();
   const t = useTranslations('auth');
   const common = useTranslations('common');
   const { setAuth } = useAuthStore();
+
+  React.useEffect(() => {
+    // Fetch branding
+    const contactUrl = typeof window !== 'undefined' && window.location.port === '8080'
+      ? '/api/store/settings/contact'
+      : 'http://localhost:8080/api/store/settings/contact';
+
+    fetch(contactUrl)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data) {
+          setBranding({
+            appName: data.app_name || data.appName || 'Jequex E-Commerce',
+            appLogoUrl: data.app_logo_url || data.appLogoUrl || '',
+          });
+        }
+      })
+      .catch(() => {});
+
+    // Fetch active legal document versions
+    const legalUrl = typeof window !== 'undefined' && window.location.port === '8080'
+      ? '/api/store/legal'
+      : 'http://localhost:8080/api/store/legal';
+
+    fetch(legalUrl)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.documents && Array.isArray(data.documents)) {
+          const versions = { termsVersion: '1.0', privacyVersion: '1.0' };
+          data.documents.forEach((d: any) => {
+            if (d.type === 'terms_conditions') versions.termsVersion = d.current_version || '1.0';
+            if (d.type === 'privacy_policy') versions.privacyVersion = d.current_version || '1.0';
+          });
+          setLegalVersions(versions);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const openDocViewer = async (type: 'terms_conditions' | 'privacy_policy') => {
+    setLoadingDoc(true);
+    try {
+      const url = typeof window !== 'undefined' && window.location.port === '8080'
+        ? `/api/store/legal/${type}`
+        : `http://localhost:8080/api/store/legal/${type}`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (data?.activeVersion) {
+        setViewingDoc({
+          title: data.activeVersion.title || data.document?.title || 'Legal Policy',
+          content: data.activeVersion.content || 'No content published.',
+          version: data.activeVersion.version || '1.0',
+        });
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoadingDoc(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -51,8 +121,8 @@ export default function RegisterPage() {
           role: 'admin',
           storeName: storeName || `${firstName}'s Store`,
           acceptedTerms: true,
-          termsVersion: '1.0',
-          privacyVersion: '1.0',
+          termsVersion: legalVersions.termsVersion,
+          privacyVersion: legalVersions.privacyVersion,
         }),
       });
 
@@ -128,14 +198,20 @@ export default function RegisterPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-center"
           >
-            <div className="mx-auto h-14 w-14 flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg text-white">
-              <Icons.PersonIcon className="w-7 h-7" />
-            </div>
+            {branding.appLogoUrl ? (
+              <div className="mx-auto h-16 w-16 flex items-center justify-center p-2 rounded-2xl bg-white dark:bg-gray-800 shadow-md border border-gray-200 dark:border-gray-700">
+                <img src={branding.appLogoUrl} alt={branding.appName} className="max-h-full max-w-full object-contain" />
+              </div>
+            ) : (
+              <div className="mx-auto h-14 w-14 flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg text-white">
+                <Icons.PersonIcon className="w-7 h-7" />
+              </div>
+            )}
             <h2 className="mt-4 text-center text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
               {t('register')}
             </h2>
             <p className="mt-1 text-center text-xs text-gray-600 dark:text-gray-400">
-              {t('registerSubtitle')}
+              {branding.appName ? `${branding.appName} Merchant Platform` : t('registerSubtitle')}
             </p>
           </motion.div>
 
@@ -276,9 +352,22 @@ export default function RegisterPage() {
                 />
                 <span>
                   I have read and agree to the{' '}
-                  <span className="font-semibold text-blue-600 dark:text-blue-400">Terms & Conditions</span> and{' '}
-                  <span className="font-semibold text-blue-600 dark:text-blue-400">Privacy Policy (v1.0)</span>.
-                  My agreement will be permanently logged in the governance audit trail.
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); openDocViewer('terms_conditions'); }}
+                    className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Terms & Conditions (v{legalVersions.termsVersion})
+                  </button>{' '}
+                  and{' '}
+                  <button
+                    type="button"
+                    onClick={(e) => { e.preventDefault(); openDocViewer('privacy_policy'); }}
+                    className="font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                  >
+                    Privacy Policy (v{legalVersions.privacyVersion})
+                  </button>.
+                  My consent will be permanently recorded in the governance audit trail.
                 </span>
               </label>
             </div>
@@ -314,6 +403,51 @@ export default function RegisterPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Policy Preview Modal */}
+      {(viewingDoc || loadingDoc) && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-2xl border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div className="flex items-center justify-between p-5 border-b border-gray-200 dark:border-gray-700">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  {loadingDoc ? 'Loading Document...' : viewingDoc?.title}
+                </h3>
+                {viewingDoc && (
+                  <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 font-mono">
+                    Version {viewingDoc.version}
+                  </span>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setViewingDoc(null)}
+                className="p-1 rounded-lg text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+              >
+                <Icons.Cross2Icon className="w-5 h-5" />
+              </button>
+            </div>
+
+            <div className="p-6 overflow-y-auto flex-1 text-sm text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+              {loadingDoc ? (
+                <div className="py-12 text-center text-gray-400">Loading policy content...</div>
+              ) : (
+                viewingDoc?.content
+              )}
+            </div>
+
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setViewingDoc(null)}
+                className="px-4 py-2 bg-gray-900 hover:bg-gray-800 dark:bg-blue-600 dark:hover:bg-blue-500 text-white rounded-xl text-xs font-semibold"
+              >
+                Close & Return
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -14,7 +14,8 @@ import {
   MdSettings,
   MdMenu,
   MdRocket,
-  MdAccountBalance
+  MdAccountBalance,
+  MdPolicy
 } from 'react-icons/md';
 import { GiBoxUnpacking } from "react-icons/gi";
 import { FaPeopleRoof } from "react-icons/fa6";
@@ -38,7 +39,11 @@ const Sidebar: React.FC = () => {
   });
 
   React.useEffect(() => {
-    fetch('http://localhost:3007/api/v1/settings/contact')
+    const contactUrl = typeof window !== 'undefined' && window.location.port === '8080'
+      ? '/api/store/settings/contact'
+      : 'http://localhost:8080/api/store/settings/contact';
+
+    fetch(contactUrl)
       .then((r) => r.json())
       .then((data) => {
         if (data) {
@@ -48,7 +53,19 @@ const Sidebar: React.FC = () => {
           });
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        fetch('http://localhost:3007/api/v1/settings/contact')
+          .then((r) => r.json())
+          .then((data) => {
+            if (data) {
+              setBranding({
+                appName: data.app_name || data.appName || 'Jequex E-Commerce',
+                appLogoUrl: data.app_logo_url || data.appLogoUrl || '',
+              });
+            }
+          })
+          .catch(() => {});
+      });
   }, []);
 
   const sidebarItems: SidebarItem[] = [
@@ -115,6 +132,12 @@ const Sidebar: React.FC = () => {
       label: 'Weekly Payouts',
       icon: MdAccountBalance,
       href: '/payouts',
+    },
+    {
+      id: 'legal',
+      label: 'Platform Policies',
+      icon: MdPolicy,
+      href: '/legal',
     },
     // {
     //   id: 'analytics',

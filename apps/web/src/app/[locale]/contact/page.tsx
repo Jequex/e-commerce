@@ -3,9 +3,40 @@
 import { Link } from '@/i18n/navigation';
 import { Navbar, Footer } from '@/components/layout';
 import { useTranslations } from 'next-intl';
+import { useEffect, useState } from 'react';
 
 export default function ContactPage() {
   const t = useTranslations('contact');
+  const [contactInfo, setContactInfo] = useState<{
+    email: string;
+    phone: string;
+    address: string;
+    businessHours?: string;
+    supportHours?: string;
+  }>({
+    email: 'support@jequex.com',
+    phone: '+234 814 167 6170',
+    address: '123 Commerce Boulevard, Suite 500',
+    businessHours: 'Mon - Fri: 9:00 AM - 6:00 PM EST',
+    supportHours: '24/7 Priority Support',
+  });
+
+  useEffect(() => {
+    fetch('/api/store/settings/contact')
+      .then((res) => res.json())
+      .then((data) => {
+        if (data) {
+          setContactInfo({
+            email: data.email || 'support@jequex.com',
+            phone: data.phone || '+234 814 167 6170',
+            address: data.address || '123 Commerce Boulevard, Suite 500',
+            businessHours: data.business_hours || data.businessHours || 'Mon - Fri: 9:00 AM - 6:00 PM EST',
+            supportHours: data.support_hours || data.supportHours || '24/7 Priority Support',
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
@@ -33,8 +64,8 @@ export default function ContactPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-4">{t('emailSupport')}</h3>
             <p className="text-gray-600 mb-4">{t('emailSupportDescription')}</p>
-            <a href="mailto:support@jequex.com" className="text-blue-600 hover:text-blue-800 font-semibold">
-              support@jequex.com
+            <a href={`mailto:${contactInfo.email}`} className="text-blue-600 hover:text-blue-800 font-semibold">
+              {contactInfo.email}
             </a>
           </div>
 
@@ -46,8 +77,8 @@ export default function ContactPage() {
             </div>
             <h3 className="text-xl font-bold text-gray-900 mb-4">{t('phoneSupport')}</h3>
             <p className="text-gray-600 mb-4">{t('phoneSupportDescription')}</p>
-            <a href="tel:+2348141676170" className="text-blue-600 hover:text-blue-800 font-semibold">
-              +234 814 167 6170
+            <a href={`tel:${contactInfo.phone.replace(/\s+/g, '')}`} className="text-blue-600 hover:text-blue-800 font-semibold">
+              {contactInfo.phone}
             </a>
           </div>
 
@@ -61,7 +92,7 @@ export default function ContactPage() {
             <h3 className="text-xl font-bold text-gray-900 mb-4">{t('visitUs')}</h3>
             <p className="text-gray-600 mb-4">{t('visitUsDescription')}</p>
             <p className="text-gray-800 font-semibold">
-              {t('address')}
+              {contactInfo.address}
             </p>
           </div>
         </div>
@@ -159,16 +190,12 @@ export default function ContactPage() {
               <h3 className="text-2xl font-bold text-gray-900 mb-6">{t('businessHours')}</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">{t('mondayFriday')}</span>
-                  <span className="font-semibold text-gray-900">{t('supportHoursWeekday')}</span>
+                  <span className="text-gray-600">Standard Hours:</span>
+                  <span className="font-semibold text-gray-900">{contactInfo.businessHours}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">{t('saturday')}</span>
-                  <span className="font-semibold text-gray-900">{t('supportHoursSaturday')}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">{t('sunday')}</span>
-                  <span className="font-semibold text-gray-900">{t('supportHoursSunday')}</span>
+                  <span className="text-gray-600">Customer Support:</span>
+                  <span className="font-semibold text-emerald-600">{contactInfo.supportHours}</span>
                 </div>
               </div>
             </div>

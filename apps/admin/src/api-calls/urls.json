@@ -63,5 +63,12 @@
     "getBankDetails": "localhost:3004/api/payments/payouts/bank-details",
     "saveBankDetails": "localhost:3004/api/payments/payouts/bank-details",
     "getOverview": "localhost:3004/api/payments/payouts/overview"
+  },
+  "settings": {
+    "getContact": "localhost:3007/api/v1/settings/contact"
+  },
+  "legal": {
+    "getAll": "localhost:3007/api/v1/legal",
+    "getByType": "localhost:3007/api/v1/legal/:type"
   }
 }

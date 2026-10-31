@@ -16,11 +16,33 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  const [branding, setBranding] = useState<{ appName: string; appLogoUrl: string }>({
+    appName: 'Jequex E-Commerce',
+    appLogoUrl: '',
+  });
   const router = useRouter();
   const t = useTranslations('auth');
   const common = useTranslations('common');
   const { setAuth } = useAuthStore();
   const { setData, setUserStores } = usePageStore.getState();
+
+  React.useEffect(() => {
+    const contactUrl = typeof window !== 'undefined' && window.location.port === '8080'
+      ? '/api/store/settings/contact'
+      : 'http://localhost:8080/api/store/settings/contact';
+
+    fetch(contactUrl)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data) {
+          setBranding({
+            appName: data.app_name || data.appName || 'Jequex E-Commerce',
+            appLogoUrl: data.app_logo_url || data.appLogoUrl || '',
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -97,14 +119,20 @@ export default function LoginPage() {
             transition={{ duration: 0.5, delay: 0.1 }}
             className="text-center"
           >
-            <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
-              <Icons.RocketIcon className="w-8 h-8 text-white" />
-            </div>
+            {branding.appLogoUrl ? (
+              <div className="mx-auto h-16 w-16 flex items-center justify-center p-2 rounded-2xl bg-white dark:bg-gray-800 shadow-lg border border-gray-200 dark:border-gray-700">
+                <img src={branding.appLogoUrl} alt={branding.appName} className="max-h-full max-w-full object-contain" />
+              </div>
+            ) : (
+              <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+                <Icons.RocketIcon className="w-8 h-8 text-white" />
+              </div>
+            )}
             <h2 className="mt-6 text-center text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-white dark:to-gray-300 bg-clip-text text-transparent">
               {t('login')}
             </h2>
             <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-              {t('loginSubtitle')}
+              {branding.appName ? `${branding.appName} Merchant Admin` : t('loginSubtitle')}
             </p>
           </motion.div>
 

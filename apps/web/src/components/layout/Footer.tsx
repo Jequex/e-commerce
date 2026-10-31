@@ -12,20 +12,42 @@ export default function Footer({ activeRoute }: FooterProps) {
   const t = useTranslations('nav');
   const tCommon = useTranslations('common');
   const [adminUrl, setAdminUrl] = useState('http://localhost:3006');
-  const [contactData, setContactData] = useState<{ phone?: string; email?: string; address?: string } | null>(null);
+  const [branding, setBranding] = useState<{ appName: string; appLogoUrl: string }>({
+    appName: '',
+    appLogoUrl: '',
+  });
+  const [contactData, setContactData] = useState<{
+    phone?: string;
+    email?: string;
+    address?: string;
+    businessHours?: string;
+    socialFacebook?: string;
+    socialTwitter?: string;
+    socialInstagram?: string;
+    socialLinkedin?: string;
+  } | null>(null);
 
   useEffect(() => {
-    fetch('http://localhost:8080/api/store/settings/contact')
+    fetch('/api/store/settings/contact')
       .then((res) => res.json())
       .then((data) => {
-        if (data.admin_app_url || data.adminAppUrl) {
-          setAdminUrl(data.admin_app_url || data.adminAppUrl);
-        }
-        if (data.phone || data.email || data.address) {
+        if (data) {
+          if (data.admin_app_url || data.adminAppUrl) {
+            setAdminUrl(data.admin_app_url || data.adminAppUrl);
+          }
+          setBranding({
+            appName: data.app_name || data.appName || '',
+            appLogoUrl: data.app_logo_url || data.appLogoUrl || '',
+          });
           setContactData({
             phone: data.phone,
             email: data.email,
             address: data.address,
+            businessHours: data.business_hours || data.businessHours,
+            socialFacebook: data.social_facebook || data.socialFacebook,
+            socialTwitter: data.social_twitter || data.socialTwitter,
+            socialInstagram: data.social_instagram || data.socialInstagram,
+            socialLinkedin: data.social_linkedin || data.socialLinkedin,
           });
         }
       })
@@ -43,7 +65,7 @@ export default function Footer({ activeRoute }: FooterProps) {
           {/* Brand Section */}
           <div className="md:col-span-2">
             <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
-              {tCommon('title')}
+              {branding.appName || tCommon('title')}
             </h3>
             <p className="text-gray-400 mb-6 max-w-md">
               Your ultimate e-commerce destination for the latest products, best deals, and exceptional customer service.
@@ -190,7 +212,7 @@ export default function Footer({ activeRoute }: FooterProps) {
         <div className="border-t border-gray-800 pt-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
             <p className="text-gray-400 text-xs sm:text-sm">
-              © 2025 {tCommon('title')}. {tCommon('allRightsReserved')}
+              © 2025 {branding.appName || tCommon('title')}. {tCommon('allRightsReserved')}
             </p>
             <div className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2 text-xs sm:text-sm items-center">
               <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
@@ -198,6 +220,9 @@ export default function Footer({ activeRoute }: FooterProps) {
               </Link>
               <Link href="/terms" className="text-gray-400 hover:text-white transition-colors">
                 {t('termsOfService')}
+              </Link>
+              <Link href="/cancellation-refund" className="text-gray-400 hover:text-white transition-colors">
+                Refund Policy
               </Link>
               <Link href="/cookies" className="text-gray-400 hover:text-white transition-colors">
                 {t('cookiePolicy')}

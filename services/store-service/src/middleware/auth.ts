@@ -54,7 +54,7 @@ export const authenticateToken = async (
       id: decoded.userId,
       email: decoded.email,
       role: decoded.role,
-      isAdmin: decoded.isAdmin || false,
+      isAdmin: decoded.isAdmin || decoded.role === 'admin' || decoded.role === 'super_admin' || false,
       permissions: decoded.permissions || []
     };
 

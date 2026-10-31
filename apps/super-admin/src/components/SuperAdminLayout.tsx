@@ -21,6 +21,7 @@ const navItems: NavItem[] = [
   { name: 'Weekly Payouts', href: '/payouts', icon: Icons.LayersIcon, badge: 'Paystack' },
   { name: 'Coupons & Promo', href: '/coupons', icon: Icons.TokensIcon },
   { name: 'Categories', href: '/categories', icon: Icons.ComponentInstanceIcon, badge: 'Super Admin' },
+  { name: 'Stores & Merchants', href: '/stores', icon: Icons.HomeIcon, badge: 'Stores' },
   { name: 'Products', href: '/products', icon: Icons.CubeIcon },
   { name: 'Manage Admins', href: '/admins', icon: Icons.PersonIcon, badge: 'Super Admin' },
   { name: 'App Branding & Settings', href: '/settings', icon: Icons.GearIcon, badge: 'Super Admin' },

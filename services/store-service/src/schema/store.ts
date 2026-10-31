@@ -319,6 +319,8 @@ export const insertStoreCategorySchema = z.object({
 export const insertStoreSchema = z.object({
   name: z.string().min(1).max(200),
   slug: z.string().min(1).max(200),
+  ownerId: z.string().uuid().optional(),
+  status: z.enum(['active', 'inactive', 'pending_approval', 'suspended', 'closed']).optional(),
   description: z.string().optional(),
   type: z.enum(['physical', 'online', 'hybrid']).optional(),
   email: z.string().email().optional(),

@@ -1,11 +1,33 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link } from '@/i18n/navigation';
 import { motion } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
 
 export default function AdminLandingPage() {
+  const [branding, setBranding] = useState<{ appName: string; appLogoUrl: string }>({
+    appName: 'Jequex Admin',
+    appLogoUrl: '',
+  });
+
+  useEffect(() => {
+    const contactUrl = typeof window !== 'undefined' && window.location.port === '8080'
+      ? '/api/store/settings/contact'
+      : 'http://localhost:8080/api/store/settings/contact';
+
+    fetch(contactUrl)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data) {
+          setBranding({
+            appName: data.app_name || data.appName || 'Jequex Admin',
+            appLogoUrl: data.app_logo_url || data.appLogoUrl || '',
+          });
+        }
+      })
+      .catch(() => {});
+  }, []);
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col selection:bg-blue-500 selection:text-white">
       {/* Background Glow */}
@@ -18,11 +40,17 @@ export default function AdminLandingPage() {
       <header className="relative z-20 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur-md">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
-              <Icons.RocketIcon className="w-6 h-6" />
-            </div>
+            {branding.appLogoUrl ? (
+              <div className="h-11 w-11 rounded-2xl bg-white p-1 flex items-center justify-center shadow-lg shadow-blue-500/20">
+                <img src={branding.appLogoUrl} alt={branding.appName} className="max-h-full max-w-full object-contain" />
+              </div>
+            ) : (
+              <div className="h-11 w-11 rounded-2xl bg-gradient-to-tr from-blue-600 to-indigo-500 flex items-center justify-center text-white shadow-lg shadow-blue-500/20">
+                <Icons.RocketIcon className="w-6 h-6" />
+              </div>
+            )}
             <div>
-              <span className="text-xl font-bold tracking-tight text-white">Jequex Admin</span>
+              <span className="text-xl font-bold tracking-tight text-white">{branding.appName}</span>
               <span className="block text-[10px] uppercase font-semibold text-blue-400 tracking-wider">Merchant Portal</span>
             </div>
           </div>
@@ -258,7 +286,7 @@ export default function AdminLandingPage() {
       {/* Footer */}
       <footer className="mt-auto border-t border-slate-800/80 py-8 px-4 text-center text-xs text-slate-500">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center gap-4">
-          <p>© 2026 Jequex E-Commerce Platform. All rights reserved.</p>
+          <p>© 2026 {branding.appName}. All rights reserved.</p>
           <div className="flex items-center gap-6">
             <a href="http://localhost:3000" target="_blank" rel="noopener noreferrer" className="hover:text-blue-400 transition">
               Customer Web App ↗

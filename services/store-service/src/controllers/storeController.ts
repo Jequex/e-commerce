@@ -53,15 +53,18 @@ export class StoreController {
         });
       }
 
+      const storeOwnerId = (req.user.isAdmin && validatedData.ownerId) ? validatedData.ownerId : req.user.id;
+      const storeStatus = (req.user.isAdmin && validatedData.status) ? validatedData.status : 'pending_approval';
+
       // Create store
       const [newStore] = await db.insert(stores).values({
         id: uuidv4(),
-        ownerId: req.user.id,
+        ownerId: storeOwnerId,
         name: validatedData.name,
         slug: validatedData.slug,
         description: validatedData.description,
         type: validatedData.type || 'physical',
-        status: 'pending_approval',
+        status: storeStatus,
         email: validatedData.email,
         phone: validatedData.phone,
         website: validatedData.website,
@@ -296,12 +299,18 @@ export class StoreController {
       }
 
       // Update store
+      const updateData: any = {
+        ...validatedData,
+        updatedAt: new Date()
+      };
+      if (!req.user.isAdmin) {
+        delete updateData.ownerId;
+        delete updateData.status;
+      }
+
       const [updatedStore] = await db
         .update(stores)
-        .set({
-          ...validatedData,
-          updatedAt: new Date()
-        })
+        .set(updateData)
         .where(eq(stores.id, id))
         .returning();
 
