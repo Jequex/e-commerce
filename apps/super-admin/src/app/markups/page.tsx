@@ -460,3 +460,4 @@ export default function MarkupsManagementPage() {
     </SuperAdminLayout>
   );
 }
+

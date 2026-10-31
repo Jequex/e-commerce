@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { testConnection } from './config/database';
 import paymentRoutes from './routes/payments';
+import { PaymentController } from './controllers/paymentController';
 
 // Load environment variables
 dotenv.config();
@@ -109,6 +110,38 @@ const server = app.listen(PORT, async () => {
   try {
     await testConnection();
     console.log('✅ Database connection successful');
+
+    // Automatic Weekly Monday Payout Scheduler (Runs every Monday)
+    let lastMondayProcessedDate: string | null = null;
+    const paymentCtrl = new PaymentController();
+
+    const checkAndRunWeeklyPayouts = async () => {
+      const now = new Date();
+      const day = now.getUTCDay(); // 1 = Monday
+      const todayDateString = now.toISOString().slice(0, 10);
+
+      if (day === 1 && lastMondayProcessedDate !== todayDateString) {
+        console.log(`⏰ Monday detected (${todayDateString}). Initiating automatic weekly payout run...`);
+        try {
+          const mockReq = { body: {}, query: {}, user: { role: 'super_admin', id: 'system-scheduler' } } as any;
+          const mockRes = {
+            json: (data: any) => console.log('✅ Automatic Monday Payout Complete:', data.message || data),
+            status: (code: number) => ({
+              json: (err: any) => console.error(`❌ Automatic Monday Payout Error (${code}):`, err),
+            }),
+          } as any;
+          await paymentCtrl.processWeeklyPayouts(mockReq, mockRes);
+          lastMondayProcessedDate = todayDateString;
+        } catch (err) {
+          console.error('❌ Failed executing automated Monday payouts:', err);
+        }
+      }
+    };
+
+    // Check on startup and then every 30 minutes
+    checkAndRunWeeklyPayouts();
+    setInterval(checkAndRunWeeklyPayouts, 30 * 60 * 1000);
+
   } catch (error) {
     console.error('❌ Database connection failed:', error);
     process.exit(1);

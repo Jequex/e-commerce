@@ -28,3 +28,4 @@ ALTER TABLE order_line_items ADD COLUMN IF NOT EXISTS discount_amount numeric(10
 ALTER TABLE order_line_items ADD COLUMN IF NOT EXISTS discount_funded_by varchar(50) DEFAULT 'none';
 ALTER TABLE order_line_items ADD COLUMN IF NOT EXISTS store_payout numeric(10,2) DEFAULT 0.00;
 ALTER TABLE order_line_items ADD COLUMN IF NOT EXISTS platform_profit numeric(10,2) DEFAULT 0.00;
+

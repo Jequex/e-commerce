@@ -13,7 +13,8 @@ import {
   MdAnalytics, 
   MdSettings,
   MdMenu,
-  MdRocket
+  MdRocket,
+  MdAccountBalance
 } from 'react-icons/md';
 import { GiBoxUnpacking } from "react-icons/gi";
 import { FaPeopleRoof } from "react-icons/fa6";
@@ -108,6 +109,12 @@ const Sidebar: React.FC = () => {
       label: 'Profits & Reports',
       icon: MdAnalytics,
       href: '/reports',
+    },
+    {
+      id: 'payouts',
+      label: 'Weekly Payouts',
+      icon: MdAccountBalance,
+      href: '/payouts',
     },
     // {
     //   id: 'analytics',

@@ -1,4 +1,4 @@
-import { pgTable, text, integer, decimal, boolean, timestamp, uuid, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, text, integer, decimal, boolean, timestamp, uuid, jsonb, varchar, date } from 'drizzle-orm/pg-core';
 import { relations } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -22,12 +22,12 @@ export const paymentMethods = pgTable('payment_methods', {
   // Billing address
   billingAddress: jsonb('billing_address').$type<{
     name?: string;
-    address1: string;
+    address1?: string;
     address2?: string;
-    city: string;
+    city?: string;
     state?: string;
-    country: string;
-    postalCode: string;
+    country?: string;
+    postalCode?: string;
   }>(),
   
   // Status and metadata
@@ -44,6 +44,7 @@ export const paymentTransactions = pgTable('payment_transactions', {
   id: uuid('id').primaryKey().defaultRandom(),
   orderId: uuid('order_id'), // Reference to order service
   userId: uuid('user_id').notNull(),
+  storeId: uuid('store_id'),
   paymentMethodId: uuid('payment_method_id').references(() => paymentMethods.id),
   
   // Transaction details
@@ -58,7 +59,9 @@ export const paymentTransactions = pgTable('payment_transactions', {
   // Provider details
   provider: text('provider').notNull(), // stripe, paypal, etc.
   providerTransactionId: text('provider_transaction_id'),
+  providerReference: text('provider_reference'),
   providerCustomerId: text('provider_customer_id'),
+  customerEmail: text('customer_email'),
   
   // Intent/session IDs for multi-step payments
   paymentIntentId: text('payment_intent_id'),
@@ -377,3 +380,59 @@ export const SubscriptionStatus = {
   UNPAID: 'unpaid',
   TRIALING: 'trialing',
 } as const;
+
+// Store Payout Settings (Bank details for receiving payouts via Paystack)
+export const storePayoutSettings = pgTable('store_payout_settings', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  storeId: uuid('store_id').notNull().unique(),
+  adminId: uuid('admin_id').notNull(),
+  bankCode: varchar('bank_code', { length: 50 }).notNull(),
+  bankName: varchar('bank_name', { length: 255 }).notNull(),
+  accountNumber: varchar('account_number', { length: 50 }).notNull(),
+  accountName: varchar('account_name', { length: 255 }).notNull(),
+  paystackRecipientCode: varchar('paystack_recipient_code', { length: 100 }),
+  currency: varchar('currency', { length: 10 }).default('NGN'),
+  isVerified: boolean('is_verified').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Payout Batches (Weekly Monday automated payouts)
+export const payoutBatches = pgTable('payout_batches', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  batchNumber: varchar('batch_number', { length: 50 }).notNull().unique(),
+  scheduledDate: date('scheduled_date').notNull(),
+  status: varchar('status', { length: 50 }).default('pending'), // pending, processing, completed, partially_failed, failed
+  totalPayoutAmount: decimal('total_payout_amount', { precision: 12, scale: 2 }).default('0.00'),
+  totalStoresCount: integer('total_stores_count').default(0),
+  processedAt: timestamp('processed_at'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Store Payouts (Individual store payout within a batch)
+export const storePayouts = pgTable('store_payouts', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  batchId: uuid('batch_id').references(() => payoutBatches.id, { onDelete: 'cascade' }),
+  storeId: uuid('store_id').notNull(),
+  adminId: uuid('admin_id'),
+  amount: decimal('amount', { precision: 12, scale: 2 }).notNull(),
+  currency: varchar('currency', { length: 10 }).default('NGN'),
+  orderIds: jsonb('order_ids').$type<string[]>().default([]),
+  paystackTransferCode: varchar('paystack_transfer_code', { length: 100 }),
+  paystackReference: varchar('paystack_reference', { length: 100 }).unique(),
+  status: varchar('status', { length: 50 }).default('pending'), // pending, successful, failed
+  failureReason: text('failure_reason'),
+  bankName: varchar('bank_name', { length: 255 }),
+  accountNumber: varchar('account_number', { length: 50 }),
+  accountName: varchar('account_name', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+export const saveBankDetailsSchema = z.object({
+  bankCode: z.string().min(1, 'Bank is required'),
+  bankName: z.string().min(1, 'Bank name is required'),
+  accountNumber: z.string().min(10, 'Account number must be 10 digits').max(10),
+  accountName: z.string().min(1, 'Account name is required'),
+});

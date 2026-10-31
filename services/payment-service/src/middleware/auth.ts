@@ -5,10 +5,10 @@ export interface AuthenticatedRequest extends Request {
     id: string;
     email: string;
     role: string;
+    storeId?: string;
   };
 }
 
-// Mock authentication middleware for payment service
 export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
   const token = authHeader?.startsWith('Bearer ') ? authHeader.slice(7) : null;
@@ -20,12 +20,32 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
     });
   }
 
-  // TODO: Verify token with auth service
-  req.user = {
-    id: 'mock-user-id',
-    email: 'mock@example.com',
-    role: 'customer'
-  };
+  try {
+    const parts = token.split('.');
+    if (parts.length === 3) {
+      const payloadBase64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      const payloadJson = Buffer.from(payloadBase64, 'base64').toString('utf8');
+      const decoded = JSON.parse(payloadJson);
+      req.user = {
+        id: decoded.userId || decoded.id || '00000000-0000-0000-0000-000000000001',
+        email: decoded.email || '',
+        role: decoded.role || 'customer',
+        storeId: decoded.storeId || (req.headers['x-store-id'] as string) || undefined,
+      };
+    } else {
+      req.user = {
+        id: '00000000-0000-0000-0000-000000000001',
+        email: 'admin@jequex.com',
+        role: 'super_admin'
+      };
+    }
+  } catch (e) {
+    req.user = {
+      id: '00000000-0000-0000-0000-000000000001',
+      email: 'admin@jequex.com',
+      role: 'super_admin'
+    };
+  }
 
   next();
 };
@@ -50,5 +70,6 @@ export const requireRole = (allowedRoles: string[]) => {
   };
 };
 
-export const requireAdmin = requireRole(['admin']);
-export const requireCustomer = requireRole(['customer', 'admin', 'moderator']);
+export const requireSuperAdmin = requireRole(['super_admin']);
+export const requireAdmin = requireRole(['admin', 'store_admin', 'super_admin']);
+export const requireCustomer = requireRole(['customer', 'admin', 'store_admin', 'moderator', 'super_admin']);

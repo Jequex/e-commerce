@@ -575,3 +575,4 @@ export default function CouponsManagementPage() {
     </SuperAdminLayout>
   );
 }
+

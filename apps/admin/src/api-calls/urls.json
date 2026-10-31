@@ -56,5 +56,12 @@
   },
   "reports": {
     "getStoreReports": "localhost:3003/api/orders/admin/store-reports"
+  },
+  "payouts": {
+    "getBanks": "localhost:3004/api/payments/paystack/banks",
+    "resolveAccount": "localhost:3004/api/payments/paystack/resolve-account",
+    "getBankDetails": "localhost:3004/api/payments/payouts/bank-details",
+    "saveBankDetails": "localhost:3004/api/payments/payouts/bank-details",
+    "getOverview": "localhost:3004/api/payments/payouts/overview"
   }
 }
