@@ -147,7 +147,7 @@ export default function ProductDetailsPage() {
           </ol>
         </nav>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12">
           {/* Product Images */}
           <div className="space-y-4">
             <div className="aspect-square bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-200">
@@ -372,10 +372,10 @@ export default function ProductDetailsPage() {
         <div className="mt-16">
           <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden">
             <div className="border-b border-gray-200">
-              <nav className="flex">
+              <nav className="flex overflow-x-auto whitespace-nowrap">
                 <button 
                   onClick={() => setActiveTab('description')}
-                  className={`px-8 py-4 text-sm font-medium transition-colors ${
+                  className={`px-5 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-sm font-medium transition-colors shrink-0 ${
                     activeTab === 'description' 
                       ? 'text-blue-600 border-b-2 border-blue-600' 
                       : 'text-gray-500 hover:text-gray-700'
@@ -385,7 +385,7 @@ export default function ProductDetailsPage() {
                 </button>
                 <button 
                   onClick={() => setActiveTab('specifications')}
-                  className={`px-8 py-4 text-sm font-medium transition-colors ${
+                  className={`px-5 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-sm font-medium transition-colors shrink-0 ${
                     activeTab === 'specifications' 
                       ? 'text-blue-600 border-b-2 border-blue-600' 
                       : 'text-gray-500 hover:text-gray-700'
@@ -395,7 +395,7 @@ export default function ProductDetailsPage() {
                 </button>
                 <button 
                   onClick={() => setActiveTab('reviews')}
-                  className={`px-8 py-4 text-sm font-medium transition-colors ${
+                  className={`px-5 sm:px-8 py-3.5 sm:py-4 text-xs sm:text-sm font-medium transition-colors shrink-0 ${
                     activeTab === 'reviews' 
                       ? 'text-blue-600 border-b-2 border-blue-600' 
                       : 'text-gray-500 hover:text-gray-700'
@@ -405,7 +405,7 @@ export default function ProductDetailsPage() {
                 </button>
               </nav>
             </div>
-            <div className="p-8">
+            <div className="p-4 sm:p-8">
               {/* Description Tab */}
               {activeTab === 'description' && (
                 <div className="prose max-w-none">

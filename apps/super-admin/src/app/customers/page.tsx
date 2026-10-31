@@ -6,6 +6,15 @@ import { useAuthStore } from '../../stores/useAuthStore';
 import * as Icons from '@radix-ui/react-icons';
 import toast from 'react-hot-toast';
 
+interface LegalConsent {
+  id: string;
+  documentType: string;
+  versionNumber: string;
+  acceptedAt: string;
+  ipAddress?: string;
+  userAgent?: string;
+}
+
 interface Customer {
   id: string;
   email: string;
@@ -15,6 +24,7 @@ interface Customer {
   status: string;
   emailVerified: boolean;
   createdAt: string;
+  consents?: LegalConsent[];
 }
 
 interface OrderItem {
@@ -49,6 +59,7 @@ export default function CustomersPurchasesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
+  const [activeModalTab, setActiveModalTab] = useState<'purchases' | 'consents'>('purchases');
 
   useEffect(() => {
     fetchData();
@@ -172,9 +183,9 @@ export default function CustomersPurchasesPage() {
                   <th className="py-3.5 px-4 font-semibold">Contact</th>
                   <th className="py-3.5 px-4 font-semibold text-center">Orders</th>
                   <th className="py-3.5 px-4 font-semibold">Total Spent</th>
-                  <th className="py-3.5 px-4 font-semibold">Last Purchase</th>
+                  <th className="py-3.5 px-4 font-semibold text-center">Legal Consents</th>
                   <th className="py-3.5 px-4 font-semibold">Member Since</th>
-                  <th className="py-3.5 px-4 font-semibold text-right">Purchases</th>
+                  <th className="py-3.5 px-4 font-semibold text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-800/60">
@@ -216,18 +227,28 @@ export default function CustomersPurchasesPage() {
                       <td className="py-3.5 px-4 font-semibold text-emerald-400">
                         ${c.totalSpent.toFixed(2)}
                       </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-400">
-                        {c.lastOrderDate ? new Date(c.lastOrderDate).toLocaleDateString() : 'Never'}
+                      <td className="py-3.5 px-4 text-center">
+                        {c.consents && c.consents.length > 0 ? (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-950/60 text-emerald-300 border border-emerald-800/60">
+                            <Icons.CheckCircledIcon className="w-3.5 h-3.5 text-emerald-400" />
+                            {c.consents.length} Signed
+                          </span>
+                        ) : (
+                          <span className="text-xs text-slate-500 italic">None logged</span>
+                        )}
                       </td>
                       <td className="py-3.5 px-4 text-xs text-slate-400">
                         {new Date(c.createdAt).toLocaleDateString()}
                       </td>
                       <td className="py-3.5 px-4 text-right">
                         <button
-                          onClick={() => setSelectedCustomer(c)}
+                          onClick={() => {
+                            setSelectedCustomer(c);
+                            setActiveModalTab('purchases');
+                          }}
                           className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/40 text-indigo-300 border border-indigo-500/30 rounded-lg text-xs font-semibold transition"
                         >
-                          View ({c.ordersCount})
+                          View Details
                         </button>
                       </td>
                     </tr>
@@ -238,85 +259,162 @@ export default function CustomersPurchasesPage() {
           </div>
         </div>
 
-        {/* Customer Purchases Modal / Drawer */}
+        {/* Customer Purchases & Legal Consents Modal */}
         {activeSelected && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[85vh] flex flex-col shadow-2xl">
-              <div className="p-5 border-b border-slate-800 flex items-center justify-between">
-                <div>
-                  <h3 className="font-bold text-lg text-white">
-                    Purchase History: {activeSelected.firstName || activeSelected.lastName ? `${activeSelected.firstName || ''} ${activeSelected.lastName || ''}` : activeSelected.email}
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[90dvh] flex flex-col shadow-2xl">
+              <div className="p-4 sm:p-5 border-b border-slate-800 flex items-center justify-between">
+                <div className="min-w-0 pr-2">
+                  <h3 className="font-bold text-base sm:text-lg text-white truncate">
+                    Customer Profile: {activeSelected.firstName || activeSelected.lastName ? `${activeSelected.firstName || ''} ${activeSelected.lastName || ''}` : activeSelected.email}
                   </h3>
-                  <p className="text-xs text-slate-400 mt-0.5">
+                  <p className="text-xs text-slate-400 mt-0.5 truncate">
                     {activeSelected.email} • {activeSelected.ordersCount} total orders • ${activeSelected.totalSpent.toFixed(2)} lifetime spend
                   </p>
                 </div>
                 <button
                   onClick={() => setSelectedCustomer(null)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition shrink-0"
                 >
                   <Icons.Cross2Icon className="w-5 h-5" />
                 </button>
               </div>
 
-              <div className="p-6 overflow-y-auto space-y-4 flex-1">
-                {activeSelected.orders.length === 0 ? (
-                  <div className="text-center py-12 text-slate-400">
-                    <Icons.CubeIcon className="w-10 h-10 mx-auto text-slate-600 mb-2" />
-                    <p className="text-sm">This customer hasn't placed any purchases yet.</p>
-                  </div>
-                ) : (
-                  activeSelected.orders.map((ord) => (
-                    <div key={ord.id} className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-3">
-                      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/60 pb-3">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-indigo-400 text-sm">{ord.orderNumber}</span>
-                          <span className="text-xs text-slate-500">•</span>
-                          <span className="text-xs text-slate-400">{new Date(ord.createdAt).toLocaleString()}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="px-2 py-0.5 text-[10px] font-bold rounded uppercase bg-slate-800 text-slate-300">
-                            {ord.status}
-                          </span>
-                          <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${
-                            ord.financialStatus === 'paid' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400'
-                          }`}>
-                            {ord.financialStatus}
-                          </span>
-                          <span className="font-bold text-white text-sm ml-2">
-                            ${Number(ord.totalPrice || 0).toFixed(2)}
-                          </span>
-                        </div>
-                      </div>
+              {/* Tabs */}
+              <div className="flex border-b border-slate-800 px-4 sm:px-6 bg-slate-950/40 overflow-x-auto">
+                <button
+                  onClick={() => setActiveModalTab('purchases')}
+                  className={`py-3 px-3 sm:px-4 text-xs font-semibold border-b-2 flex items-center gap-2 shrink-0 transition ${
+                    activeModalTab === 'purchases'
+                      ? 'border-indigo-500 text-indigo-400'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Icons.CubeIcon className="w-4 h-4" />
+                  <span>Purchases ({activeSelected.orders.length})</span>
+                </button>
+                <button
+                  onClick={() => setActiveModalTab('consents')}
+                  className={`py-3 px-3 sm:px-4 text-xs font-semibold border-b-2 flex items-center gap-2 shrink-0 transition ${
+                    activeModalTab === 'consents'
+                      ? 'border-indigo-500 text-indigo-400'
+                      : 'border-transparent text-slate-400 hover:text-slate-200'
+                  }`}
+                >
+                  <Icons.CheckCircledIcon className="w-4 h-4" />
+                  <span>Legal Consents & Agreements ({activeSelected.consents?.length || 0})</span>
+                </button>
+              </div>
 
-                      {/* Line Items */}
-                      <div>
-                        <h4 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
-                          Items Purchased ({ord.lineItems?.length || 0})
-                        </h4>
-                        <div className="divide-y divide-slate-800/40">
-                          {ord.lineItems && ord.lineItems.length > 0 ? (
-                            ord.lineItems.map((item) => (
-                              <div key={item.id} className="py-2 flex items-center justify-between text-xs">
-                                <div>
-                                  <span className="font-medium text-slate-200">{item.title}</span>
-                                  {item.sku && <span className="text-slate-500 font-mono ml-2">SKU: {item.sku}</span>}
-                                  <div className="text-slate-400 text-[11px] mt-0.5">
-                                    Qty: {item.quantity} × ${Number(item.price || 0).toFixed(2)}
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-4 flex-1">
+                {activeModalTab === 'purchases' ? (
+                  activeSelected.orders.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400">
+                      <Icons.CubeIcon className="w-10 h-10 mx-auto text-slate-600 mb-2" />
+                      <p className="text-sm">This customer hasn't placed any purchases yet.</p>
+                    </div>
+                  ) : (
+                    activeSelected.orders.map((ord) => (
+                      <div key={ord.id} className="bg-slate-950/70 border border-slate-800 rounded-xl p-4 space-y-3">
+                        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/60 pb-3">
+                          <div className="flex items-center gap-2">
+                            <span className="font-mono font-bold text-indigo-400 text-sm">{ord.orderNumber}</span>
+                            <span className="text-xs text-slate-500">•</span>
+                            <span className="text-xs text-slate-400">{new Date(ord.createdAt).toLocaleString()}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <span className="px-2 py-0.5 text-[10px] font-bold rounded uppercase bg-slate-800 text-slate-300">
+                              {ord.status}
+                            </span>
+                            <span className={`px-2 py-0.5 text-[10px] font-bold rounded uppercase ${
+                              ord.financialStatus === 'paid' ? 'bg-emerald-950 text-emerald-400 border border-emerald-800' : 'bg-amber-950 text-amber-400'
+                            }`}>
+                              {ord.financialStatus}
+                            </span>
+                            <span className="font-bold text-white text-sm ml-2">
+                              ${Number(ord.totalPrice || 0).toFixed(2)}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Line Items */}
+                        <div>
+                          <h4 className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-2">
+                            Items Purchased ({ord.lineItems?.length || 0})
+                          </h4>
+                          <div className="divide-y divide-slate-800/40">
+                            {ord.lineItems && ord.lineItems.length > 0 ? (
+                              ord.lineItems.map((item) => (
+                                <div key={item.id} className="py-2 flex items-center justify-between text-xs">
+                                  <div>
+                                    <span className="font-medium text-slate-200">{item.title}</span>
+                                    {item.sku && <span className="text-slate-500 font-mono ml-2">SKU: {item.sku}</span>}
+                                    <div className="text-slate-400 text-[11px] mt-0.5">
+                                      Qty: {item.quantity} × ${Number(item.price || 0).toFixed(2)}
+                                    </div>
                                   </div>
+                                  <span className="font-semibold text-slate-200">
+                                    ${Number(item.total || Number(item.price || 0) * item.quantity).toFixed(2)}
+                                  </span>
                                 </div>
-                                <span className="font-semibold text-slate-200">
-                                  ${Number(item.total || Number(item.price || 0) * item.quantity).toFixed(2)}
-                                </span>
-                              </div>
-                            ))
-                          ) : (
-                            <p className="text-xs text-slate-500 italic">No line items detailed</p>
-                          )}
+                              ))
+                            ) : (
+                              <p className="text-xs text-slate-500 italic">No line items detailed</p>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))
+                  )
+                ) : (
+                  <div>
+                    {!activeSelected.consents || activeSelected.consents.length === 0 ? (
+                      <div className="text-center py-12 text-slate-400">
+                        <Icons.CheckCircledIcon className="w-10 h-10 mx-auto text-slate-600 mb-2" />
+                        <p className="text-sm">No legal consents recorded for this customer yet.</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="border border-slate-800 rounded-xl overflow-x-auto bg-slate-950/40">
+                          <table className="w-full text-left text-xs min-w-[500px]">
+                            <thead className="bg-slate-950/80 text-slate-400 font-semibold border-b border-slate-800">
+                              <tr>
+                                <th className="py-3 px-4">Policy / Document</th>
+                                <th className="py-3 px-4">Version</th>
+                                <th className="py-3 px-4">Accepted Date & Time</th>
+                                <th className="py-3 px-4">IP Address</th>
+                                <th className="py-3 px-4">User Agent</th>
+                              </tr>
+                            </thead>
+                            <tbody className="divide-y divide-slate-800/50">
+                              {activeSelected.consents.map((c) => (
+                                <tr key={c.id} className="hover:bg-slate-800/20">
+                                  <td className="py-3 px-4 font-medium text-white capitalize">
+                                    {c.documentType.replace(/_/g, ' ')}
+                                  </td>
+                                  <td className="py-3 px-4 font-mono text-indigo-400">
+                                    {c.versionNumber}
+                                  </td>
+                                  <td className="py-3 px-4 text-slate-300">
+                                    {new Date(c.acceptedAt).toLocaleString()}
+                                  </td>
+                                  <td className="py-3 px-4 font-mono text-slate-400">
+                                    {c.ipAddress || '—'}
+                                  </td>
+                                  <td className="py-3 px-4 text-slate-400 max-w-xs truncate" title={c.userAgent}>
+                                    {c.userAgent || '—'}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <p className="text-[11px] text-slate-500">
+                          All timestamped consent logs comply with GDPR/CCPA auditing standards and immutable sign-up records.
+                        </p>
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
 

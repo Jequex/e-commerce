@@ -39,7 +39,7 @@ export default function Footer({ activeRoute }: FooterProps) {
   return (
     <footer className="bg-gray-900 text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 mb-8">
           {/* Brand Section */}
           <div className="md:col-span-2">
             <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-4">
@@ -188,11 +188,11 @@ export default function Footer({ activeRoute }: FooterProps) {
 
         {/* Bottom Section */}
         <div className="border-t border-gray-800 pt-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm mb-4 md:mb-0">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 text-center md:text-left">
+            <p className="text-gray-400 text-xs sm:text-sm">
               © 2025 {tCommon('title')}. {tCommon('allRightsReserved')}
             </p>
-            <div className="flex space-x-6 text-sm items-center">
+            <div className="flex flex-wrap justify-center md:justify-end gap-x-6 gap-y-2 text-xs sm:text-sm items-center">
               <Link href="/privacy" className="text-gray-400 hover:text-white transition-colors">
                 {t('privacyPolicy')}
               </Link>
@@ -206,7 +206,7 @@ export default function Footer({ activeRoute }: FooterProps) {
                 href={adminUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-amber-400 hover:text-amber-300 font-medium transition-colors border-l border-gray-700 pl-4"
+                className="text-amber-400 hover:text-amber-300 font-medium transition-colors sm:border-l sm:border-gray-700 sm:pl-4"
               >
                 Admin App ↗
               </a>

@@ -465,7 +465,7 @@ export default function StorePayoutsPage() {
           </div>
 
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
+            <table className="w-full text-left text-xs min-w-[650px]">
               <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 border-b border-gray-200 dark:border-gray-700">
                 <tr>
                   <th className="py-2.5 px-3">Order #</th>
@@ -537,7 +537,7 @@ export default function StorePayoutsPage() {
         </p>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full text-left text-xs min-w-[650px]">
             <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="py-3 px-4">Payout Date</th>

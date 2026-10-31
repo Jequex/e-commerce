@@ -129,6 +129,7 @@ router.get('/users', jwtAuthMiddleware, authController.getAllUsers.bind(authCont
 // Admin routes
 // Admin list & management
 router.get('/admins', authController.getAdmins.bind(authController));
+router.get('/admins/:id', authController.getAdminById.bind(authController));
 router.post('/admins', validateRequest(adminRegisterSchema), authController.adminRegister.bind(authController));
 router.put('/admins/:id', authController.updateAdmin.bind(authController));
 router.delete('/admins/:id', authController.deleteAdmin.bind(authController));

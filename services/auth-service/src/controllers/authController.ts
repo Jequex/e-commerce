@@ -1082,6 +1082,21 @@ export class AuthController {
         });
       }
 
+      // Fetch user's legal consents history
+      const userConsents = await db
+        .select({
+          id: userLegalConsents.id,
+          documentType: userLegalConsents.documentType,
+          versionNumber: userLegalConsents.versionNumber,
+          acceptedAt: userLegalConsents.acceptedAt,
+          ipAddress: userLegalConsents.ipAddress,
+          userAgent: userLegalConsents.userAgent,
+          createdAt: userLegalConsents.createdAt
+        })
+        .from(userLegalConsents)
+        .where(eq(userLegalConsents.userId, user.id))
+        .orderBy(desc(userLegalConsents.acceptedAt));
+
       // Return user without sensitive data
       res.json({
         user: {
@@ -1094,7 +1109,8 @@ export class AuthController {
           role: user.role,
           status: user.status,
           emailVerified: user.emailVerified,
-          createdAt: user.createdAt
+          createdAt: user.createdAt,
+          consents: userConsents
         }
       });
 
@@ -1143,8 +1159,36 @@ export class AuthController {
 
       const allUsers = await query.orderBy(desc(users.createdAt));
 
+      // Fetch legal consents mapped to users
+      const allConsents = await db
+        .select({
+          id: userLegalConsents.id,
+          userId: userLegalConsents.userId,
+          documentType: userLegalConsents.documentType,
+          versionNumber: userLegalConsents.versionNumber,
+          acceptedAt: userLegalConsents.acceptedAt,
+          ipAddress: userLegalConsents.ipAddress,
+          userAgent: userLegalConsents.userAgent,
+          createdAt: userLegalConsents.createdAt
+        })
+        .from(userLegalConsents)
+        .orderBy(desc(userLegalConsents.acceptedAt));
+
+      const consentsByUserId = new Map<string, any[]>();
+      for (const consent of allConsents) {
+        if (!consentsByUserId.has(consent.userId)) {
+          consentsByUserId.set(consent.userId, []);
+        }
+        consentsByUserId.get(consent.userId)!.push(consent);
+      }
+
+      const usersWithConsents = allUsers.map((u) => ({
+        ...u,
+        consents: consentsByUserId.get(u.id) || []
+      }));
+
       res.json({
-        users: allUsers
+        users: usersWithConsents
       });
 
     } catch (error) {
@@ -1176,14 +1220,99 @@ export class AuthController {
         .where(inArray(users.role, ['admin', 'super_admin']))
         .orderBy(desc(users.createdAt));
 
+      // Fetch all legal consents for admins
+      const allConsents = await db
+        .select({
+          id: userLegalConsents.id,
+          userId: userLegalConsents.userId,
+          documentType: userLegalConsents.documentType,
+          versionNumber: userLegalConsents.versionNumber,
+          acceptedAt: userLegalConsents.acceptedAt,
+          ipAddress: userLegalConsents.ipAddress,
+          userAgent: userLegalConsents.userAgent,
+          createdAt: userLegalConsents.createdAt
+        })
+        .from(userLegalConsents)
+        .orderBy(desc(userLegalConsents.acceptedAt));
+
+      const consentsByUserId = new Map<string, any[]>();
+      for (const consent of allConsents) {
+        if (!consentsByUserId.has(consent.userId)) {
+          consentsByUserId.set(consent.userId, []);
+        }
+        consentsByUserId.get(consent.userId)!.push(consent);
+      }
+
+      const adminsWithConsents = adminList.map((a) => ({
+        ...a,
+        consents: consentsByUserId.get(a.id) || []
+      }));
+
       res.json({
-        admins: adminList
+        admins: adminsWithConsents
       });
     } catch (error) {
       console.error('Get admins error:', error);
       res.status(500).json({
         error: 'Failed to fetch admin users',
         code: 'GET_ADMINS_FAILED'
+      });
+    }
+  }
+
+  // Super Admin: Get admin by ID with legal consents
+  async getAdminById(req: AuthenticatedRequest, res: Response) {
+    try {
+      const { id } = req.params;
+
+      const admin = await db.query.users.findFirst({
+        where: and(
+          eq(users.id, id),
+          inArray(users.role, ['admin', 'super_admin'])
+        )
+      });
+
+      if (!admin) {
+        return res.status(404).json({
+          error: 'Admin not found',
+          code: 'ADMIN_NOT_FOUND'
+        });
+      }
+
+      const consents = await db
+        .select({
+          id: userLegalConsents.id,
+          documentType: userLegalConsents.documentType,
+          versionNumber: userLegalConsents.versionNumber,
+          acceptedAt: userLegalConsents.acceptedAt,
+          ipAddress: userLegalConsents.ipAddress,
+          userAgent: userLegalConsents.userAgent,
+          createdAt: userLegalConsents.createdAt
+        })
+        .from(userLegalConsents)
+        .where(eq(userLegalConsents.userId, id))
+        .orderBy(desc(userLegalConsents.acceptedAt));
+
+      res.json({
+        admin: {
+          id: admin.id,
+          email: admin.email,
+          firstName: admin.firstName,
+          lastName: admin.lastName,
+          role: admin.role,
+          status: admin.status,
+          emailVerified: admin.emailVerified,
+          lastLoginAt: admin.lastLoginAt,
+          createdAt: admin.createdAt,
+          metadata: admin.metadata,
+          consents
+        }
+      });
+    } catch (error) {
+      console.error('Get admin by ID error:', error);
+      res.status(500).json({
+        error: 'Failed to fetch admin',
+        code: 'GET_ADMIN_FAILED'
       });
     }
   }

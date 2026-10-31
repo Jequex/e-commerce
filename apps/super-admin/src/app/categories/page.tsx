@@ -165,13 +165,14 @@ export default function CategoriesManagementPage() {
         </div>
 
         {/* Categories Table */}
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
           {loading ? (
             <div className="p-8 text-center text-slate-400">Loading categories...</div>
           ) : categories.length === 0 ? (
             <div className="p-8 text-center text-slate-400">No categories found. Create the first category!</div>
           ) : (
-            <table className="w-full text-left text-sm text-slate-300">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-300 min-w-[650px]">
               <thead className="bg-slate-800/60 text-xs font-semibold uppercase text-slate-400 border-b border-slate-800">
                 <tr>
                   <th className="px-6 py-4">Category Name</th>
@@ -233,13 +234,14 @@ export default function CategoriesManagementPage() {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </div>
 
         {/* Modal for Create/Edit Category */}
         {showModal && (
-          <div className="fixed inset-0 z-50 bg-black/70 flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-5 sm:p-6 max-h-[90dvh] overflow-y-auto shadow-2xl">
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
                 <h2 className="text-lg font-bold text-white">
                   {editingCategory ? 'Edit Category' : 'Create New Category'}

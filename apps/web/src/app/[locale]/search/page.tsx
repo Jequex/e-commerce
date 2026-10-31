@@ -75,12 +75,12 @@ export default function SearchPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Search Header */}
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <div className="mb-6 sm:mb-8">
+          <h1 className="text-2xl sm:text-4xl font-bold text-gray-900 mb-2">
             Search Results
           </h1>
           {query && (
-            <p className="text-lg text-gray-600">
+            <p className="text-sm sm:text-lg text-gray-600">
               Showing results for: <span className="font-semibold text-blue-600">"{query}"</span>
             </p>
           )}
@@ -154,14 +154,14 @@ export default function SearchPage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
               {products.map((product) => (
                 <div
                   key={product.id}
                   className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:scale-105 overflow-hidden group"
                 >
                   <Link href={`/${product.id}`} className="block">
-                    <div className="relative h-64 overflow-hidden bg-gray-100">
+                    <div className="relative h-52 sm:h-64 overflow-hidden bg-gray-100">
                       {product.images && product.images.length > 0 ? (
                         <Image
                           src={typeof product.images[0] === 'string' ? product.images[0] : product.images[0].src}

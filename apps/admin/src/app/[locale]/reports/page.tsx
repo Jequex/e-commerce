@@ -161,7 +161,7 @@ export default function StoreReportsPage() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300">
+          <table className="w-full text-left text-sm text-gray-600 dark:text-gray-300 min-w-[650px]">
             <thead className="bg-gray-50 dark:bg-gray-900/50 text-gray-500 dark:text-gray-400 text-xs uppercase tracking-wider border-b border-gray-200 dark:border-gray-700">
               <tr>
                 <th className="py-3 px-4 font-semibold">Order #</th>

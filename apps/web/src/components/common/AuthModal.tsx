@@ -230,9 +230,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       />
       
       {/* Modal Container */}
-      <div className="flex min-h-full items-center justify-center p-4 sm:p-6 lg:p-8">
+      <div className="flex min-h-full items-center justify-center p-3 sm:p-6 lg:p-8">
         {/* Modal */}
-        <div className="relative w-full max-w-md transform overflow-hidden rounded-2xl bg-white/95 backdrop-blur-md p-8 shadow-2xl transition-all border border-gray-200/50">
+        <div className="relative w-full max-w-md transform overflow-y-auto max-h-[90dvh] rounded-2xl bg-white/95 backdrop-blur-md p-5 sm:p-8 shadow-2xl transition-all border border-gray-200/50">
           {/* Close Button */}
           <button
             onClick={onClose}
@@ -244,8 +244,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </button>
 
           {/* Header */}
-          <div className="text-center mb-8">
-            <h2 className="text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <div className="text-center mb-6 sm:mb-8">
+            <h2 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
               {mode === 'signin' ? t('signIn') : t('signUp')}
             </h2>
             <p className="mt-2 text-gray-600">

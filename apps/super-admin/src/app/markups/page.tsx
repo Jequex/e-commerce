@@ -230,7 +230,8 @@ export default function MarkupsManagementPage() {
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-            <table className="w-full text-left text-sm text-slate-300">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-300 min-w-[550px]">
               <thead className="bg-slate-950/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
                 <tr>
                   <th className="py-3.5 px-4 font-semibold">Category Name</th>
@@ -295,12 +296,13 @@ export default function MarkupsManagementPage() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 
         {/* Section 2: Individual Admin Overrides */}
         <div className="space-y-3">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-lg font-bold text-white">Individual Admin Markup Overrides</h2>
               <p className="text-xs text-slate-400">
@@ -309,14 +311,15 @@ export default function MarkupsManagementPage() {
             </div>
             <button
               onClick={() => setShowOverrideModal(true)}
-              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition"
+              className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 rounded-lg text-xs font-semibold transition shrink-0"
             >
               + Add Override
             </button>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-            <table className="w-full text-left text-sm text-slate-300">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-300 min-w-[550px]">
               <thead className="bg-slate-950/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
                 <tr>
                   <th className="py-3.5 px-4 font-semibold">Admin / Merchant</th>
@@ -387,15 +390,16 @@ export default function MarkupsManagementPage() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 
         {/* Set Override Modal */}
         {showOverrideModal && (
-          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-6 shadow-2xl">
+          <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-3 sm:p-4">
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg p-5 sm:p-6 max-h-[90dvh] overflow-y-auto shadow-2xl">
               <div className="flex items-center justify-between pb-4 border-b border-slate-800">
-                <h3 className="font-bold text-lg text-white">
+                <h3 className="font-bold text-base sm:text-lg text-white">
                   {editingOverride ? 'Update Profit Markup Override' : 'Set Admin Category Markup Override'}
                 </h3>
                 <button

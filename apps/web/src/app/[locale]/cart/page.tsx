@@ -91,17 +91,17 @@ export default function CartPage() {
                   key={item.id}
                   className="bg-white/70 backdrop-blur-sm rounded-xl shadow-lg border border-gray-200/50 p-6 hover:shadow-xl transition-shadow"
                 >
-                  <div className="flex gap-6">
+                  <div className="flex flex-col sm:flex-row gap-4 sm:gap-6">
                     {/* Product Image */}
-                    <Link href={`/${item.productId}`} className="flex-shrink-0">
-                      <div className="relative w-32 h-32 rounded-lg overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
+                    <Link href={`/${item.productId}`} className="flex-shrink-0 self-center sm:self-start">
+                      <div className="relative w-36 h-36 sm:w-32 sm:h-32 rounded-xl overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100 shadow-sm">
                         {item.image ? (
                           <Image
                             src={item.image}
                             alt={item.name}
                             fill
                             className="object-cover"
-                            sizes="128px"
+                            sizes="(max-width: 640px) 144px, 128px"
                           />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center">
@@ -116,38 +116,38 @@ export default function CartPage() {
                     {/* Product Details */}
                     <div className="flex-1 min-w-0">
                       <Link href={`/${item.productId}`}>
-                        <h3 className="text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors mb-2">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-900 hover:text-blue-600 transition-colors mb-1 line-clamp-2">
                           {item.name}
                         </h3>
                       </Link>
-                      <p className="text-sm text-gray-600 mb-2">SKU: {item.sku}</p>
-                      <div className="flex items-center gap-2 mb-4">
-                        <span className="text-2xl font-bold text-blue-600">
+                      <p className="text-xs sm:text-sm text-gray-500 mb-2">SKU: {item.sku}</p>
+                      <div className="flex items-center gap-2 mb-3">
+                        <span className="text-xl sm:text-2xl font-bold text-blue-600">
                           {item.price.toLocaleString('en-US', {style: 'currency', currency: 'USD'})}
                         </span>
                       </div>
 
                       {/* Quantity Controls */}
-                      <div className="flex items-center gap-4">
+                      <div className="flex flex-wrap items-center gap-3">
                         <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                           <button
                             onClick={() => handleUpdateQuantity(item.productId, item.quantity - 1)}
                             disabled={item.quantity <= 1}
-                            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
                             </svg>
                           </button>
-                          <span className="px-6 py-2 bg-white font-semibold">
+                          <span className="px-4 py-1.5 bg-white font-semibold text-sm">
                             {item.quantity}
                           </span>
                           <button
                             onClick={() => handleUpdateQuantity(item.productId, item.quantity + 1)}
                             disabled={item.maxQuantity ? item.quantity >= item.maxQuantity : false}
-                            className="px-4 py-2 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                            className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                           >
-                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
                             </svg>
                           </button>
@@ -155,7 +155,7 @@ export default function CartPage() {
 
                         <button
                           onClick={() => handleRemoveItem(item.productId)}
-                          className="text-red-600 hover:text-red-700 font-medium transition-colors"
+                          className="text-red-600 hover:text-red-700 font-medium text-xs sm:text-sm transition-colors py-1 px-2 hover:bg-red-50 rounded-lg"
                         >
                           {t('remove') || 'Remove'}
                         </button>
@@ -163,9 +163,9 @@ export default function CartPage() {
                     </div>
 
                     {/* Item Total */}
-                    <div className="text-right">
-                      <p className="text-sm text-gray-600 mb-2">{t('subtotal') || 'Subtotal'}</p>
-                      <p className="text-2xl font-bold text-gray-900">
+                    <div className="text-left sm:text-right flex sm:flex-col justify-between items-center sm:items-end pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                      <p className="text-xs sm:text-sm text-gray-500 sm:mb-1">{t('subtotal') || 'Subtotal'}:</p>
+                      <p className="text-lg sm:text-2xl font-bold text-gray-900">
                         {(item.price * item.quantity).toLocaleString('en-US', {style: 'currency', currency: 'USD'})}
                       </p>
                     </div>

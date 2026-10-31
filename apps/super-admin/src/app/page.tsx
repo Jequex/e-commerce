@@ -49,57 +49,57 @@ export default function DashboardPage() {
 
   return (
     <SuperAdminLayout>
-      <div className="space-y-8">
+      <div className="space-y-6 sm:space-y-8">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">Super Admin Command Center</h1>
-          <p className="text-slate-400 mt-1">High-privilege platform control: Categories, Products, Admin Staff, Legal Compliance, and Contact Info.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">Super Admin Command Center</h1>
+          <p className="text-xs sm:text-sm text-slate-400 mt-1">High-privilege platform control: Categories, Products, Admin Staff, Legal Compliance, and Contact Info.</p>
         </div>
 
         {/* Top Metric Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-5">
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl relative overflow-hidden">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5">
+          <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase text-slate-400">Categories</span>
               <span className="text-[10px] bg-amber-500/10 text-amber-400 px-2 py-0.5 rounded-full font-bold">Super Admin Exclusive</span>
             </div>
-            <div className="text-3xl font-extrabold text-white mt-3">{loading ? '...' : stats.categoriesCount}</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-white mt-3">{loading ? '...' : stats.categoriesCount}</div>
             <p className="text-xs text-slate-400 mt-1">Active product taxonomies</p>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl relative overflow-hidden">
+          <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase text-slate-400">Total Products</span>
               <Icons.CubeIcon className="w-4 h-4 text-indigo-400" />
             </div>
-            <div className="text-3xl font-extrabold text-white mt-3">{loading ? '...' : stats.productsCount}</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-white mt-3">{loading ? '...' : stats.productsCount}</div>
             <p className="text-xs text-slate-400 mt-1">Products across all categories</p>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl relative overflow-hidden">
+          <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase text-slate-400">Admin Accounts</span>
               <span className="text-[10px] bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-full font-bold">Staff</span>
             </div>
-            <div className="text-3xl font-extrabold text-white mt-3">{loading ? '...' : stats.adminsCount}</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-white mt-3">{loading ? '...' : stats.adminsCount}</div>
             <p className="text-xs text-slate-400 mt-1">Active platform operators</p>
           </div>
 
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl relative overflow-hidden">
+          <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl relative overflow-hidden">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold uppercase text-slate-400">Legal Versions</span>
               <span className="text-[10px] bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full font-bold">Tracked</span>
             </div>
-            <div className="text-3xl font-extrabold text-white mt-3">{loading ? '...' : stats.legalPoliciesCount}</div>
+            <div className="text-2xl sm:text-3xl font-extrabold text-white mt-3">{loading ? '...' : stats.legalPoliciesCount}</div>
             <p className="text-xs text-slate-400 mt-1">Versioned compliance policies</p>
           </div>
         </div>
 
         {/* Quick Actions & Policies Status */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Active Policies Tracker */}
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+          <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-white">Active Legal Versions</h2>
+              <h2 className="text-base sm:text-lg font-semibold text-white">Active Legal Versions</h2>
               <Link href="/legal" className="text-xs text-indigo-400 hover:text-indigo-300 font-medium">
                 Manage Policies &rarr;
               </Link>
@@ -113,12 +113,12 @@ export default function DashboardPage() {
                 const found = policies.find((p) => p.type === item.type);
                 const version = found?.current_version || item.defaultVer;
                 return (
-                  <div key={item.type} className="flex items-center justify-between p-3.5 bg-slate-800/40 border border-slate-800 rounded-xl">
+                  <div key={item.type} className="flex items-center justify-between p-3 sm:p-3.5 bg-slate-800/40 border border-slate-800 rounded-xl gap-2">
                     <div>
-                      <p className="text-sm font-medium text-white">{item.title}</p>
-                      <p className="text-xs text-slate-400">Mandatory acceptance at registration</p>
+                      <p className="text-xs sm:text-sm font-medium text-white">{item.title}</p>
+                      <p className="text-[11px] text-slate-400">Mandatory acceptance at registration</p>
                     </div>
-                    <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span className="px-2.5 py-1 text-xs font-bold rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">
                       v{version}
                     </span>
                   </div>
@@ -128,9 +128,9 @@ export default function DashboardPage() {
           </div>
 
           {/* Quick Access Matrix */}
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
-            <h2 className="text-lg font-semibold text-white mb-4">Super Admin Governance Matrix</h2>
-            <div className="grid grid-cols-2 gap-3">
+          <div className="bg-slate-900 border border-slate-800 p-5 sm:p-6 rounded-2xl">
+            <h2 className="text-base sm:text-lg font-semibold text-white mb-4">Super Admin Governance Matrix</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <Link
                 href="/categories"
                 className="p-4 bg-slate-800/50 hover:bg-slate-800 border border-slate-800 rounded-xl text-left transition block"

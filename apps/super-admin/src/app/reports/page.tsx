@@ -235,7 +235,8 @@ export default function PlatformReportsPage() {
         <div className="space-y-3">
           <h2 className="text-lg font-bold text-white">Merchant Stores Financial Ledger</h2>
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-            <table className="w-full text-left text-sm text-slate-300">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-300 min-w-[750px]">
               <thead className="bg-slate-950/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
                 <tr>
                   <th className="py-3.5 px-4 font-semibold">Store / Merchant ID</th>
@@ -291,6 +292,7 @@ export default function PlatformReportsPage() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
 
@@ -298,7 +300,8 @@ export default function PlatformReportsPage() {
         <div className="space-y-3">
           <h2 className="text-lg font-bold text-white">Recent Transactions Audit</h2>
           <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-            <table className="w-full text-left text-sm text-slate-300">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm text-slate-300 min-w-[750px]">
               <thead className="bg-slate-950/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
                 <tr>
                   <th className="py-3.5 px-4 font-semibold">Order #</th>
@@ -362,6 +365,7 @@ export default function PlatformReportsPage() {
                 )}
               </tbody>
             </table>
+            </div>
           </div>
         </div>
       </div>

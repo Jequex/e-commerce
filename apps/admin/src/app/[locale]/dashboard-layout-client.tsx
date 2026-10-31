@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { usePathname } from 'next/navigation';
@@ -17,6 +17,10 @@ export default function DashboardLayoutClient({
   const t = useTranslations('dashboard');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const pathname = usePathname();
+
+  useEffect(() => {
+    setIsSidebarOpen(false);
+  }, [pathname]);
   
   // Check if current route is public (landing, login, register)
   const isPublicPage =
@@ -59,7 +63,7 @@ export default function DashboardLayoutClient({
       </div>
       
       {/* Main Content */}
-      <div className="flex-1 flex flex-col min-h-screen lg:ml-0">
+      <div className="flex-1 flex flex-col min-h-screen min-w-0 overflow-x-hidden">
         {/* Header */}
         <Header 
           title={t('title')} 

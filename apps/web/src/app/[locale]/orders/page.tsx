@@ -213,11 +213,11 @@ export default function OrdersPage() {
                         </p>
                       )}
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <p className="text-2xl font-bold text-gray-900">
+                    <div className="flex flex-row sm:flex-col items-center sm:items-end justify-between sm:justify-start gap-1 sm:gap-2 pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100">
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900">
                         {formatCurrency(order.totalPrice, order.currency)}
                       </p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-xs sm:text-sm text-gray-600">
                         {(order.lineItems || order.items || []).length} item(s)
                       </p>
                     </div>

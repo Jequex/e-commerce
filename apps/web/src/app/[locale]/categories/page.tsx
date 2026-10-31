@@ -108,18 +108,18 @@ export default function CategoriesPage() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Section */}
-        <div className="text-center mb-16 relative">
+        <div className="text-center mb-10 sm:mb-16 relative">
           <div className="absolute inset-0 bg-white/10 backdrop-blur-lg rounded-3xl shadow-2xl"></div>
-          <div className="relative z-10 py-16 px-8">
-            <h1 className="text-6xl md:text-8xl font-black text-blue-900 mb-6 animate-bounce">
+          <div className="relative z-10 py-8 sm:py-16 px-4 sm:px-8">
+            <h1 className="text-3xl sm:text-6xl md:text-7xl font-black text-blue-900 mb-4 sm:mb-6">
               🛍️ Categories
             </h1>
-            <p className="text-xl md:text-2xl text-blue-900/90 max-w-3xl mx-auto mb-8 leading-relaxed">
+            <p className="text-base sm:text-xl md:text-2xl text-blue-900/90 max-w-3xl mx-auto mb-6 sm:mb-8 leading-relaxed">
               Explore our amazing collection of products across different categories
             </p>
             <div className="flex justify-center">
-              <div className="bg-white/20 backdrop-blur-sm px-6 py-3 rounded-full">
-                <span className="text-blue-900 font-semibold">
+              <div className="bg-white/20 backdrop-blur-sm px-5 py-2 sm:px-6 sm:py-3 rounded-full">
+                <span className="text-blue-900 font-semibold text-xs sm:text-sm">
                   {categories.length} {categories.length === 1 ? 'Category' : 'Categories'} Available
                 </span>
               </div>
@@ -128,7 +128,7 @@ export default function CategoriesPage() {
         </div>
 
         {/* Categories Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-16">
           {categories.filter(cat => cat.isActive).map((category, index) => (
             <Link
               key={category.id}

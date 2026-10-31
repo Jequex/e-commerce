@@ -25,7 +25,6 @@ const navItems: NavItem[] = [
   { name: 'Manage Admins', href: '/admins', icon: Icons.PersonIcon, badge: 'Super Admin' },
   { name: 'App Branding & Settings', href: '/settings', icon: Icons.GearIcon, badge: 'Super Admin' },
   { name: 'Legal Policies CMS', href: '/legal', icon: Icons.FileTextIcon, badge: 'Audit Trail' },
-  { name: 'Consent Log', href: '/consents', icon: Icons.CheckCircledIcon },
 ];
 
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
@@ -33,10 +32,15 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   const router = useRouter();
   const { user, isAuthenticated, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [branding, setBranding] = useState<{ appName: string; appLogoUrl: string }>({
     appName: 'Jequex E-Commerce',
     appLogoUrl: '',
   });
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     setMounted(true);
@@ -72,26 +76,49 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <div className="min-h-screen flex bg-slate-950 text-slate-100">
-      {/* Sidebar */}
-      <aside className="w-64 bg-slate-900/90 border-r border-slate-800 flex flex-col fixed inset-y-0 z-30">
-        <div className="p-5 border-b border-slate-800 flex items-center gap-3">
-          {branding.appLogoUrl ? (
-            <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 p-1 flex items-center justify-center overflow-hidden shrink-0">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={branding.appLogoUrl} alt="" className="max-h-full max-w-full object-contain" />
+    <div className="min-h-screen flex bg-slate-950 text-slate-100 relative">
+      {/* Mobile Drawer Overlay / Backdrop */}
+      {isMobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar - responsive drawer on mobile, fixed on lg+ */}
+      <aside
+        className={`w-64 bg-slate-900 border-r border-slate-800 flex flex-col fixed inset-y-0 left-0 z-50 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+          isMobileMenuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'
+        }`}
+      >
+        <div className="p-5 border-b border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            {branding.appLogoUrl ? (
+              <div className="h-10 w-10 rounded-xl bg-slate-800 border border-slate-700 p-1 flex items-center justify-center overflow-hidden shrink-0">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={branding.appLogoUrl} alt="" className="max-h-full max-w-full object-contain" />
+              </div>
+            ) : (
+              <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20 shrink-0">
+                SA
+              </div>
+            )}
+            <div className="min-w-0">
+              <h1 className="font-bold text-xs tracking-wide text-white truncate" title={branding.appName}>
+                {branding.appName || 'SUPER ADMIN'}
+              </h1>
+              <p className="text-[10px] text-amber-400 font-medium">Super Admin Console</p>
             </div>
-          ) : (
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-tr from-amber-500 via-rose-500 to-indigo-500 flex items-center justify-center font-bold text-white shadow-lg shadow-indigo-500/20 shrink-0">
-              SA
-            </div>
-          )}
-          <div className="min-w-0">
-            <h1 className="font-bold text-xs tracking-wide text-white truncate" title={branding.appName}>
-              {branding.appName || 'SUPER ADMIN'}
-            </h1>
-            <p className="text-[10px] text-amber-400 font-medium">Super Admin Console</p>
           </div>
+          {/* Close button inside mobile drawer */}
+          <button
+            onClick={() => setIsMobileMenuOpen(false)}
+            className="lg:hidden p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+            aria-label="Close sidebar"
+          >
+            <Icons.Cross2Icon className="w-5 h-5" />
+          </button>
         </div>
 
         <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
@@ -102,6 +129,7 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setIsMobileMenuOpen(false)}
                 className={`flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   isActive
                     ? 'bg-gradient-to-r from-indigo-600 to-indigo-500 text-white shadow-md shadow-indigo-600/30'
@@ -148,18 +176,33 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 ml-64 flex flex-col min-h-screen">
-        <header className="h-16 border-b border-slate-800 bg-slate-900/40 backdrop-blur-md px-8 flex items-center justify-between sticky top-0 z-20">
-          <div className="text-sm text-slate-400">
-            Platform Mode: <span className="text-amber-400 font-semibold">Super Administrator</span>
+      <div className="flex-1 ml-0 lg:ml-64 min-w-0 flex flex-col min-h-screen">
+        <header className="h-16 border-b border-slate-800 bg-slate-900/40 backdrop-blur-md px-4 sm:px-6 lg:px-8 flex items-center justify-between sticky top-0 z-20">
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsMobileMenuOpen(true)}
+              className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition focus:outline-none"
+              aria-label="Open mobile menu"
+            >
+              <Icons.HamburgerMenuIcon className="w-5 h-5" />
+            </button>
+            <div className="text-xs sm:text-sm text-slate-400">
+              <span className="hidden sm:inline">Platform Mode: </span>
+              <span className="text-amber-400 font-semibold">Super Administrator</span>
+            </div>
           </div>
-          <div className="flex items-center gap-4 text-xs text-slate-400">
-            <span>Server: <strong className="text-emerald-400">Online</strong></span>
-            <span>Gateway: <strong className="text-indigo-400">:8080</strong></span>
+          <div className="flex items-center gap-2 sm:gap-4 text-[11px] sm:text-xs text-slate-400">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span className="hidden sm:inline">Server: </span>
+              <strong className="text-emerald-400">Online</strong>
+            </span>
+            <span className="hidden sm:inline text-slate-700">|</span>
+            <span className="hidden sm:inline">Gateway: <strong className="text-indigo-400">:8080</strong></span>
           </div>
         </header>
 
-        <main className="p-8 flex-1 max-w-7xl w-full mx-auto">
+        <main className="p-4 sm:p-6 lg:p-8 flex-1 max-w-7xl w-full mx-auto min-w-0">
           {children}
         </main>
       </div>

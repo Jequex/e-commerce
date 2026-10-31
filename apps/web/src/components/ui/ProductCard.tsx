@@ -72,7 +72,7 @@ export default function ProductCard({ product }: ProductCardProps) {
 
   return (
     <div className="group bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-200/50 overflow-hidden">
-      <div className="relative h-64 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 overflow-hidden">
+      <div className="relative h-52 sm:h-64 bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center group-hover:scale-105 transition-transform duration-300 overflow-hidden">
         <Link href={`/${product.id}`} className="absolute inset-0 z-10">
           <span className="sr-only">{product.name}</span>
         </Link>

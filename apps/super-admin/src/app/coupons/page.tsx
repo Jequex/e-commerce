@@ -224,7 +224,7 @@ export default function CouponsManagementPage() {
         {/* Coupons List Table */}
         <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
           <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm text-slate-300">
+            <table className="w-full text-left text-sm text-slate-300 min-w-[700px]">
               <thead className="bg-slate-950/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-800">
                 <tr>
                   <th className="py-3.5 px-4 font-semibold">Code & Details</th>
