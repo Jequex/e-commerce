@@ -1,10 +1,25 @@
 import { Router } from 'express';
+import multer from 'multer';
 import { ProductController } from '../controllers/productController';
 import { authMiddleware, requireStoreOwnerOrAdmin, requireCustomer, requireSuperAdmin } from '../middleware/auth';
 import rateLimit from 'express-rate-limit';
 
 const router = Router();
 const productController = new ProductController();
+
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB limit for demo videos
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype.startsWith('image/') || file.mimetype.startsWith('video/')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only image and video files are permitted'));
+    }
+  },
+});
 
 // Rate limiting for product endpoints
 const searchLimiter = rateLimit({
@@ -48,6 +63,7 @@ router.get('/:id', productController.getProduct.bind(productController));
 router.use(authMiddleware);
 
 // Admin-only routes for products
+router.post('/upload', requireStoreOwnerOrAdmin, upload.any(), productController.uploadMedia.bind(productController));
 router.post('/', requireStoreOwnerOrAdmin, productController.createProduct.bind(productController));
 router.put('/:id', requireStoreOwnerOrAdmin, productController.updateProduct.bind(productController));
 router.delete('/:id', requireStoreOwnerOrAdmin, productController.deleteProduct.bind(productController));

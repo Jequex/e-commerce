@@ -5,6 +5,7 @@ import compression from 'compression';
 import morgan from 'morgan';
 import dotenv from 'dotenv';
 import { testConnection } from './config/database';
+import { initMinio } from './config/minio';
 import productRoutes from './routes/products';
 
 // Load environment variables
@@ -124,6 +125,7 @@ const server = app.listen(PORT, async () => {
   try {
     await testConnection();
     console.log('✅ Database connection successful');
+    await initMinio();
   } catch (error) {
     console.error('❌ Database connection failed:', error);
     process.exit(1);

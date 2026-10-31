@@ -43,6 +43,7 @@ interface Product {
   category: Category | null;
   categoryId: number | null;
   images: { src: string; position?: number }[] | null;
+  demoVideo?: string | null;
   isFeatured: boolean;
   isActive: boolean;
   createdAt: string;

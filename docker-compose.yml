@@ -65,6 +65,22 @@ services:
     networks:
       - ecommerce-network
 
+  # Local MinIO Object Storage (Images & Videos)
+  minio:
+    image: minio/minio:latest
+    container_name: ecommerce-minio
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadminpassword
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - ecommerce-network
+
   # Microservices
   auth-service:
     build:
@@ -96,12 +112,19 @@ services:
       - DATABASE_URL=postgresql://ecommerce:password@postgres:5432/ecommerce
       - REDIS_URL=redis://redis:6379
       - ELASTICSEARCH_URL=http://elasticsearch:9200
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=minioadmin
+      - MINIO_SECRET_KEY=minioadminpassword
+      - MINIO_BUCKET=products
+      - MEDIA_PUBLIC_URL=http://localhost:8080/media
     ports:
       - "3002:3002"
     depends_on:
       - postgres
       - redis
       - elasticsearch
+      - minio
     networks:
       - ecommerce-network
 
@@ -214,6 +237,7 @@ services:
       - order-service
       - payment-service
       - email-service
+      - minio
     networks:
       - ecommerce-network
 
@@ -221,6 +245,7 @@ volumes:
   postgres_data:
   redis_data:
   elasticsearch_data:
+  minio_data:
 
 
 networks:

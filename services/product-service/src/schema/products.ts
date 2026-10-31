@@ -38,6 +38,7 @@ export const products = pgTable('products', {
   tags: jsonb('tags').$type<string[]>(),
   options: jsonb('options').$type<ProductOption[]>(),
   images: jsonb('images').$type<ProductImage[]>(),
+  demoVideo: text('demo_video'),
   vendor: text('vendor'),
   productType: text('product_type'),
   createdAt: timestamp('created_at').defaultNow(),
@@ -170,7 +171,7 @@ export type NewProductAttribute = typeof productAttributes.$inferInsert;
 export const createProductSchema = z.object({
   name: z.string().min(1).max(255),
   sku: z.string().min(1).max(100),
-  storeId: z.string().uuid(),
+  storeId: z.string().uuid().optional().nullable(),
   price: z.number().positive(),
   inventoryQuantity: z.number().int().min(0).default(0),
   weightUnit: z.enum(['kg', 'g', 'lb', 'oz']).default('kg'),
@@ -208,6 +209,7 @@ export const createProductSchema = z.object({
     alt: z.string().optional(),
     position: z.number().int().optional(),
   })).default([]),
+  demoVideo: z.string().optional().nullable(),
   vendor: z.string().optional(),
   productType: z.string().optional(),
 });

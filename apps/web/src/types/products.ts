@@ -10,6 +10,7 @@ export interface Product {
   inventoryQuantity?: number;
   lowStockThreshold?: number;
   images: { src: string; position?: number }[];
+  demoVideo?: string;
   categoryId?: string;
   category?: {
     id: string;

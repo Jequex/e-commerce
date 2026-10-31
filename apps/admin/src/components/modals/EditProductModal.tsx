@@ -8,6 +8,7 @@ import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
 import { toast } from 'react-toastify';
 import ImageUpload from '@/components/ImageUpload';
+import VideoUpload from '@/components/VideoUpload';
 import { usePageStore } from '@/stores/use-page-store';
 
 interface Category {
@@ -39,6 +40,7 @@ interface Product {
   category: Category | null;
   categoryId: number | null;
   images: { src: string; position?: number }[] | null;
+  demoVideo?: string | null;
   isFeatured: boolean;
   isActive: boolean;
   createdAt: string;
@@ -62,6 +64,7 @@ export default function EditProductModal({
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [images, setImages] = useState<string[]>([]);
+  const [demoVideo, setDemoVideo] = useState<string | null>(null);
   const t = useTranslations('products');
   const common = useTranslations('common');
   const { data: pageData } = usePageStore.getState();
@@ -75,6 +78,7 @@ export default function EditProductModal({
         ? product.images.map((img: any) => typeof img === 'string' ? img : img.src)
         : [];
       setImages(imageUrls);
+      setDemoVideo((product as any)?.demoVideo || null);
     }
   }, [isOpen, product]);
 
@@ -120,6 +124,7 @@ export default function EditProductModal({
       trackQuantity: formData.get('trackQuantity') === 'on',
       isActive: formData.get('isActive') === 'on',
       isFeatured: formData.get('isFeatured') === 'on',
+      demoVideo: demoVideo || null,
       images: images.map((url, index) => ({
         src: url,
         position: index,
@@ -198,14 +203,26 @@ export default function EditProductModal({
           {/* Product Images */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Product Images
+              Product Images (MinIO)
             </label>
             <ImageUpload
               images={images}
               onImagesChange={setImages}
-              maxImages={5}
-              maxSizeMB={5}
+              maxImages={8}
+              maxSizeMB={10}
               storeName={pageData?.store?.name}
+            />
+          </div>
+
+          {/* Product Demo Video */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Demo Video (1 Video Upload to MinIO)
+            </label>
+            <VideoUpload
+              videoUrl={demoVideo}
+              onVideoChange={setDemoVideo}
+              maxSizeMB={100}
             />
           </div>
 

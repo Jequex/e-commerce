@@ -33,6 +33,7 @@ interface Product {
   inventoryQuantity: number;
   category: Category | null;
   images: { src: string; position?: number }[] | null;
+  demoVideo?: string | null;
   isFeatured: boolean;
   isActive: boolean;
   createdAt: string;
@@ -115,6 +116,22 @@ export default function ViewProductModal({
                     className="h-32 w-32 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
                   />
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Product Demo Video */}
+          {product.demoVideo && (
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                Demo Video
+              </label>
+              <div className="rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700 bg-black aspect-video max-h-60 flex items-center justify-center">
+                <video
+                  src={product.demoVideo}
+                  controls
+                  className="w-full h-full object-contain"
+                />
               </div>
             </div>
           )}

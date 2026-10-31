@@ -1,17 +1,22 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image, Linking } from 'react-native';
 import { useCart } from '../context/CartContext';
 
 export default function ProductDetailScreen({ route, navigation }: any) {
   const product = route?.params?.product || {};
   const { addToCart } = useCart();
   const priceNum = Number(product.price) || 0;
+  const mainImage = product.images && product.images.length > 0 ? product.images[0].src : null;
 
   return (
     <ScrollView style={styles.container}>
-      <View style={styles.imagePlaceholder}>
-        <Text style={styles.icon}>🛍️</Text>
-      </View>
+      {mainImage ? (
+        <Image source={{ uri: mainImage }} style={styles.productImage} resizeMode="cover" />
+      ) : (
+        <View style={styles.imagePlaceholder}>
+          <Text style={styles.icon}>🛍️</Text>
+        </View>
+      )}
 
       <View style={styles.content}>
         <View style={styles.header}>
@@ -31,6 +36,14 @@ export default function ProductDetailScreen({ route, navigation }: any) {
             <View style={[styles.badge, { backgroundColor: '#e0e7ff' }]}>
               <Text style={[styles.badgeText, { color: '#4338ca' }]}>{product.category.name}</Text>
             </View>
+          )}
+          {product.demoVideo && (
+            <TouchableOpacity
+              style={[styles.badge, { backgroundColor: '#f3e8ff' }]}
+              onPress={() => Linking.openURL(product.demoVideo)}
+            >
+              <Text style={[styles.badgeText, { color: '#7e22ce' }]}>▶ Watch Demo Video</Text>
+            </TouchableOpacity>
           )}
         </View>
 
@@ -55,6 +68,11 @@ export default function ProductDetailScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#ffffff' },
+  productImage: {
+    width: '100%',
+    height: 280,
+    backgroundColor: '#f1f5f9',
+  },
   imagePlaceholder: {
     height: 260,
     backgroundColor: '#f1f5f9',

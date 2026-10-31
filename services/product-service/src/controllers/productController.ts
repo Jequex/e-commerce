@@ -11,8 +11,64 @@ import {
 } from '../schema/products';
 import { eq, and, desc, asc, ilike, sql, or } from 'drizzle-orm';
 import { v4 as uuidv4 } from 'uuid';
+import { uploadFileToMinio } from '../config/minio';
 
 export class ProductController {
+  // Upload images or demo videos directly to MinIO
+  async uploadMedia(req: Request, res: Response) {
+    try {
+      const files = req.files as Express.Multer.File[] | { [fieldname: string]: Express.Multer.File[] } | undefined;
+      const singleFile = req.file;
+
+      const fileList: Express.Multer.File[] = [];
+
+      if (singleFile) {
+        fileList.push(singleFile);
+      } else if (Array.isArray(files)) {
+        fileList.push(...files);
+      } else if (files && typeof files === 'object') {
+        Object.values(files).forEach((val) => {
+          if (Array.isArray(val)) {
+            fileList.push(...val);
+          }
+        });
+      }
+
+      if (fileList.length === 0) {
+        return res.status(400).json({
+          error: 'No files provided for upload',
+          code: 'NO_FILES',
+        });
+      }
+
+      const uploadResults = await Promise.all(
+        fileList.map(async (file) => {
+          const result = await uploadFileToMinio(file.buffer, file.originalname, file.mimetype);
+          return {
+            url: result.url,
+            fileName: result.fileName,
+            originalName: file.originalname,
+            mimeType: file.mimetype,
+            size: result.size,
+          };
+        })
+      );
+
+      return res.status(200).json({
+        message: 'Files uploaded to MinIO successfully',
+        files: uploadResults,
+        urls: uploadResults.map((r) => r.url),
+        url: uploadResults[0]?.url,
+      });
+    } catch (error) {
+      console.error('Upload media to MinIO error:', error);
+      return res.status(500).json({
+        error: error instanceof Error ? error.message : 'Failed to upload media to MinIO',
+        code: 'UPLOAD_ERROR',
+      });
+    }
+  }
+
   // Product CRUD operations
   async createProduct(req: Request, res: Response) {
     try {

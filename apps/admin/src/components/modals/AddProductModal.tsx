@@ -9,6 +9,7 @@ import urls from '@/api-calls/urls.json';
 import { usePageStore } from '@/stores/use-page-store';
 import { toast } from 'react-toastify';
 import ImageUpload from '@/components/ImageUpload';
+import VideoUpload from '@/components/VideoUpload';
 
 interface AddProductModalProps {
   isOpen: boolean;
@@ -25,6 +26,7 @@ export default function AddProductModal({
   const [categories, setCategories] = useState<any[]>([]);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [images, setImages] = useState<string[]>([]);
+  const [demoVideo, setDemoVideo] = useState<string | null>(null);
   const t = useTranslations('products');
   const common = useTranslations('common');
   const { data: pageData } = usePageStore.getState();
@@ -32,8 +34,9 @@ export default function AddProductModal({
   useEffect(() => {
     if (isOpen) {
       fetchCategories();
-      // Reset images when modal opens
+      // Reset images and demo video when modal opens
       setImages([]);
+      setDemoVideo(null);
     }
   }, [isOpen]);
 
@@ -75,6 +78,7 @@ export default function AddProductModal({
       isActive: formData.get('isActive') === 'on',
       isFeatured: formData.get('isFeatured') === 'on',
       storeId: pageData?.store.id,
+      demoVideo: demoVideo || null,
       images: images.map((url, index) => ({
         src: url,
         position: index,
@@ -151,14 +155,26 @@ export default function AddProductModal({
           {/* Product Images */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-              Product Images
+              Product Images (MinIO)
             </label>
             <ImageUpload
               images={images}
               onImagesChange={setImages}
-              maxImages={5}
-              maxSizeMB={5}
+              maxImages={8}
+              maxSizeMB={10}
               storeName={pageData?.store?.name}
+            />
+          </div>
+
+          {/* Product Demo Video */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+              Demo Video (1 Video Upload to MinIO)
+            </label>
+            <VideoUpload
+              videoUrl={demoVideo}
+              onVideoChange={setDemoVideo}
+              maxSizeMB={100}
             />
           </div>
 

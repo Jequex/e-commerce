@@ -8,6 +8,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   ScrollView,
+  Image,
 } from 'react-native';
 import { PRODUCTS_API_URL } from '../config/api';
 import { useCart } from '../context/CartContext';
@@ -99,9 +100,13 @@ export default function HomeScreen({ navigation }: any) {
                 onPress={() => navigation.navigate('ProductDetail', { product: item })}
                 style={styles.cardContent}
               >
-                <View style={styles.imagePlaceholder}>
-                  <Text style={styles.placeholderIcon}>🛍️</Text>
-                </View>
+                {item.images && item.images.length > 0 ? (
+                  <Image source={{ uri: item.images[0].src }} style={styles.cardImage} resizeMode="cover" />
+                ) : (
+                  <View style={styles.imagePlaceholder}>
+                    <Text style={styles.placeholderIcon}>🛍️</Text>
+                  </View>
+                )}
                 <Text style={styles.productName} numberOfLines={2}>{item.name}</Text>
                 <Text style={styles.productPrice}>${Number(item.price).toFixed(2)}</Text>
                 {item.sku && <Text style={styles.productSku}>SKU: {item.sku}</Text>}
@@ -159,6 +164,12 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   cardContent: { flex: 1 },
+  cardImage: {
+    height: 100,
+    borderRadius: 10,
+    marginBottom: 8,
+    backgroundColor: '#f8fafc',
+  },
   imagePlaceholder: {
     height: 100,
     backgroundColor: '#f8fafc',
