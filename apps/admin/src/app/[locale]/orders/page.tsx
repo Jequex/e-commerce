@@ -78,7 +78,37 @@ export default function OrdersPage() {
         },
       });
 
-      setOrders(data.orders || data || []);
+      const rawOrders = data.orders || (Array.isArray(data) ? data : []);
+      const normalizedOrders: Order[] = rawOrders.map((o: any) => ({
+        id: o.id,
+        orderNumber: o.orderNumber || o.order_number || '',
+        userId: o.userId || o.user_id || '',
+        status: o.status || 'pending',
+        totalAmount: Number(o.totalPrice ?? o.total_price ?? o.totalAmount ?? 0),
+        subtotal: Number(o.subtotalPrice ?? o.subtotal_price ?? o.subtotal ?? 0),
+        tax: Number(o.totalTax ?? o.total_tax ?? o.tax ?? 0),
+        shipping: Number(o.totalShipping ?? o.total_shipping ?? o.shipping ?? 0),
+        discount: Number(o.totalDiscounts ?? o.total_discounts ?? o.discount ?? 0),
+        items: (o.lineItems || o.items || []).map((i: any) => ({
+          id: i.id,
+          productId: i.productId || i.product_id || '',
+          productName: i.productTitle || i.product_title || i.productName || 'Product',
+          quantity: Number(i.quantity || 1),
+          price: Number(i.price || 0),
+          total: Number(i.totalPrice || i.total_price || (Number(i.price || 0) * Number(i.quantity || 1))),
+        })),
+        shippingAddress: o.shippingAddress || o.shipping_address || null,
+        paymentMethod: o.paymentMethod || o.payment_method || (o.transactions?.[0]?.gateway) || null,
+        createdAt: o.createdAt || o.created_at || new Date().toISOString(),
+        updatedAt: o.updatedAt || o.updated_at || new Date().toISOString(),
+        user: {
+          email: o.email || o.user?.email || 'N/A',
+          firstName: o.customerInfo?.firstName || o.user?.firstName || '',
+          lastName: o.customerInfo?.lastName || o.user?.lastName || '',
+        },
+      }));
+
+      setOrders(normalizedOrders);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load orders');
     } finally {
@@ -113,8 +143,12 @@ export default function OrdersPage() {
 
   const filteredOrders = orders.filter((order) => {
     // Search filter
-    const matchesSearch = order.orderNumber.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         order.user?.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    const searchLower = (searchQuery || '').toLowerCase();
+    const matchesSearch = !searchQuery ||
+      (order.orderNumber && order.orderNumber.toLowerCase().includes(searchLower)) ||
+      (order.user?.email && order.user.email.toLowerCase().includes(searchLower)) ||
+      (order.user?.firstName && order.user.firstName.toLowerCase().includes(searchLower)) ||
+      (order.user?.lastName && order.user.lastName.toLowerCase().includes(searchLower));
     
     // Status filter
     const matchesStatus = filterStatus === 'all' || order.status === filterStatus;
@@ -325,7 +359,7 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        ${order.totalAmount.toFixed(2)}
+                        ${Number(order.totalAmount || 0).toFixed(2)}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
@@ -411,11 +445,11 @@ export default function OrdersPage() {
                           {item.productName}
                         </div>
                         <div className="text-xs text-gray-500 dark:text-gray-400">
-                          Qty: {item.quantity} × ${item.price.toFixed(2)}
+                          Qty: {item.quantity} × ${Number(item.price || 0).toFixed(2)}
                         </div>
                       </div>
                       <div className="text-sm font-medium text-gray-900 dark:text-white">
-                        ${item.total.toFixed(2)}
+                        ${Number(item.total || 0).toFixed(2)}
                       </div>
                     </div>
                   ))}
@@ -427,29 +461,29 @@ export default function OrdersPage() {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600 dark:text-gray-400">{t('subtotal')}</span>
-                    <span className="text-gray-900 dark:text-white">${selectedOrder.subtotal.toFixed(2)}</span>
+                    <span className="text-gray-900 dark:text-white">${Number(selectedOrder.subtotal || 0).toFixed(2)}</span>
                   </div>
-                  {selectedOrder.shipping > 0 && (
+                  {Number(selectedOrder.shipping || 0) > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">{t('shipping')}</span>
-                      <span className="text-gray-900 dark:text-white">${selectedOrder.shipping.toFixed(2)}</span>
+                      <span className="text-gray-900 dark:text-white">${Number(selectedOrder.shipping || 0).toFixed(2)}</span>
                     </div>
                   )}
-                  {selectedOrder.tax > 0 && (
+                  {Number(selectedOrder.tax || 0) > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-gray-600 dark:text-gray-400">{t('tax')}</span>
-                      <span className="text-gray-900 dark:text-white">${selectedOrder.tax.toFixed(2)}</span>
+                      <span className="text-gray-900 dark:text-white">${Number(selectedOrder.tax || 0).toFixed(2)}</span>
                     </div>
                   )}
-                  {selectedOrder.discount > 0 && (
+                  {Number(selectedOrder.discount || 0) > 0 && (
                     <div className="flex justify-between text-sm">
                       <span className="text-red-600 dark:text-red-400">{t('discount')}</span>
-                      <span className="text-red-600 dark:text-red-400">-${selectedOrder.discount.toFixed(2)}</span>
+                      <span className="text-red-600 dark:text-red-400">-${Number(selectedOrder.discount || 0).toFixed(2)}</span>
                     </div>
                   )}
                   <div className="flex justify-between text-lg font-bold border-t border-gray-200 dark:border-gray-700 pt-2">
                     <span className="text-gray-900 dark:text-white">{t('total')}</span>
-                    <span className="text-gray-900 dark:text-white">${selectedOrder.totalAmount.toFixed(2)}</span>
+                    <span className="text-blue-600 dark:text-blue-400">${Number(selectedOrder.totalAmount || 0).toFixed(2)}</span>
                   </div>
                 </div>
               </div>

@@ -513,7 +513,8 @@ export class OrderController {
         financialStatus,
         fulfillmentStatus,
         search,
-        userId
+        userId,
+        storeId
       } = req.query;
 
       const pageNum = parseInt(page as string, 10);
@@ -522,6 +523,39 @@ export class OrderController {
 
       // Build where conditions
       const conditions = [];
+
+      // If user is a merchant admin (not super_admin), restrict strictly to orders for their stores
+      if (req.user?.role === 'admin') {
+        const storeServiceUrl = process.env.STORE_SERVICE_URL || 'http://store-service:3007';
+        let userStoreIds: string[] = [];
+        try {
+          const sRes = await fetch(`${storeServiceUrl}/api/v1/stores?ownerId=${req.user.id}&limit=100`);
+          if (sRes.ok) {
+            const sData = await sRes.json();
+            userStoreIds = (sData.stores || []).map((s: any) => s.id);
+          }
+        } catch (e) {
+          console.error('Failed to get admin stores in order service:', e);
+        }
+
+        if (userStoreIds.length === 0) {
+          return res.json({
+            orders: [],
+            pagination: { page: pageNum, limit: limitNum, total: 0, totalPages: 0, hasNext: false, hasPrev: false }
+          });
+        }
+
+        if (storeId && typeof storeId === 'string' && storeId !== 'all') {
+          if (!userStoreIds.includes(storeId)) {
+            return res.status(403).json({ error: 'You do not have access to this store', code: 'FORBIDDEN' });
+          }
+          conditions.push(eq(orders.storeId, storeId));
+        } else {
+          conditions.push(inArray(orders.storeId, userStoreIds));
+        }
+      } else if (storeId && typeof storeId === 'string' && storeId !== 'all') {
+        conditions.push(eq(orders.storeId, storeId));
+      }
 
       if (userId) {
         conditions.push(eq(orders.userId, userId as string));

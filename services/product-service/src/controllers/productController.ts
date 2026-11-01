@@ -1222,9 +1222,19 @@ export class ProductController {
       const user = req.user;
       let queryConditions = [];
 
-      // If user is a regular admin with a specific storeId, filter to their store or storeId null
-      if (user?.role === 'admin' && user?.storeId) {
-        queryConditions.push(or(eq(coupons.storeId, user.storeId), isNull(coupons.storeId)));
+      // If user is a merchant admin, scope to their stores and coupons they created
+      if (user?.role === 'admin') {
+        const userStoreIds = await this.getUserStoreIds(user.id);
+        if (userStoreIds.length === 0) {
+          queryConditions.push(eq(coupons.createdById, user.id));
+        } else {
+          queryConditions.push(
+            or(
+              inArray(coupons.storeId, userStoreIds),
+              eq(coupons.createdById, user.id)
+            )
+          );
+        }
       }
 
       const allCoupons = await db
@@ -1250,6 +1260,46 @@ export class ProductController {
       const user = req.user;
       const validatedData = createCouponSchema.parse(req.body);
       const normalizedCode = validatedData.code.trim().toUpperCase();
+
+      let targetStoreId = validatedData.storeId || user?.storeId || null;
+
+      // Merchant admin store & product scoping
+      if (user?.role === 'admin') {
+        const userStoreIds = await this.getUserStoreIds(user.id);
+        if (userStoreIds.length === 0) {
+          return res.status(400).json({
+            error: 'No store found. Please create a store first before creating coupons.',
+            code: 'NO_STORE'
+          });
+        }
+
+        if (targetStoreId && !userStoreIds.includes(targetStoreId)) {
+          return res.status(403).json({
+            error: 'You do not have permission to create a coupon for this store',
+            code: 'FORBIDDEN_STORE'
+          });
+        }
+
+        if (!targetStoreId) {
+          targetStoreId = userStoreIds[0];
+        }
+
+        // Verify products belong to merchant's stores
+        if (validatedData.appliesTo === 'specific_products' && validatedData.productIds && validatedData.productIds.length > 0) {
+          const prods = await db
+            .select({ id: products.id, storeId: products.storeId })
+            .from(products)
+            .where(inArray(products.id, validatedData.productIds));
+
+          const unownedProds = prods.filter(p => !p.storeId || !userStoreIds.includes(p.storeId));
+          if (unownedProds.length > 0 || prods.length !== validatedData.productIds.length) {
+            return res.status(403).json({
+              error: 'You can only assign coupons to products in your stores',
+              code: 'UNAUTHORIZED_PRODUCT_COUPON'
+            });
+          }
+        }
+      }
 
       // Check if code exists
       const existing = await db.query.coupons.findFirst({
@@ -1277,7 +1327,7 @@ export class ProductController {
         startDate: validatedData.startDate ? new Date(validatedData.startDate) : null,
         endDate: validatedData.endDate ? new Date(validatedData.endDate) : null,
         isActive: validatedData.isActive !== false,
-        storeId: validatedData.storeId || user?.storeId || null,
+        storeId: targetStoreId,
         createdById: user?.id || null,
         createdByName: user?.email || null,
         createdByRole: user?.role || null,
@@ -1308,6 +1358,7 @@ export class ProductController {
   async updateCoupon(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
+      const user = req.user;
       const validatedData = updateCouponSchema.parse(req.body);
 
       const existing = await db.query.coupons.findFirst({
@@ -1319,6 +1370,33 @@ export class ProductController {
           error: 'Coupon not found',
           code: 'NOT_FOUND'
         });
+      }
+
+      // Check merchant permissions & product scope
+      if (user?.role === 'admin') {
+        const userStoreIds = await this.getUserStoreIds(user.id);
+        const isOwner = existing.createdById === user.id || (existing.storeId && userStoreIds.includes(existing.storeId));
+        if (!isOwner) {
+          return res.status(403).json({
+            error: 'You do not have permission to modify this coupon',
+            code: 'INSUFFICIENT_PERMISSIONS'
+          });
+        }
+
+        if (validatedData.appliesTo === 'specific_products' && validatedData.productIds && validatedData.productIds.length > 0) {
+          const prods = await db
+            .select({ id: products.id, storeId: products.storeId })
+            .from(products)
+            .where(inArray(products.id, validatedData.productIds));
+
+          const unownedProds = prods.filter(p => !p.storeId || !userStoreIds.includes(p.storeId));
+          if (unownedProds.length > 0 || prods.length !== validatedData.productIds.length) {
+            return res.status(403).json({
+              error: 'You can only assign coupons to products in your stores',
+              code: 'UNAUTHORIZED_PRODUCT_COUPON'
+            });
+          }
+        }
       }
 
       let normalizedCode = existing.code;
@@ -1389,13 +1467,31 @@ export class ProductController {
   async deleteCoupon(req: AuthenticatedRequest, res: Response) {
     try {
       const { id } = req.params;
-      const [deleted] = await db.delete(coupons).where(eq(coupons.id, id)).returning();
-      if (!deleted) {
+      const user = req.user;
+
+      const existing = await db.query.coupons.findFirst({
+        where: eq(coupons.id, id)
+      });
+
+      if (!existing) {
         return res.status(404).json({
           error: 'Coupon not found',
           code: 'NOT_FOUND'
         });
       }
+
+      if (user?.role === 'admin') {
+        const userStoreIds = await this.getUserStoreIds(user.id);
+        const isOwner = existing.createdById === user.id || (existing.storeId && userStoreIds.includes(existing.storeId));
+        if (!isOwner) {
+          return res.status(403).json({
+            error: 'You do not have permission to delete this coupon',
+            code: 'INSUFFICIENT_PERMISSIONS'
+          });
+        }
+      }
+
+      const [deleted] = await db.delete(coupons).where(eq(coupons.id, id)).returning();
       res.json({
         message: 'Coupon deleted successfully'
       });

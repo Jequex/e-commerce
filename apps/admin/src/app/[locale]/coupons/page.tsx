@@ -73,8 +73,10 @@ export default function AdminCouponsPage() {
       });
       setCoupons(couponsData.coupons || []);
 
-      // 2. Fetch products
-      const prodData = await callApi(`http://${urls.products.getAll}?limit=200`);
+      // 2. Fetch merchant's own products
+      const prodData = await callApi(`http://${urls.products.getMyProducts}?limit=200`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setProducts(prodData.products || []);
     } catch (err: any) {
       setError(err.message || 'Failed to load coupons');
@@ -456,25 +458,31 @@ export default function AdminCouponsPage() {
 
                 {appliesTo === 'specific_products' && (
                   <div className="border border-gray-300 dark:border-gray-700 rounded-lg p-2 max-h-40 overflow-y-auto space-y-1">
-                    {products.map((p) => {
-                      const isChecked = selectedProductIds.includes(p.id);
-                      return (
-                        <label
-                          key={p.id}
-                          className="flex items-center justify-between p-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
-                        >
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="checkbox"
-                              checked={isChecked}
-                              onChange={() => toggleProductSelection(p.id)}
-                            />
-                            <span>{p.name}</span>
-                          </div>
-                          <span className="font-semibold text-blue-600">${Number(p.price).toFixed(2)}</span>
-                        </label>
-                      );
-                    })}
+                    {products.length === 0 ? (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 p-2">
+                        No products found in your stores. Please add products to your store first.
+                      </p>
+                    ) : (
+                      products.map((p) => {
+                        const isChecked = selectedProductIds.includes(p.id);
+                        return (
+                          <label
+                            key={p.id}
+                            className="flex items-center justify-between p-1.5 text-xs rounded hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
+                          >
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={() => toggleProductSelection(p.id)}
+                              />
+                              <span>{p.name}</span>
+                            </div>
+                            <span className="font-semibold text-blue-600">${Number(p.price).toFixed(2)}</span>
+                          </label>
+                        );
+                      })
+                    )}
                   </div>
                 )}
               </div>

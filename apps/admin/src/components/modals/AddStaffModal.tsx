@@ -19,7 +19,8 @@ interface AddStaffModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: (staff: any) => void;
-  storeId: string;
+  storeId?: string;
+  stores?: Array<{ storeId: string; storeName: string }>;
 }
 
 export default function AddStaffModal({
@@ -27,10 +28,12 @@ export default function AddStaffModal({
   onClose,
   onSuccess,
   storeId,
+  stores,
 }: AddStaffModalProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [loadingRoles, setLoadingRoles] = useState(false);
+  const [selectedStoreId, setSelectedStoreId] = useState(storeId || (stores && stores[0]?.storeId) || '');
   
   const t = useTranslations('staff');
   const common = useTranslations('common');
@@ -39,8 +42,13 @@ export default function AddStaffModal({
   useEffect(() => {
     if (isOpen) {
       fetchRoles();
+      if (storeId) {
+        setSelectedStoreId(storeId);
+      } else if (stores && stores.length > 0) {
+        setSelectedStoreId(stores[0].storeId);
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, storeId, stores]);
 
   const fetchRoles = async () => {
     setLoadingRoles(true);
@@ -65,6 +73,13 @@ export default function AddStaffModal({
     e.preventDefault();
     setIsSubmitting(true);
 
+    const effectiveStoreId = selectedStoreId || storeId || (stores && stores[0]?.storeId);
+    if (!effectiveStoreId) {
+      toast.error('Please select a store');
+      setIsSubmitting(false);
+      return;
+    }
+
     const formData = new FormData(e.currentTarget);
     const staffData = {
       email: formData.get('email') as string,
@@ -78,7 +93,7 @@ export default function AddStaffModal({
     };
 
     try {
-      const url = `http://${urls.staff.addStaff.replace(':id', storeId)}`;
+      const url = `http://${urls.staff.addStaff.replace(':id', effectiveStoreId)}`;
       const newStaff = await callApi(url, {
         method: 'POST',
         headers: {
@@ -121,6 +136,27 @@ export default function AddStaffModal({
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          {/* Store Selection (if multiple stores) */}
+          {stores && stores.length > 1 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                {t('store')} <span className="text-red-500">*</span>
+              </label>
+              <select
+                value={selectedStoreId}
+                onChange={(e) => setSelectedStoreId(e.target.value)}
+                required
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+              >
+                {stores.map((s) => (
+                  <option key={s.storeId} value={s.storeId}>
+                    {s.storeName}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
           {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">

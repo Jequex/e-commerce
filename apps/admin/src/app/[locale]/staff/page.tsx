@@ -65,45 +65,62 @@ export default function StaffPage() {
   const t = useTranslations('staff');
   const common = useTranslations('common');
   const { token } = useAuthStore();
-  const { data: pageData, userStores } = usePageStore.getState();
+  const { data: pageData } = usePageStore.getState();
 
   useEffect(() => {
     fetchStaffData();
-    setStores(userStores);
-  }, []);
+  }, [token]);
 
   const fetchStaffData = async () => {
     setLoading(true);
     setError('');
     
     try {
-      const url = `http://${urls.staff.getStaff.replace(':id', pageData?.store?.id || '')}`;
-      
-      const data = await callApi(url, {
-        method: 'GET',
+      // 1. Fetch user's stores first to get valid store IDs
+      const storeRes = await callApi(`http://${urls.store.getUserStores}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
 
-      // Flatten staff from all stores
-      const allStaff: StaffMember[] = [];
-      stores.forEach((store: Store) => {
-        if (store.staff && Array.isArray(store.staff)) {
-          store.staff.forEach((staff: StaffMember) => {
-            allStaff.push({
-              ...staff,
-              store: {
-                id: store.storeId,
-                name: store.storeName,
-                category: (store as any).category || null,
-              }
-            });
+      const userStoresList = (storeRes.stores || []).map((s: any) => ({
+        storeId: s.id || s.storeId,
+        storeName: s.name || s.storeName,
+        category: s.category || s.categoryId || null,
+        staff: [],
+      }));
+      setStores(userStoresList);
+
+      if (userStoresList.length === 0) {
+        setStaffMembers([]);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Fetch staff for each store safely with valid UUIDs
+      const staffPromises = userStoresList.map(async (st: any) => {
+        try {
+          const data = await callApi(`http://${urls.staff.getStaff.replace(':id', st.storeId)}`, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
           });
+          return (data.staff || []).map((member: any) => ({
+            ...member,
+            store: {
+              id: st.storeId,
+              name: st.storeName,
+              category: st.category,
+            },
+          }));
+        } catch (e) {
+          console.warn(`Failed to fetch staff for store ${st.storeId}:`, e);
+          return [];
         }
       });
 
-      setStaffMembers(data.staff);
+      const results = await Promise.all(staffPromises);
+      setStaffMembers(results.flat());
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load staff');
     } finally {
@@ -188,13 +205,36 @@ export default function StaffPage() {
         <div className="mt-4 md:mt-0">
           <button 
             onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+            disabled={stores.length === 0}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Icons.PlusIcon className="w-4 h-4" />
             <span>{t('addStaff')}</span>
           </button>
         </div>
       </motion.div>
+
+      {/* No Stores Warning */}
+      {stores.length === 0 && !loading && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 flex items-center justify-between"
+        >
+          <div className="flex items-center space-x-3">
+            <Icons.ExclamationTriangleIcon className="h-5 w-5 text-amber-500 flex-shrink-0" />
+            <p className="text-sm text-amber-800 dark:text-amber-300">
+              No store created yet. Please create a store first before managing staff members.
+            </p>
+          </div>
+          <a
+            href="/stores"
+            className="px-3 py-1.5 bg-amber-600 text-white text-xs font-medium rounded-lg hover:bg-amber-700 transition-colors whitespace-nowrap ml-4"
+          >
+            Create Store
+          </a>
+        </motion.div>
+      )}
 
       {/* Error Message */}
       {error && (
@@ -391,7 +431,8 @@ export default function StaffPage() {
         isOpen={showAddModal}
         onClose={() => setShowAddModal(false)}
         onSuccess={handleStaffAdded}
-        storeId={pageData?.store?.id || ''}
+        storeId={stores[0]?.storeId || ''}
+        stores={stores}
       />
 
       {/* View Staff Modal */}
@@ -413,7 +454,7 @@ export default function StaffPage() {
         }}
         onSuccess={handleStaffUpdated}
         staff={selectedStaff}
-        storeId={pageData?.store?.id || ''}
+        storeId={selectedStaff?.storeId || stores[0]?.storeId || ''}
       />
     </div>
   );

@@ -104,11 +104,17 @@ export default function EditStaffModal({ isOpen, onClose, onSuccess, staff, stor
       return;
     }
 
+    const effectiveStoreId = staff.storeId || (staff as any)?.store?.id || storeId;
+    if (!effectiveStoreId) {
+      toast.error('Store ID is missing');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const token = localStorage.getItem('token');
-      const url = `http://${urls.staff.update.replace(':storeId', storeId).replace(':staffId', staff.id)}`;
+      const url = `http://${urls.staff.update.replace(':storeId', effectiveStoreId).replace(':staffId', staff.id)}`;
       
       const response = await callApi(url, {
         method: 'PUT',

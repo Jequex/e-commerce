@@ -109,12 +109,6 @@ const Sidebar: React.FC = () => {
       // badge: 5,
     },
     {
-      id: 'customers',
-      label: t('customers'),
-      icon: MdPeople,
-      href: '/customers',
-    },
-    {
       id: 'staff',
       label: t('staff'),
       icon: FaPeopleRoof,
@@ -132,12 +126,6 @@ const Sidebar: React.FC = () => {
       label: 'Weekly Payouts',
       icon: MdAccountBalance,
       href: '/payouts',
-    },
-    {
-      id: 'legal',
-      label: 'Platform Policies',
-      icon: MdPolicy,
-      href: '/legal',
     },
     // {
     //   id: 'analytics',

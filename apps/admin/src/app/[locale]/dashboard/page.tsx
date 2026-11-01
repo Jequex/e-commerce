@@ -170,10 +170,10 @@ export default function DashboardPage() {
           delay={0.2}
         />
         <StatsCard
-          title={t('totalUsers')}
-          value="890"
-          change={{ value: 5, type: 'decrease' }}
-          icon="PersonIcon"
+          title="Active Stores"
+          value={String(userStores?.length || (currentStore ? 1 : 0))}
+          change={{ value: 0, type: 'increase' }}
+          icon="HomeIcon"
           color="purple"
           delay={0.3}
         />
@@ -287,9 +287,9 @@ export default function DashboardPage() {
               color: 'green',
             },
             {
-              title: t('userManagement'),
-              description: t('userManagementDesc'),
-              icon: 'PersonIcon',
+              title: 'Store Management',
+              description: 'Manage store profiles and operations',
+              icon: 'HomeIcon',
               color: 'purple',
             },
           ].map((action, index) => {
