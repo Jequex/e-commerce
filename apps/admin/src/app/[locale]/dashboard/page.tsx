@@ -9,6 +9,7 @@ import ChartCard from '@/components/ChartCard';
 import { usePageStore } from '@/stores/use-page-store';
 import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
+import { Link } from '@/i18n/navigation';
 
 export default function DashboardPage() {
   const t = useTranslations('dashboard');
@@ -141,12 +142,12 @@ export default function DashboardPage() {
               </p>
             </div>
           </div>
-          <a
+          <Link
             href="/stores"
             className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
           >
             Create Store
-          </a>
+          </Link>
         </motion.div>
       )}
 
