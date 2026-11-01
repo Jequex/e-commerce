@@ -75,6 +75,12 @@ export default function PlatformReportsPage() {
       const res = await fetch(url, {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (res.status === 401) {
+        useAuthStore.getState().logout();
+        toast.error('Session expired. Please sign in again.');
+        window.location.href = '/login';
+        return;
+      }
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed to load platform reports');
 

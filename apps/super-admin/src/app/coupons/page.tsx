@@ -39,6 +39,7 @@ export default function CouponsManagementPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'super_admin' | 'merchant_admin'>('super_admin');
 
   // Modal state
   const [showModal, setShowModal] = useState(false);
@@ -71,6 +72,12 @@ export default function CouponsManagementPage() {
       const couponsRes = await fetch('/api/products/coupons', {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (couponsRes.status === 401) {
+        useAuthStore.getState().logout();
+        toast.error('Session expired. Please sign in again.');
+        window.location.href = '/login';
+        return;
+      }
       const couponsData = await couponsRes.json();
       setCoupons(couponsData.coupons || []);
 
@@ -201,6 +208,14 @@ export default function CouponsManagementPage() {
     }
   };
 
+  const superAdminCoupons = coupons.filter(
+    (c) => c.createdByRole === 'super_admin' || (!c.storeId && c.createdByRole !== 'admin')
+  );
+  const merchantAdminCoupons = coupons.filter(
+    (c) => c.createdByRole === 'admin' || Boolean(c.storeId)
+  );
+  const activeCouponsList = activeTab === 'super_admin' ? superAdminCoupons : merchantAdminCoupons;
+
   return (
     <SuperAdminLayout>
       <div className="space-y-6">
@@ -209,7 +224,7 @@ export default function CouponsManagementPage() {
           <div>
             <h1 className="text-2xl font-bold text-white">Coupons & Promotions</h1>
             <p className="text-sm text-slate-400 mt-1">
-              Create and manage discount codes, percentage cuts, and special product promotions.
+              Audit and manage platform-wide promotional discounts and individual merchant store codes.
             </p>
           </div>
           <button
@@ -217,8 +232,54 @@ export default function CouponsManagementPage() {
             className="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition shadow-lg shadow-indigo-600/30"
           >
             <Icons.PlusIcon className="w-4 h-4" />
-            Create New Coupon
+            Create Super Admin Promo
           </button>
+        </div>
+
+        {/* 2 Tabs: Super Admin Promos vs Other Admin Promos */}
+        <div className="flex border-b border-slate-800 gap-2">
+          <button
+            onClick={() => setActiveTab('super_admin')}
+            className={`pb-3 px-4 font-semibold text-sm transition-all flex items-center gap-2 border-b-2 ${
+              activeTab === 'super_admin'
+                ? 'border-indigo-500 text-white'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Icons.ComponentInstanceIcon className="w-4 h-4 text-indigo-400" />
+            <span>Super Admin Promos (Platform Funded)</span>
+            <span className="px-2 py-0.5 rounded-full text-xs bg-indigo-950 text-indigo-300 border border-indigo-800">
+              {superAdminCoupons.length}
+            </span>
+          </button>
+          <button
+            onClick={() => setActiveTab('merchant_admin')}
+            className={`pb-3 px-4 font-semibold text-sm transition-all flex items-center gap-2 border-b-2 ${
+              activeTab === 'merchant_admin'
+                ? 'border-amber-500 text-white'
+                : 'border-transparent text-slate-400 hover:text-slate-200'
+            }`}
+          >
+            <Icons.HomeIcon className="w-4 h-4 text-amber-400" />
+            <span>Merchant Admin Promos (Store Funded)</span>
+            <span className="px-2 py-0.5 rounded-full text-xs bg-amber-950 text-amber-300 border border-amber-800">
+              {merchantAdminCoupons.length}
+            </span>
+          </button>
+        </div>
+
+        {/* Informational Scope Callout */}
+        <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 text-xs text-slate-400 flex items-start gap-3">
+          <Icons.InfoCircledIcon className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+          {activeTab === 'super_admin' ? (
+            <div>
+              <strong className="text-white">Platform-Funded Campaigns:</strong> Promos created by Super Admin are applied across eligible platform inventory. In accordance with Jequex financial policies, these discounts are absorbed 100% by Jequex from platform profit markup, leaving merchants' product earnings intact.
+            </div>
+          ) : (
+            <div>
+              <strong className="text-white">Store-Funded Promotions:</strong> Promos created by individual merchant administrators. These discount amounts are funded by the store owner and deducted from their weekly payouts, leaving Jequex platform markup preserved.
+            </div>
+          )}
         </div>
 
         {/* Coupons List Table */}
@@ -230,8 +291,8 @@ export default function CouponsManagementPage() {
                   <th className="py-3.5 px-4 font-semibold">Code & Details</th>
                   <th className="py-3.5 px-4 font-semibold">Discount</th>
                   <th className="py-3.5 px-4 font-semibold">Applies To</th>
+                  <th className="py-3.5 px-4 font-semibold">Creator & Funding</th>
                   <th className="py-3.5 px-4 font-semibold">Usage</th>
-                  <th className="py-3.5 px-4 font-semibold">Validity</th>
                   <th className="py-3.5 px-4 font-semibold">Status</th>
                   <th className="py-3.5 px-4 font-semibold text-right">Actions</th>
                 </tr>
@@ -241,21 +302,20 @@ export default function CouponsManagementPage() {
                   <tr>
                     <td colSpan={7} className="text-center py-10 text-slate-400">Loading coupons...</td>
                   </tr>
-                ) : coupons.length === 0 ? (
+                ) : activeCouponsList.length === 0 ? (
                   <tr>
                     <td colSpan={7} className="text-center py-12 text-slate-500">
-                      No discount coupons created yet. Click "Create New Coupon" to start.
+                      {activeTab === 'super_admin'
+                        ? 'No Super Admin coupons created yet. Click "Create Super Admin Promo" above.'
+                        : 'No merchant admin coupons found across stores.'}
                     </td>
                   </tr>
                 ) : (
-                  coupons.map((c) => (
+                  activeCouponsList.map((c) => (
                     <tr key={c.id} className="hover:bg-slate-800/40 transition">
                       <td className="py-3.5 px-4">
                         <div className="font-mono font-bold text-amber-400 text-base">{c.code}</div>
                         {c.description && <div className="text-xs text-slate-400 mt-0.5">{c.description}</div>}
-                        <div className="text-[11px] text-slate-500 mt-1">
-                          Created by: {c.createdByName || 'Admin'} ({c.createdByRole || 'super_admin'})
-                        </div>
                       </td>
                       <td className="py-3.5 px-4">
                         <span className="font-bold text-white text-base">
@@ -285,17 +345,38 @@ export default function CouponsManagementPage() {
                           </span>
                         )}
                       </td>
-                      <td className="py-3.5 px-4 font-mono text-xs">
-                        {c.timesUsed || 0} {c.usageLimit ? `/ ${c.usageLimit} max` : 'used'}
-                      </td>
-                      <td className="py-3.5 px-4 text-xs text-slate-400">
-                        {c.startDate || c.endDate ? (
+                      <td className="py-3.5 px-4 text-xs">
+                        {activeTab === 'super_admin' ? (
                           <div>
-                            <div>Start: {c.startDate ? new Date(c.startDate).toLocaleDateString() : 'Immediate'}</div>
-                            <div>End: {c.endDate ? new Date(c.endDate).toLocaleDateString() : 'No expiry'}</div>
+                            <span className="inline-block px-2 py-0.5 bg-indigo-950 text-indigo-300 border border-indigo-800 rounded text-[11px] font-semibold">
+                              Platform (Jequex)
+                            </span>
+                            <div className="text-slate-500 mt-0.5 text-[11px]">
+                              {c.createdByName || 'Super Admin'}
+                            </div>
                           </div>
                         ) : (
-                          <span className="text-slate-500">Always valid</span>
+                          <div>
+                            <span className="inline-block px-2 py-0.5 bg-amber-950 text-amber-300 border border-amber-800 rounded text-[11px] font-semibold">
+                              Store Merchant
+                            </span>
+                            <div className="text-slate-400 mt-0.5 text-[11px]">
+                              {c.createdByName || 'Merchant'}
+                            </div>
+                            {c.storeId && (
+                              <div className="text-slate-500 font-mono text-[10px] truncate max-w-[140px]">
+                                Store: {c.storeId.slice(0, 8)}...
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </td>
+                      <td className="py-3.5 px-4 font-mono text-xs">
+                        <div>{c.timesUsed || 0} {c.usageLimit ? `/ ${c.usageLimit} max` : 'used'}</div>
+                        {c.endDate && (
+                          <div className="text-[11px] text-slate-500">
+                            Expires {new Date(c.endDate).toLocaleDateString()}
+                          </div>
                         )}
                       </td>
                       <td className="py-3.5 px-4">

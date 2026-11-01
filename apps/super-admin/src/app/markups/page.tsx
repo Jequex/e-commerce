@@ -65,8 +65,33 @@ export default function MarkupsManagementPage() {
       const markupsRes = await fetch('/api/products/markups', {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (markupsRes.status === 401) {
+        useAuthStore.getState().logout();
+        toast.error('Session expired. Please sign in again.');
+        window.location.href = '/login';
+        return;
+      }
       const markupsData = await markupsRes.json();
-      const cats: Category[] = markupsData.categories || [];
+      let cats: Category[] = markupsData.categories || [];
+
+      // Fallback: If markups endpoint returned 0 categories, fetch directly from categories endpoint
+      if (cats.length === 0) {
+        try {
+          const catRes = await fetch('/api/products/categories');
+          const catData = await catRes.json();
+          cats = (catData.categories || catData || []).map((c: any) => ({
+            id: c.id,
+            name: c.name,
+            slug: c.slug,
+            defaultMarkupPercentage: c.defaultMarkupPercentage || '0.00',
+            sortOrder: c.sortOrder,
+            isActive: c.isActive,
+          }));
+        } catch (e) {
+          console.warn('Fallback category fetch failed:', e);
+        }
+      }
+
       setCategories(cats);
       setAdminMarkups(markupsData.adminMarkups || []);
 
@@ -80,6 +105,12 @@ export default function MarkupsManagementPage() {
       const adminsRes = await fetch('/api/auth/admins', {
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (adminsRes.status === 401) {
+        useAuthStore.getState().logout();
+        toast.error('Session expired. Please sign in again.');
+        window.location.href = '/login';
+        return;
+      }
       const adminsData = await adminsRes.json();
       const adminList: AdminUser[] = adminsData.admins || [];
       setAdmins(adminList);

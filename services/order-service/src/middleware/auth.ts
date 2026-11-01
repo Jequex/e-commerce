@@ -43,14 +43,19 @@ export const authMiddleware = (req: AuthenticatedRequest, res: Response, next: N
       storeId: decoded.storeId
     };
 
+    next();
   } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({
+        error: 'Session expired. Please sign in again.',
+        code: 'TOKEN_EXPIRED'
+      });
+    }
     return res.status(401).json({
       error: 'Invalid token',
       code: 'INVALID_TOKEN'
     });
   }
-
-  next();
 };
 
 export const requireRole = (allowedRoles: string[]) => {

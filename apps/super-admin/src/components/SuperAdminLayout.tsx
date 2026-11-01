@@ -31,7 +31,7 @@ const navItems: NavItem[] = [
 export default function SuperAdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, logout } = useAuthStore();
+  const { user, token, isAuthenticated, logout } = useAuthStore();
   const [mounted, setMounted] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [branding, setBranding] = useState<{ appName: string; appLogoUrl: string }>({
@@ -59,10 +59,26 @@ export default function SuperAdminLayout({ children }: { children: React.ReactNo
   }, []);
 
   useEffect(() => {
-    if (mounted && !isAuthenticated && pathname !== '/login') {
-      router.push('/login');
+    if (mounted && pathname !== '/login') {
+      if (!isAuthenticated || !token) {
+        router.push('/login');
+        return;
+      }
+      try {
+        const parts = token.split('.');
+        if (parts.length === 3) {
+          const payload = JSON.parse(atob(parts[1]));
+          if (payload.exp && payload.exp * 1000 < Date.now()) {
+            logout();
+            router.push('/login');
+          }
+        }
+      } catch {
+        logout();
+        router.push('/login');
+      }
     }
-  }, [mounted, isAuthenticated, pathname, router]);
+  }, [mounted, isAuthenticated, token, pathname, router, logout]);
 
   if (!mounted || (!isAuthenticated && pathname !== '/login')) {
     return (
