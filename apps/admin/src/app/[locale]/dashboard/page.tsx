@@ -19,7 +19,7 @@ export default function DashboardPage() {
   const [currentStore, setCurrentStore] = useState<any>(data?.store || userStores?.[0] || null);
   const [loading, setLoading] = useState(true);
 
-  // Real dashboard statistics
+  // Real merchant-scoped dashboard statistics
   const [totalOrders, setTotalOrders] = useState(0);
   const [totalProducts, setTotalProducts] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
@@ -73,7 +73,7 @@ export default function DashboardPage() {
     async function loadDashboardData() {
       setLoading(true);
       try {
-        // 1. Fetch user stores
+        // 1. Fetch only stores belonging to this particular admin
         let storesList: any[] = [];
         try {
           const storeRes = await callApi(`http://${urls.store.getUserStores}`);
@@ -91,23 +91,35 @@ export default function DashboardPage() {
           console.warn('Could not load user stores in dashboard:', err);
           storesList = usePageStore.getState().userStores || [];
         }
+
         setActiveStoresCount(storesList.length);
 
-        // 2. Fetch products if stores exist
-        let fetchedProducts: any[] = [];
-        if (storesList.length > 0) {
-          try {
-            const prodRes = await callApi(`http://${urls.products.getMyProducts}`);
-            fetchedProducts = prodRes.products || (Array.isArray(prodRes) ? prodRes : []);
-            setTotalProducts(prodRes.total !== undefined ? prodRes.total : fetchedProducts.length);
-          } catch (err) {
-            console.warn('Could not load products in dashboard:', err);
-          }
-        } else {
+        // If this admin has no stores, strictly set all metrics to 0
+        if (storesList.length === 0) {
           setTotalProducts(0);
+          setTotalOrders(0);
+          setTotalRevenue(0);
+          setCategoryData({
+            labels: ['No Products'],
+            datasets: [{ data: [1], backgroundColor: ['rgba(209, 213, 219, 0.4)'] }],
+          });
+          setLoading(false);
+          return;
         }
 
-        // Compute Product Categories Distribution
+        const myStoreIds = new Set(storesList.map((s: any) => s.id || s.storeId));
+
+        // 2. Fetch products belonging strictly to this merchant's stores
+        let fetchedProducts: any[] = [];
+        try {
+          const prodRes = await callApi(`http://${urls.products.getMyProducts}`);
+          fetchedProducts = prodRes.products || (Array.isArray(prodRes) ? prodRes : []);
+          setTotalProducts(prodRes.total !== undefined ? prodRes.total : fetchedProducts.length);
+        } catch (err) {
+          console.warn('Could not load products in dashboard:', err);
+        }
+
+        // Compute Product Categories Distribution for this admin
         if (fetchedProducts.length > 0) {
           const catMap: { [key: string]: number } = {};
           fetchedProducts.forEach((p) => {
@@ -149,17 +161,19 @@ export default function DashboardPage() {
           });
         }
 
-        // 3. Fetch Orders
+        // 3. Fetch orders and strictly enforce merchant store boundaries
         let fetchedOrders: any[] = [];
         try {
           const orderRes = await callApi(`http://${urls.orders.getAll}`);
-          fetchedOrders = orderRes.orders || (Array.isArray(orderRes) ? orderRes : []);
-          setTotalOrders(orderRes.pagination?.total !== undefined ? orderRes.pagination.total : fetchedOrders.length);
+          const rawOrders = orderRes.orders || (Array.isArray(orderRes) ? orderRes : []);
+          // Guard: keep only orders for this admin's stores
+          fetchedOrders = rawOrders.filter((o: any) => !o.storeId || myStoreIds.has(o.storeId));
+          setTotalOrders(fetchedOrders.length);
         } catch (err) {
           console.warn('Could not load orders in dashboard:', err);
         }
 
-        // Compute Total Revenue
+        // Compute Total Revenue for this merchant
         const revenue = fetchedOrders.reduce((sum: number, o: any) => {
           const amount = Number(o.totalPrice ?? o.total_price ?? o.totalAmount ?? 0);
           return sum + (isNaN(amount) ? 0 : amount);
@@ -206,7 +220,7 @@ export default function DashboardPage() {
         });
 
         // Compute Weekly Orders (Mon - Sun of current week)
-        const dayCounts = [0, 0, 0, 0, 0, 0, 0]; // Mon (0) to Sun (6)
+        const dayCounts = [0, 0, 0, 0, 0, 0, 0];
         const sevenDaysAgo = new Date();
         sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
@@ -215,8 +229,7 @@ export default function DashboardPage() {
           if (dateStr) {
             const d = new Date(dateStr);
             if (d >= sevenDaysAgo) {
-              // getDay(): 0 is Sunday, 1 is Monday... 6 is Saturday
-              const dayIndex = (d.getDay() + 6) % 7; // Convert to Mon=0, Sun=6
+              const dayIndex = (d.getDay() + 6) % 7;
               dayCounts[dayIndex] += 1;
             }
           }
@@ -267,7 +280,7 @@ export default function DashboardPage() {
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             {currentStore?.name || currentStore?.storeName
-              ? "Here's what's happening with your business today"
+              ? "Here's what's happening with your store and products today"
               : 'Get started by creating your first store to manage products, orders, and payouts'}
           </p>
         </div>
@@ -309,7 +322,7 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* Stats Cards with Live Data */}
+      {/* Merchant Stats Cards with Live Scoped Data */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title={t('totalOrders')}
@@ -326,7 +339,7 @@ export default function DashboardPage() {
           delay={0.2}
         />
         <StatsCard
-          title="Active Stores"
+          title="My Stores"
           value={activeStoresCount.toString()}
           icon="HomeIcon"
           color="purple"
@@ -357,62 +370,82 @@ export default function DashboardPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Service Status */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.7 }}
-          className="lg:col-span-2 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6"
-        >
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-6 flex items-center">
-            <Icons.RocketIcon className="w-5 h-5 mr-2 text-blue-600" />
-            {t('serviceStatus')}
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { name: t('authService'), port: '3001', status: t('healthy'), icon: 'LockClosedIcon' },
-              { name: t('productService'), port: '3002', status: t('healthy'), icon: 'CubeIcon' },
-              { name: t('orderService'), port: '3003', status: t('healthy'), icon: 'FileIcon' },
-              { name: t('paymentService'), port: '3004', status: t('healthy'), icon: 'CardStackIcon' },
-            ].map((service, index) => {
-              const ServiceIcon = Icons[service.icon as keyof typeof Icons];
-              return (
-                <motion.div
-                  key={service.name}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, delay: 0.8 + index * 0.1 }}
-                  className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg"
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                      <ServiceIcon className="w-4 h-4 text-green-600 dark:text-green-400" />
-                    </div>
-                    <div>
-                      <h4 className="font-medium text-gray-900 dark:text-white">{service.name}</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{t('port')}: {service.port}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span className="text-sm font-medium text-green-600 dark:text-green-400">
-                      {service.status}
-                    </span>
-                  </div>
-                </motion.div>
-              );
-            })}
-          </div>
-        </motion.div>
-
-        {/* Category Distribution */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Category Distribution for Merchant */}
         <ChartCard
           title="Product Categories"
           type="doughnut"
           data={categoryData}
-          delay={0.8}
+          delay={0.7}
         />
+
+        {/* Store Profile & Status Overview */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.8 }}
+          className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6 flex flex-col justify-between"
+        >
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center">
+                <Icons.HomeIcon className="w-5 h-5 mr-2 text-blue-600" />
+                Active Store Summary
+              </h3>
+              {currentStore && (
+                <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300">
+                  {currentStore.status || 'Active'}
+                </span>
+              )}
+            </div>
+
+            {currentStore ? (
+              <div className="space-y-3">
+                <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Store Name</p>
+                  <p className="text-base font-semibold text-gray-900 dark:text-white">
+                    {currentStore.name || currentStore.storeName}
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Store Slug</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                      {currentStore.slug || currentStore.storeSlug || 'N/A'}
+                    </p>
+                  </div>
+                  <div className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Type</p>
+                    <p className="text-sm font-medium text-gray-800 dark:text-gray-200 capitalize">
+                      {currentStore.type || currentStore.storeType || 'Online'}
+                    </p>
+                  </div>
+                </div>
+                {currentStore.description && (
+                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                    {currentStore.description}
+                  </p>
+                )}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-gray-500 dark:text-gray-400 text-sm">
+                No store selected or created yet.
+              </div>
+            )}
+          </div>
+
+          <div className="pt-4 border-t border-gray-100 dark:border-gray-700 mt-4 flex items-center justify-between">
+            <span className="text-xs text-gray-500 dark:text-gray-400">
+              Total Merchant Stores: {activeStoresCount}
+            </span>
+            <Link
+              href="/stores"
+              className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Manage Stores &rarr;
+            </Link>
+          </div>
+        </motion.div>
       </div>
 
       {/* Quick Actions */}

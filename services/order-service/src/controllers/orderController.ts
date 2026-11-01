@@ -536,14 +536,32 @@ export class OrderController {
       if (req.user?.role === 'admin') {
         const storeServiceUrl = process.env.STORE_SERVICE_URL || 'http://store-service:3007';
         let userStoreIds: string[] = [];
-        try {
-          const sRes = await fetch(`${storeServiceUrl}/api/v1/stores?ownerId=${req.user.id}&limit=100`);
-          if (sRes.ok) {
-            const sData = await sRes.json();
-            userStoreIds = (sData.stores || []).map((s: any) => s.id);
+
+        if (req.headers.authorization) {
+          try {
+            const userRes = await fetch(`${storeServiceUrl}/api/v1/stores/user/stores`, {
+              headers: { Authorization: req.headers.authorization },
+            });
+            if (userRes.ok) {
+              const data = await userRes.json();
+              const storeList = data.stores || [];
+              if (storeList.length > 0) {
+                userStoreIds = storeList.map((s: any) => s.id || s.storeId);
+              }
+            }
+          } catch (_) {}
+        }
+
+        if (userStoreIds.length === 0) {
+          try {
+            const sRes = await fetch(`${storeServiceUrl}/api/v1/stores?ownerId=${req.user.id}&limit=100`);
+            if (sRes.ok) {
+              const sData = await sRes.json();
+              userStoreIds = (sData.stores || []).map((s: any) => s.id);
+            }
+          } catch (e) {
+            console.error('Failed to get admin stores in order service:', e);
           }
-        } catch (e) {
-          console.error('Failed to get admin stores in order service:', e);
         }
 
         if (userStoreIds.length === 0) {
