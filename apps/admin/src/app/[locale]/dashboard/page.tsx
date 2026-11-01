@@ -1,17 +1,48 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslations } from 'next-intl';
 import { motion } from 'framer-motion';
 import * as Icons from '@radix-ui/react-icons';
 import StatsCard from '@/components/StatsCard';
 import ChartCard from '@/components/ChartCard';
 import { usePageStore } from '@/stores/use-page-store';
+import callApi from '@/api-calls/callApi';
+import urls from '@/api-calls/urls.json';
 
 export default function DashboardPage() {
   const t = useTranslations('dashboard');
   const common = useTranslations('common');
-  const { data } = usePageStore.getState();
+  const { data, userStores } = usePageStore.getState();
+  const [currentStore, setCurrentStore] = useState<any>(data?.store || userStores?.[0] || null);
+  const [loadingStore, setLoadingStore] = useState(false);
+
+  useEffect(() => {
+    async function loadStores() {
+      setLoadingStore(true);
+      try {
+        const res = await callApi(`http://${urls.store.getUserStores}`);
+        const storeList = res.stores || (Array.isArray(res) ? res : res?.data || []);
+        if (storeList.length > 0) {
+          usePageStore.getState().setUserStores(storeList);
+          const firstStore = storeList[0];
+          usePageStore.getState().setData({
+            ...usePageStore.getState().data,
+            store: firstStore,
+          });
+          setCurrentStore(firstStore);
+        }
+      } catch (err) {
+        console.warn('Could not load user stores in dashboard:', err);
+      } finally {
+        setLoadingStore(false);
+      }
+    }
+
+    if (!data?.store) {
+      loadStores();
+    }
+  }, []);
 
   // Sample chart data
   const salesData = {
@@ -74,10 +105,14 @@ export default function DashboardPage() {
       >
         <div>
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-            {t('welcome', { store: data.store.name || '' })}
+            {currentStore?.name || currentStore?.storeName
+              ? t('welcome', { store: currentStore.name || currentStore.storeName })
+              : t('title')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400 mt-1">
-            Here's what's happening with your business today
+            {currentStore?.name || currentStore?.storeName
+              ? "Here's what's happening with your business today"
+              : "Get started by creating your first store to manage products, orders, and payouts"}
           </p>
         </div>
         <div className="mt-4 md:mt-0 flex items-center space-x-3">
@@ -87,6 +122,33 @@ export default function DashboardPage() {
           </button>
         </div>
       </motion.div>
+
+      {/* No Store Banner */}
+      {!loadingStore && !currentStore && (
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm"
+        >
+          <div className="flex items-center space-x-3">
+            <Icons.InfoCircledIcon className="h-6 w-6 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+            <div>
+              <h3 className="text-sm font-semibold text-yellow-800 dark:text-yellow-300">
+                No Store Created Yet
+              </h3>
+              <p className="text-sm text-yellow-700 dark:text-yellow-400">
+                You need a store before you can add products, track inventory, and accept orders.
+              </p>
+            </div>
+          </div>
+          <a
+            href="/stores"
+            className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white text-sm font-medium rounded-lg transition-colors whitespace-nowrap"
+          >
+            Create Store
+          </a>
+        </motion.div>
+      )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
