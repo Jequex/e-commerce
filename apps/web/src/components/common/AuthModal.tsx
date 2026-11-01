@@ -41,7 +41,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   useEffect(() => {
     setMounted(true);
     fetch('/api/store/legal')
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data?.documents && Array.isArray(data.documents)) {
           const versions = {

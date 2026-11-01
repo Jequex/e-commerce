@@ -29,7 +29,7 @@ export default function Navbar({ activeRoute }: NavbarProps) {
   useEffect(() => {
     setMounted(true);
     fetch('/api/store/settings/contact')
-      .then((r) => r.json())
+      .then((r) => (r.ok ? r.json() : null))
       .then((data) => {
         if (data) {
           setBranding({

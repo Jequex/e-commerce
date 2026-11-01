@@ -29,7 +29,7 @@ export default function Footer({ activeRoute }: FooterProps) {
 
   useEffect(() => {
     fetch('/api/store/settings/contact')
-      .then((res) => res.json())
+      .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
         if (data) {
           if (data.admin_app_url || data.adminAppUrl) {
