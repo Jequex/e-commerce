@@ -67,26 +67,46 @@ export default function SiteContactSettingsPage() {
     loadSettings();
   }, []);
 
+  const getAuthToken = () => {
+    if (token) return token;
+    if (typeof window !== 'undefined') {
+      try {
+        const persisted = localStorage.getItem('super-admin-auth');
+        if (persisted) {
+          const parsed = JSON.parse(persisted);
+          if (parsed?.state?.token) return parsed.state.token;
+        }
+        const directToken = localStorage.getItem('token');
+        if (directToken) return directToken;
+      } catch {}
+    }
+    return '';
+  };
+
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setUploadingLogo(true);
     try {
+      const authToken = getAuthToken();
       const fd = new FormData();
       fd.append('files', file);
 
+      const headers: Record<string, string> = {};
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const res = await fetch('/api/products/upload', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+        headers,
         body: fd,
       });
 
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error || 'Failed to upload logo');
+        throw new Error(data.error || data.message || 'Failed to upload logo');
       }
 
       const logoUrl = data.url || (data.urls && data.urls[0]) || (data.files && data.files[0]?.url);
@@ -98,6 +118,7 @@ export default function SiteContactSettingsPage() {
       toast.error(err.message || 'Logo upload failed');
     } finally {
       setUploadingLogo(false);
+      e.target.value = '';
     }
   };
 

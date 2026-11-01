@@ -10,8 +10,14 @@ const callApi = async (url: string, options: RequestInit = {}) => {
     });
 
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || errorData.error || 'API call failed');
+      const errorData = await response.json().catch(() => ({}));
+      let msg = errorData.message || (typeof errorData.error === 'string' ? errorData.error : errorData.error?.message);
+      if (!msg && errorData.error?.details) {
+        msg = Array.isArray(errorData.error.details)
+          ? errorData.error.details.map((d: any) => d.message || d.path?.join('.')).join(', ')
+          : JSON.stringify(errorData.error.details);
+      }
+      throw new Error(msg || 'API call failed');
     }
 
     return await response.json();

@@ -141,6 +141,24 @@ export default function RegisterPage() {
           localStorage.setItem('sessionId', loginData.sessionId || '');
           localStorage.setItem('admin', JSON.stringify(loginData.admin || {}));
           
+          if (storeName) {
+            try {
+              const slug = storeName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') + '-' + Math.random().toString(36).substring(2, 6);
+              await callApi(`http://${urls.store.create}`, {
+                method: 'POST',
+                headers: { authorization: `Bearer ${loginData.token}` },
+                body: JSON.stringify({
+                  name: storeName,
+                  slug,
+                  type: 'general',
+                  status: 'active',
+                }),
+              });
+            } catch (storeErr) {
+              console.warn('Initial store creation deferred:', storeErr);
+            }
+          }
+
           setTimeout(() => {
             router.push('/dashboard');
           }, 1000);

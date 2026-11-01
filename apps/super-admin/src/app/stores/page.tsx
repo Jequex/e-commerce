@@ -73,6 +73,41 @@ export default function StoresManagementPage() {
   });
 
   const [saving, setSaving] = useState(false);
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+
+  const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingLogo(true);
+    try {
+      const authToken = (typeof window !== 'undefined' ? (JSON.parse(localStorage.getItem('super-admin-auth') || '{}')?.state?.token || localStorage.getItem('token')) : '');
+      const fd = new FormData();
+      fd.append('files', file);
+
+      const res = await fetch('/api/products/upload', {
+        method: 'POST',
+        headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
+        body: fd,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to upload store logo');
+      }
+
+      const logoUrl = data.url || (data.urls && data.urls[0]) || (data.files && data.files[0]?.url);
+      if (logoUrl) {
+        setFormData((prev) => ({ ...prev, logo: logoUrl }));
+        toast.success('Store logo uploaded to MinIO');
+      }
+    } catch (err: any) {
+      toast.error(err.message || 'Store logo upload failed');
+    } finally {
+      setUploadingLogo(false);
+      e.target.value = '';
+    }
+  };
 
   const fetchStores = async () => {
     setLoading(true);
@@ -797,15 +832,50 @@ export default function StoresManagementPage() {
 
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Store Logo URL
+                    Store Logo
                   </label>
-                  <input
-                    type="url"
-                    value={formData.logo}
-                    onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                    placeholder="https://..."
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                  />
+                  <div className="flex items-center gap-3">
+                    {formData.logo ? (
+                      <div className="relative group w-12 h-12 rounded-lg border border-slate-700 bg-slate-900 p-1 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={formData.logo} alt="Logo" className="max-h-full max-w-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, logo: '' })}
+                          className="absolute inset-0 bg-rose-900/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] font-bold"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg border border-dashed border-slate-700 bg-slate-900 flex items-center justify-center text-[10px] text-slate-500 font-bold flex-shrink-0">
+                        No Logo
+                      </div>
+                    )}
+                    <div className="flex-1 space-y-1">
+                      <div className="flex gap-2">
+                        <label className={`px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg cursor-pointer transition ${
+                          uploadingLogo ? 'opacity-50 pointer-events-none' : ''
+                        }`}>
+                          {uploadingLogo ? 'Uploading...' : 'Upload Image'}
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                            onChange={handleLogoUpload}
+                            className="hidden"
+                            disabled={uploadingLogo}
+                          />
+                        </label>
+                        <input
+                          type="url"
+                          value={formData.logo}
+                          onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+                          placeholder="Or paste image URL (https://...)"
+                          className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-4 border-t border-slate-800 flex justify-end gap-2">
@@ -978,14 +1048,50 @@ export default function StoresManagementPage() {
 
                 <div>
                   <label className="block text-xs font-medium text-slate-300 mb-1">
-                    Store Logo URL
+                    Store Logo
                   </label>
-                  <input
-                    type="url"
-                    value={formData.logo}
-                    onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
-                    className="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-indigo-500"
-                  />
+                  <div className="flex items-center gap-3">
+                    {formData.logo ? (
+                      <div className="relative group w-12 h-12 rounded-lg border border-slate-700 bg-slate-900 p-1 flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img src={formData.logo} alt="Logo" className="max-h-full max-w-full object-contain" />
+                        <button
+                          type="button"
+                          onClick={() => setFormData({ ...formData, logo: '' })}
+                          className="absolute inset-0 bg-rose-900/80 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[10px] font-bold"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg border border-dashed border-slate-700 bg-slate-900 flex items-center justify-center text-[10px] text-slate-500 font-bold flex-shrink-0">
+                        No Logo
+                      </div>
+                    )}
+                    <div className="flex-1 space-y-1">
+                      <div className="flex gap-2">
+                        <label className={`px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-medium rounded-lg cursor-pointer transition ${
+                          uploadingLogo ? 'opacity-50 pointer-events-none' : ''
+                        }`}>
+                          {uploadingLogo ? 'Uploading...' : 'Upload Image'}
+                          <input
+                            type="file"
+                            accept="image/png,image/jpeg,image/webp,image/svg+xml"
+                            onChange={handleLogoUpload}
+                            className="hidden"
+                            disabled={uploadingLogo}
+                          />
+                        </label>
+                        <input
+                          type="url"
+                          value={formData.logo}
+                          onChange={(e) => setFormData({ ...formData, logo: e.target.value })}
+                          placeholder="Or paste image URL (https://...)"
+                          className="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="pt-4 border-t border-slate-800 flex justify-end gap-2">
