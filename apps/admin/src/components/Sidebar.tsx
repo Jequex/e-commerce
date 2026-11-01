@@ -90,12 +90,6 @@ const Sidebar: React.FC = () => {
       // badge: 12,
     },
     {
-      id: 'categories',
-      label: 'Categories',
-      icon: MdBarChart,
-      href: '/categories',
-    },
-    {
       id: 'coupons',
       label: 'Coupons & Promo',
       icon: MdBarChart,
