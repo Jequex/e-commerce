@@ -419,9 +419,15 @@ export default function ProductsPage() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900 dark:text-white">
+                        <div className="text-sm font-medium text-gray-900 dark:text-white">
                           ${typeof product.price === 'number' ? product.price.toFixed(2) : parseFloat(product.price).toFixed(2)}
                         </div>
+                        {(product as any).consumerPrice && (product as any).consumerPrice !== product.price && (
+                          <div className="text-xs text-blue-600 dark:text-blue-400 font-medium" title="Final Consumer Price (Includes Platform Markup)">
+                            Consumer: ${(product as any).consumerPrice}
+                            {(product as any).markupPercentage ? ` (+${(product as any).markupPercentage}%)` : ''}
+                          </div>
+                        )}
                         {product.compareAtPrice && (
                           <div className="text-xs text-gray-500 dark:text-gray-400 line-through">
                             ${typeof product.compareAtPrice === 'number' ? product.compareAtPrice.toFixed(2) : parseFloat(product.compareAtPrice).toFixed(2)}

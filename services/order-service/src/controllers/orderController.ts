@@ -44,7 +44,15 @@ export class OrderController {
       for (const item of validatedData.lineItems) {
         const itemTotal = item.price * item.quantity;
         subtotalPrice += itemTotal;
-        const itemMarkup = (itemTotal * defaultPlatformMarkupRate) / 100;
+        let itemMarkup = 0;
+        if (item.platformMarkupAmount !== undefined) {
+          itemMarkup = item.platformMarkupAmount * item.quantity;
+        } else if (item.platformMarkupRate !== undefined) {
+          const itemBase = item.price / (1 + item.platformMarkupRate / 100);
+          itemMarkup = (item.price - itemBase) * item.quantity;
+        } else {
+          itemMarkup = (itemTotal * defaultPlatformMarkupRate) / 100;
+        }
         platformMarkupAmount += itemMarkup;
       }
 

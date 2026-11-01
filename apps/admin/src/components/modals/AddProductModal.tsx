@@ -78,7 +78,7 @@ export default function AddProductModal({
     const productData = {
       name: formData.get('name') as string,
       description: formData.get('description') as string,
-      categoryId: categoryId && categoryId !== '' ? parseInt(categoryId) : null,
+      categoryId: categoryId && categoryId !== '' ? categoryId : null,
       price: parseFloat(formData.get('price') as string),
       compareAtPrice: formData.get('compareAtPrice') ? parseFloat(formData.get('compareAtPrice') as string) : null,
       sku: formData.get('sku') as string,

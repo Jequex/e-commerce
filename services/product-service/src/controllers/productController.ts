@@ -21,26 +21,43 @@ import { AuthenticatedRequest } from '../middleware/auth';
 
 export class ProductController {
   // Helper to verify if user owns a specific store
-  private async isUserStoreOwner(userId: string, storeId?: string | null, role?: string): Promise<boolean> {
+  private async isUserStoreOwner(userId: string, storeId?: string | null, role?: string, authHeader?: string): Promise<boolean> {
     if (role === 'super_admin') return true;
     if (!storeId || !userId) return false;
     try {
       const storeServiceUrl = process.env.STORE_SERVICE_URL || 'http://store-service:3007';
       const res = await fetch(`${storeServiceUrl}/api/v1/stores/${storeId}`);
-      if (!res.ok) return false;
-      const data = await res.json();
-      const store = data.store || data;
-      return store && store.ownerId === userId;
+      if (res.ok) {
+        const data = await res.json();
+        const store = data.store || data;
+        if (store && store.ownerId === userId) return true;
+      }
+      const userStoreIds = await this.getUserStoreIds(userId, authHeader);
+      return userStoreIds.includes(storeId);
     } catch (e) {
       console.error('Error verifying store owner:', e);
       return false;
     }
   }
 
-  // Helper to fetch all store IDs owned by user
-  private async getUserStoreIds(userId: string): Promise<string[]> {
+  // Helper to fetch all store IDs owned by user (or staff)
+  private async getUserStoreIds(userId: string, authHeader?: string): Promise<string[]> {
     try {
       const storeServiceUrl = process.env.STORE_SERVICE_URL || 'http://store-service:3007';
+      if (authHeader) {
+        try {
+          const userRes = await fetch(`${storeServiceUrl}/api/v1/stores/user/stores`, {
+            headers: { Authorization: authHeader }
+          });
+          if (userRes.ok) {
+            const data = await userRes.json();
+            const storeList = data.stores || [];
+            if (storeList.length > 0) {
+              return storeList.map((s: any) => s.id || s.storeId);
+            }
+          }
+        } catch (_) {}
+      }
       const res = await fetch(`${storeServiceUrl}/api/v1/stores?ownerId=${userId}&limit=100`);
       if (!res.ok) return [];
       const data = await res.json();
@@ -50,6 +67,151 @@ export class ProductController {
       console.error('Error getting user store IDs:', e);
       return [];
     }
+  }
+
+  // Helper to calculate markup and review stats for products
+  private async enrichProductsWithMarkupsAndReviews(
+    productList: any[],
+    options: { isConsumerFacing?: boolean } = { isConsumerFacing: true }
+  ): Promise<any[]> {
+    if (!productList || productList.length === 0) return [];
+
+    const productIds = productList.map(p => p.id).filter(Boolean);
+    const categoryIds = Array.from(new Set(productList.map(p => p.categoryId).filter(Boolean)));
+    const storeIds = Array.from(new Set(productList.map(p => p.storeId).filter(Boolean)));
+
+    // 1. Fetch review stats for each product
+    const reviewStatsMap = new Map<string, { averageRating: number; reviewCount: number }>();
+    if (productIds.length > 0) {
+      try {
+        const stats = await db
+          .select({
+            productId: productReviews.productId,
+            averageRating: sql<number>`AVG(${productReviews.rating})`,
+            reviewCount: sql<number>`COUNT(${productReviews.id})`
+          })
+          .from(productReviews)
+          .where(and(
+            inArray(productReviews.productId, productIds),
+            eq(productReviews.isApproved, true)
+          ))
+          .groupBy(productReviews.productId);
+
+        for (const row of stats) {
+          reviewStatsMap.set(row.productId, {
+            averageRating: row.averageRating ? Number(Number(row.averageRating).toFixed(1)) : 0,
+            reviewCount: Number(row.reviewCount || 0)
+          });
+        }
+      } catch (err) {
+        console.error('Error fetching batch review stats:', err);
+      }
+    }
+
+    // 2. Fetch category default markups
+    const categoryMarkupMap = new Map<string, number>();
+    if (categoryIds.length > 0) {
+      try {
+        const cats = await db
+          .select({ id: categories.id, defaultMarkupPercentage: categories.defaultMarkupPercentage })
+          .from(categories)
+          .where(inArray(categories.id, categoryIds as string[]));
+
+        for (const c of cats) {
+          categoryMarkupMap.set(c.id, parseFloat(c.defaultMarkupPercentage || '0.00') || 0);
+        }
+      } catch (err) {
+        console.error('Error fetching category markups:', err);
+      }
+    }
+
+    // 3. Resolve store owner IDs
+    const storeOwnerMap = new Map<string, string>();
+    if (storeIds.length > 0) {
+      try {
+        const storeServiceUrl = process.env.STORE_SERVICE_URL || 'http://store-service:3007';
+        await Promise.all(
+          storeIds.map(async (sId) => {
+            try {
+              const res = await fetch(`${storeServiceUrl}/api/v1/stores/${sId}`);
+              if (res.ok) {
+                const data = await res.json();
+                const st = data.store || data;
+                if (st && st.ownerId) {
+                  storeOwnerMap.set(sId, st.ownerId);
+                }
+              }
+            } catch (_) {}
+          })
+        );
+      } catch (err) {
+        console.error('Error resolving store owners for markup:', err);
+      }
+    }
+
+    // 4. Fetch admin category markup overrides
+    const adminMarkupOverrides = new Map<string, number>();
+    const ownerIds = Array.from(new Set(Array.from(storeOwnerMap.values())));
+    if (ownerIds.length > 0 && categoryIds.length > 0) {
+      try {
+        const overrides = await db
+          .select()
+          .from(adminCategoryMarkups)
+          .where(and(
+            inArray(adminCategoryMarkups.adminId, ownerIds),
+            inArray(adminCategoryMarkups.categoryId, categoryIds as string[])
+          ));
+
+        for (const o of overrides) {
+          adminMarkupOverrides.set(`${o.adminId}_${o.categoryId}`, parseFloat(o.markupPercentage || '0.00') || 0);
+        }
+      } catch (err) {
+        console.error('Error fetching admin markup overrides:', err);
+      }
+    }
+
+    // 5. Enrich each product
+    return productList.map(product => {
+      const basePrice = parseFloat(product.price) || 0;
+      let markupRate = 0;
+
+      if (product.categoryId) {
+        const ownerId = product.storeId ? storeOwnerMap.get(product.storeId) : null;
+        if (ownerId && adminMarkupOverrides.has(`${ownerId}_${product.categoryId}`)) {
+          markupRate = adminMarkupOverrides.get(`${ownerId}_${product.categoryId}`)!;
+        } else if (categoryMarkupMap.has(product.categoryId)) {
+          markupRate = categoryMarkupMap.get(product.categoryId)!;
+        } else if (product.category?.defaultMarkupPercentage) {
+          markupRate = parseFloat(product.category.defaultMarkupPercentage) || 0;
+        }
+      }
+
+      const markupAmount = Number(((basePrice * markupRate) / 100).toFixed(2));
+      const consumerPrice = (basePrice + markupAmount).toFixed(2);
+
+      let finalCompareAtPrice = product.compareAtPrice;
+      if (product.compareAtPrice) {
+        const baseCompare = parseFloat(product.compareAtPrice) || 0;
+        const compareMarkup = Number(((baseCompare * markupRate) / 100).toFixed(2));
+        finalCompareAtPrice = (baseCompare + compareMarkup).toFixed(2);
+      }
+
+      const stats = reviewStatsMap.get(product.id) || product.reviewStats || { averageRating: 0, reviewCount: 0 };
+
+      return {
+        ...product,
+        basePrice: basePrice.toFixed(2),
+        markupPercentage: markupRate.toFixed(2),
+        markupAmount: markupAmount.toFixed(2),
+        price: options.isConsumerFacing ? consumerPrice : basePrice.toFixed(2),
+        consumerPrice,
+        compareAtPrice: options.isConsumerFacing ? finalCompareAtPrice : product.compareAtPrice,
+        baseCompareAtPrice: product.compareAtPrice,
+        rating: stats.averageRating,
+        reviewCount: stats.reviewCount,
+        reviewStats: stats
+      };
+    });
   }
 
   // Upload images or demo videos directly to MinIO
@@ -116,7 +278,7 @@ export class ProductController {
       if (req.user && req.user.role !== 'super_admin') {
         let storeId = validatedData.storeId;
         if (storeId) {
-          const isOwner = await this.isUserStoreOwner(req.user.id, storeId, req.user.role);
+          const isOwner = await this.isUserStoreOwner(req.user.id, storeId, req.user.role, req.headers.authorization);
           if (!isOwner) {
             return res.status(403).json({
               error: 'Insufficient permissions',
@@ -126,7 +288,7 @@ export class ProductController {
           }
         } else {
           // If no storeId passed, resolve default store for user
-          const userStoreIds = await this.getUserStoreIds(req.user.id);
+          const userStoreIds = await this.getUserStoreIds(req.user.id, req.headers.authorization);
           if (userStoreIds.length === 0) {
             return res.status(400).json({
               error: 'No store found',
@@ -310,8 +472,10 @@ export class ProductController {
 
       const totalPages = Math.ceil(count / limitNum);
 
+      const enriched = await this.enrichProductsWithMarkupsAndReviews(productList, { isConsumerFacing: true });
+
       res.json({
-        products: productList,
+        products: enriched,
         pagination: {
           page: pageNum,
           limit: limitNum,
@@ -391,13 +555,15 @@ export class ProductController {
         ...product,
         store,
         reviewStats: {
-          averageRating: reviewStats[0]?.averageRating ? Number(reviewStats[0].averageRating.toFixed(2)) : 0,
-          reviewCount: reviewStats[0]?.reviewCount || 0
+          averageRating: reviewStats[0]?.averageRating ? Number(Number(reviewStats[0].averageRating).toFixed(1)) : 0,
+          reviewCount: Number(reviewStats[0]?.reviewCount || 0)
         }
       };
 
+      const [enriched] = await this.enrichProductsWithMarkupsAndReviews([productWithStats], { isConsumerFacing: true });
+
       res.json({
-        product: productWithStats
+        product: enriched
       });
 
     } catch (error) {
@@ -889,8 +1055,10 @@ export class ProductController {
 
       const totalPages = Math.ceil(count / limitNum);
 
+      const enriched = await this.enrichProductsWithMarkupsAndReviews(searchResults, { isConsumerFacing: true });
+
       res.json({
-        products: searchResults,
+        products: enriched,
         query,
         pagination: {
           page: pageNum,
@@ -929,8 +1097,10 @@ export class ProductController {
         limit: limitNum
       });
 
+      const enriched = await this.enrichProductsWithMarkupsAndReviews(featuredProducts, { isConsumerFacing: true });
+
       res.json({
-        products: featuredProducts
+        products: enriched
       });
 
     } catch (error) {
@@ -956,7 +1126,7 @@ export class ProductController {
       if (req.user.role === 'super_admin') {
         if (storeId) targetStoreIds = [storeId as string];
       } else {
-        const userStoreIds = await this.getUserStoreIds(req.user.id);
+        const userStoreIds = await this.getUserStoreIds(req.user.id, req.headers.authorization);
         if (userStoreIds.length === 0) {
           return res.json({ products: [], total: 0, page: 1, totalPages: 0 });
         }
@@ -1020,8 +1190,10 @@ export class ProductController {
 
       const total = Number(totalCountResult[0]?.count || 0);
 
+      const enriched = await this.enrichProductsWithMarkupsAndReviews(productList, { isConsumerFacing: false });
+
       return res.json({
-        products: productList,
+        products: enriched,
         total,
         page: pageNum,
         totalPages: Math.ceil(total / limitNum)
@@ -1123,8 +1295,10 @@ export class ProductController {
         offset
       });
 
+      const enriched = await this.enrichProductsWithMarkupsAndReviews(storeProducts, { isConsumerFacing: true });
+
       res.json({
-        products: storeProducts,
+        products: enriched,
         pagination: {
           page: pageNum,
           limit: limitNum,
@@ -1817,6 +1991,86 @@ export class ProductController {
         error: 'Internal server error',
         code: 'INTERNAL_ERROR'
       });
+    }
+  }
+
+  // Submit product review (authenticated)
+  async createReview(req: AuthenticatedRequest, res: Response) {
+    try {
+      if (!req.user) {
+        return res.status(401).json({ error: 'Authentication required', code: 'NO_AUTH' });
+      }
+
+      const { id } = req.params;
+      const { rating, title, content } = req.body;
+
+      const numRating = parseInt(String(rating), 10);
+      if (isNaN(numRating) || numRating < 1 || numRating > 5) {
+        return res.status(400).json({ error: 'Rating must be an integer between 1 and 5', code: 'INVALID_RATING' });
+      }
+
+      const product = await db.query.products.findFirst({
+        where: eq(products.id, id)
+      });
+
+      if (!product) {
+        return res.status(404).json({ error: 'Product not found', code: 'PRODUCT_NOT_FOUND' });
+      }
+
+      const [newReview] = await db
+        .insert(productReviews)
+        .values({
+          productId: id,
+          userId: req.user.id,
+          rating: numRating,
+          title: title ? String(title).trim() : null,
+          content: content ? String(content).trim() : null,
+          isApproved: true,
+          isVerifiedPurchase: false
+        })
+        .returning();
+
+      const reviewStats = await db
+        .select({
+          averageRating: sql<number>`AVG(${productReviews.rating})`,
+          reviewCount: sql<number>`COUNT(${productReviews.id})`
+        })
+        .from(productReviews)
+        .where(and(
+          eq(productReviews.productId, id),
+          eq(productReviews.isApproved, true)
+        ));
+
+      res.status(201).json({
+        message: 'Review submitted successfully',
+        review: newReview,
+        reviewStats: {
+          averageRating: reviewStats[0]?.averageRating ? Number(Number(reviewStats[0].averageRating).toFixed(1)) : 0,
+          reviewCount: Number(reviewStats[0]?.reviewCount || 0)
+        }
+      });
+    } catch (error) {
+      console.error('Create product review error:', error);
+      res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
+    }
+  }
+
+  // Get product reviews
+  async getProductReviews(req: Request, res: Response) {
+    try {
+      const { id } = req.params;
+      const reviews = await db.query.productReviews.findMany({
+        where: and(
+          eq(productReviews.productId, id),
+          eq(productReviews.isApproved, true)
+        ),
+        orderBy: desc(productReviews.createdAt),
+        limit: 50
+      });
+      res.json({ reviews });
+    } catch (error) {
+      console.error('Get product reviews error:', error);
+      res.status(500).json({ error: 'Internal server error', code: 'INTERNAL_ERROR' });
     }
   }
 }

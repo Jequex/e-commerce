@@ -131,12 +131,25 @@ export default function ProductCard({ product }: ProductCardProps) {
         {/* Rating and Stock */}
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="flex items-center">
-              {renderStars(4.5)}
-            </div>
-            <span className="text-sm font-medium text-gray-700">
-              4.5
-            </span>
+            {product.reviewCount && product.reviewCount > 0 ? (
+              <>
+                <div className="flex items-center">
+                  {renderStars(product.rating || product.reviewStats?.averageRating || 0)}
+                </div>
+                <span className="text-sm font-medium text-gray-700">
+                  {Number(product.rating || product.reviewStats?.averageRating || 0).toFixed(1)} ({product.reviewCount || product.reviewStats?.reviewCount})
+                </span>
+              </>
+            ) : (
+              <>
+                <div className="flex items-center">
+                  {renderStars(0)}
+                </div>
+                <span className="text-xs text-gray-400">
+                  (0)
+                </span>
+              </>
+            )}
           </div>
           {product.trackQuantity && (
             <div className="text-sm text-gray-600">

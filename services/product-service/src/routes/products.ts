@@ -76,10 +76,14 @@ router.get('/admin/my-products', authMiddleware, requireStoreOwnerOrAdmin, produ
 
 // General product routes (public)
 router.get('/', productController.getProducts.bind(productController));
+router.get('/:id/reviews', productController.getProductReviews.bind(productController));
 router.get('/:id', productController.getProduct.bind(productController));
 
 // Protected routes - Require authentication
 router.use(authMiddleware);
+
+// Customer review submission
+router.post('/:id/reviews', productController.createReview.bind(productController));
 
 // Admin-only routes for products
 router.post('/upload', requireStoreOwnerOrAdmin, upload.any(), productController.uploadMedia.bind(productController));

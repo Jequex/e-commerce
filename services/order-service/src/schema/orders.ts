@@ -358,6 +358,8 @@ export const createOrderSchema = z.object({
     categoryId: z.string().uuid().optional(),
     quantity: z.number().int().positive(),
     price: z.number().positive(),
+    platformMarkupAmount: z.number().optional(),
+    platformMarkupRate: z.number().optional(),
     properties: z.record(z.string()).optional(),
   })).min(1),
   billingAddress: addressSchema,

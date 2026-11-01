@@ -3,12 +3,30 @@ export interface Product {
   name: string;
   description: string;
   price: string;
+  basePrice?: string;
+  markupPercentage?: string;
+  markupAmount?: string;
+  consumerPrice?: string;
   compareAtPrice?: string;
   sku: string;
   barcode?: string;
   trackQuantity: boolean;
   inventoryQuantity?: number;
   lowStockThreshold?: number;
+  rating?: number;
+  reviewCount?: number;
+  reviewStats?: {
+    averageRating: number;
+    reviewCount: number;
+  };
+  reviews?: Array<{
+    id: string;
+    rating: number;
+    title?: string;
+    content?: string;
+    createdAt?: string;
+    userId?: string;
+  }>;
   images: { src: string; position?: number }[];
   demoVideo?: string;
   categoryId?: string;

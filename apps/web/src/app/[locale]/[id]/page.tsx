@@ -23,6 +23,11 @@ export default function ProductDetailsPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [showReviewForm, setShowReviewForm] = useState(false);
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewTitle, setReviewTitle] = useState('');
+  const [reviewContent, setReviewContent] = useState('');
+  const [submittingReview, setSubmittingReview] = useState(false);
 
   useEffect(() => {
     const fetchProduct = async () => {
@@ -69,6 +74,61 @@ export default function ProductDetailsPage() {
     
     toast.success(`${quantity} item(s) added to cart!`);
     setQuantity(1);
+  };
+
+  const handleSubmitReview = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!product) return;
+
+    try {
+      setSubmittingReview(true);
+      const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+      if (!token) {
+        toast.info('Please log in to submit a review');
+        return;
+      }
+
+      const res = await fetch(`/api/products/${product.id}/reviews`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          rating: reviewRating,
+          title: reviewTitle,
+          content: reviewContent
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || 'Failed to submit review');
+      }
+
+      toast.success('Thank you! Your review has been submitted.');
+      setShowReviewForm(false);
+      setReviewTitle('');
+      setReviewContent('');
+      setReviewRating(5);
+
+      // Update product reviews locally
+      setProduct((prev) => {
+        if (!prev) return prev;
+        const currentReviews = prev.reviews || [];
+        return {
+          ...prev,
+          reviews: [data.review, ...currentReviews],
+          rating: data.reviewStats?.averageRating || prev.rating,
+          reviewCount: data.reviewStats?.reviewCount || ((prev.reviewCount || 0) + 1),
+          reviewStats: data.reviewStats || prev.reviewStats
+        };
+      });
+    } catch (err: any) {
+      toast.error(err.message || 'Failed to submit review');
+    } finally {
+      setSubmittingReview(false);
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -220,22 +280,30 @@ export default function ProductDetailsPage() {
                 {product.name}
               </h1>
               
-              {/* Rating and Reviews - Placeholder for now */}
+              {/* Rating and Reviews */}
               <div className="flex items-center gap-4 mb-4">
-                <div className="flex items-center gap-2">
-                  <div className="flex items-center">
-                    {renderStars(4.5)}
+                {product.reviewStats?.reviewCount && product.reviewStats.reviewCount > 0 ? (
+                  <>
+                    <div className="flex items-center gap-2">
+                      <div className="flex items-center">
+                        {renderStars(product.reviewStats.averageRating || 0)}
+                      </div>
+                      <span className="text-lg font-medium text-gray-700">
+                        {Number(product.reviewStats.averageRating || 0).toFixed(1)}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 text-gray-600 text-sm">
+                      <span>({product.reviewStats.reviewCount} {product.reviewStats.reviewCount === 1 ? 'review' : 'reviews'})</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 text-sm text-gray-500">
+                    <div className="flex items-center">
+                      {renderStars(0)}
+                    </div>
+                    <span>No reviews yet</span>
                   </div>
-                  <span className="text-lg font-medium text-gray-700">
-                    4.5
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-gray-600">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                  </svg>
-                  <span>100+ {t('bought')}</span>
-                </div>
+                )}
               </div>
             </div>
 
@@ -465,43 +533,147 @@ export default function ProductDetailsPage() {
               {activeTab === 'reviews' && (
                 <div className="space-y-8">
                   {/* Reviews Summary */}
-                  <div className="flex items-center gap-8 pb-8 border-b border-gray-200">
-                    <div className="text-center">
-                      <div className="text-4xl font-bold text-gray-900 mb-2">4.5</div>
-                      <div className="flex items-center justify-center mb-2">
-                        {renderStars(4.5)}
+                  {product.reviewStats?.reviewCount && product.reviewStats.reviewCount > 0 ? (
+                    <div className="flex flex-col sm:flex-row items-center gap-8 pb-8 border-b border-gray-200">
+                      <div className="text-center sm:w-48">
+                        <div className="text-4xl font-bold text-gray-900 mb-2">
+                          {Number(product.reviewStats.averageRating || 0).toFixed(1)}
+                        </div>
+                        <div className="flex items-center justify-center mb-2">
+                          {renderStars(product.reviewStats.averageRating || 0)}
+                        </div>
+                        <div className="text-sm text-gray-600">
+                          {product.reviewStats.reviewCount} {product.reviewStats.reviewCount === 1 ? 'review' : 'reviews'}
+                        </div>
                       </div>
-                      <div className="text-sm text-gray-600">100+ {t('reviews')}</div>
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      {[5, 4, 3, 2, 1].map((stars) => {
-                        const percentage = stars === 5 ? 75 : stars === 4 ? 20 : stars === 3 ? 3 : stars === 2 ? 1 : 1;
-                        return (
-                          <div key={stars} className="flex items-center gap-3">
-                            <span className="text-sm text-gray-600 w-8">{stars} ★</span>
-                            <div className="flex-1 bg-gray-200 rounded-full h-2">
-                              <div 
-                                className="bg-yellow-400 h-2 rounded-full transition-all duration-300" 
-                                style={{ width: `${percentage}%` }}
-                              />
+                      <div className="flex-1 w-full space-y-2">
+                        {[5, 4, 3, 2, 1].map((stars) => {
+                          const count = product.reviews?.filter((r) => r.rating === stars).length || 0;
+                          const total = product.reviewStats?.reviewCount || 1;
+                          const percentage = Math.round((count / total) * 100);
+                          return (
+                            <div key={stars} className="flex items-center gap-3">
+                              <span className="text-sm text-gray-600 w-8">{stars} ★</span>
+                              <div className="flex-1 bg-gray-200 rounded-full h-2">
+                                <div 
+                                  className="bg-yellow-400 h-2 rounded-full transition-all duration-300" 
+                                  style={{ width: `${percentage}%` }}
+                                />
+                              </div>
+                              <span className="text-sm text-gray-600 w-12">{percentage}%</span>
                             </div>
-                            <span className="text-sm text-gray-600 w-12">{percentage}%</span>
-                          </div>
-                        );
-                      })}
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="text-center py-6 border-b border-gray-200">
+                      <div className="flex items-center justify-center mb-2">
+                        {renderStars(0)}
+                      </div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-1">No reviews yet</h4>
+                      <p className="text-gray-500 text-sm">Be the first to share your experience with this product!</p>
+                    </div>
+                  )}
 
-                  {/* Individual Reviews */}
-                  <div className="space-y-6">
-                    <p className="text-gray-600 text-center">No reviews yet. Be the first to review this product!</p>
-                  </div>
+                  {/* Individual Reviews List */}
+                  {product.reviews && product.reviews.length > 0 && (
+                    <div className="space-y-4 divide-y divide-gray-100">
+                      {product.reviews.map((rev) => (
+                        <div key={rev.id} className="pt-4 first:pt-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <div className="flex items-center gap-2">
+                              {renderStars(rev.rating)}
+                              {rev.title && <span className="font-semibold text-gray-900">{rev.title}</span>}
+                            </div>
+                            {rev.createdAt && (
+                              <span className="text-xs text-gray-400">
+                                {new Date(rev.createdAt).toLocaleDateString()}
+                              </span>
+                            )}
+                          </div>
+                          {rev.content && (
+                            <p className="text-gray-700 text-sm mt-1 leading-relaxed">
+                              {rev.content}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
-                  {/* Write Review Button */}
-                  <div className="text-center pt-8 border-t border-gray-200">
-                    <button className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                      {t('writeReview')}
-                    </button>
+                  {/* Write Review Form or Button */}
+                  <div className="pt-6 border-t border-gray-200">
+                    {showReviewForm ? (
+                      <form onSubmit={handleSubmitReview} className="bg-gray-50 p-6 rounded-xl border border-gray-200 space-y-4 max-w-xl mx-auto">
+                        <h4 className="text-lg font-bold text-gray-900">Write a Review</h4>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                          <div className="flex items-center gap-2">
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                onClick={() => setReviewRating(star)}
+                                className={`text-2xl transition-colors ${
+                                  star <= reviewRating ? 'text-yellow-400' : 'text-gray-300 hover:text-yellow-200'
+                                }`}
+                              >
+                                ★
+                              </button>
+                            ))}
+                            <span className="text-sm font-semibold text-gray-700 ml-2">{reviewRating} / 5</span>
+                          </div>
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Review Title</label>
+                          <input
+                            type="text"
+                            value={reviewTitle}
+                            onChange={(e) => setReviewTitle(e.target.value)}
+                            placeholder="Summary of your review"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
+                        </div>
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-1">Feedback</label>
+                          <textarea
+                            value={reviewContent}
+                            onChange={(e) => setReviewContent(e.target.value)}
+                            rows={4}
+                            placeholder="What did you like or dislike about this product?"
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            required
+                          />
+                        </div>
+                        <div className="flex gap-3">
+                          <button
+                            type="submit"
+                            disabled={submittingReview}
+                            className="bg-blue-600 text-white px-6 py-2.5 rounded-lg font-semibold hover:bg-blue-700 transition disabled:opacity-50"
+                          >
+                            {submittingReview ? 'Submitting...' : 'Submit Review'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setShowReviewForm(false)}
+                            className="bg-gray-200 text-gray-700 px-6 py-2.5 rounded-lg font-semibold hover:bg-gray-300 transition"
+                          >
+                            Cancel
+                          </button>
+                        </div>
+                      </form>
+                    ) : (
+                      <div className="text-center">
+                        <button
+                          onClick={() => setShowReviewForm(true)}
+                          className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-xl font-semibold hover:shadow-lg transition-all duration-200 transform hover:scale-105"
+                        >
+                          {t('writeReview') || 'Write a Review'}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               )}

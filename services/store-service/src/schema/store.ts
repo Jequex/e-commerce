@@ -439,13 +439,13 @@ export const storeSearchSchema = z.object({
   city: z.string().optional(),
   state: z.string().optional(),
   country: z.string().optional(),
-  minRating: z.number().min(1).max(5).optional(),
-  allowDelivery: z.boolean().optional(),
-  allowPickup: z.boolean().optional(),
+  minRating: z.union([z.number(), z.string().transform(v => parseFloat(v))]).optional(),
+  allowDelivery: z.union([z.boolean(), z.string().transform(v => v === 'true')]).optional(),
+  allowPickup: z.union([z.boolean(), z.string().transform(v => v === 'true')]).optional(),
   sortBy: z.enum(['name', 'rating', 'totalOrders', 'totalRevenue', 'createdAt']).optional(),
   sortOrder: z.enum(['asc', 'desc']).optional(),
-  page: z.number().int().min(1).optional(),
-  limit: z.number().int().min(1).max(100).optional()
+  page: z.union([z.number(), z.string().transform(v => parseInt(v, 10))]).optional(),
+  limit: z.union([z.number(), z.string().transform(v => parseInt(v, 10))]).optional()
 });
 
 export type StoreCategory = typeof storeCategories.$inferSelect;
