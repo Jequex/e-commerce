@@ -2,6 +2,57 @@
 const nextConfig = {
   reactStrictMode: true,
   output: 'standalone',
+  images: {
+    unoptimized: true,
+    domains: [
+      'images.unsplash.com',
+      'via.placeholder.com',
+      'res.cloudinary.com',
+      'localhost',
+      '127.0.0.1',
+    ],
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'via.placeholder.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        port: '8080',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        port: '8080',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: 'localhost',
+        pathname: '/**',
+      },
+      {
+        protocol: 'http',
+        hostname: '127.0.0.1',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'localhost',
+        pathname: '/**',
+      },
+    ],
+  },
   async rewrites() {
     return [
       {
