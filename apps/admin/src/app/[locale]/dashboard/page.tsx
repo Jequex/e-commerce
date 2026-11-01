@@ -9,63 +9,43 @@ import ChartCard from '@/components/ChartCard';
 import { usePageStore } from '@/stores/use-page-store';
 import callApi from '@/api-calls/callApi';
 import urls from '@/api-calls/urls.json';
-import { Link } from '@/i18n/navigation';
+import { Link, useRouter } from '@/i18n/navigation';
 
 export default function DashboardPage() {
   const t = useTranslations('dashboard');
   const common = useTranslations('common');
+  const router = useRouter();
   const { data, userStores } = usePageStore.getState();
   const [currentStore, setCurrentStore] = useState<any>(data?.store || userStores?.[0] || null);
-  const [loadingStore, setLoadingStore] = useState(false);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadStores() {
-      setLoadingStore(true);
-      try {
-        const res = await callApi(`http://${urls.store.getUserStores}`);
-        const storeList = res.stores || (Array.isArray(res) ? res : res?.data || []);
-        if (storeList.length > 0) {
-          usePageStore.getState().setUserStores(storeList);
-          const firstStore = storeList[0];
-          usePageStore.getState().setData({
-            ...usePageStore.getState().data,
-            store: firstStore,
-          });
-          setCurrentStore(firstStore);
-        }
-      } catch (err) {
-        console.warn('Could not load user stores in dashboard:', err);
-      } finally {
-        setLoadingStore(false);
-      }
-    }
+  // Real dashboard statistics
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [totalProducts, setTotalProducts] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [activeStoresCount, setActiveStoresCount] = useState(0);
 
-    if (!data?.store) {
-      loadStores();
-    }
-  }, []);
-
-  // Sample chart data
-  const salesData = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+  // Dynamic Chart States
+  const [salesData, setSalesData] = useState({
+    labels: ['Month 1', 'Month 2', 'Month 3', 'Month 4', 'Month 5', 'Month 6'],
     datasets: [
       {
-        label: 'Sales',
-        data: [12000, 19000, 15000, 25000, 22000, 30000],
+        label: 'Sales ($)',
+        data: [0, 0, 0, 0, 0, 0],
         borderColor: 'rgb(59, 130, 246)',
         backgroundColor: 'rgba(59, 130, 246, 0.1)',
         tension: 0.4,
         fill: true,
       },
     ],
-  };
+  });
 
-  const ordersData = {
+  const [ordersData, setOrdersData] = useState({
     labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
     datasets: [
       {
         label: 'Orders',
-        data: [65, 59, 80, 81, 56, 55, 40],
+        data: [0, 0, 0, 0, 0, 0, 0],
         backgroundColor: [
           'rgba(59, 130, 246, 0.8)',
           'rgba(16, 185, 129, 0.8)',
@@ -77,23 +57,198 @@ export default function DashboardPage() {
         ],
       },
     ],
-  };
+  });
 
-  const categoryData = {
-    labels: ['Electronics', 'Clothing', 'Books', 'Home & Garden', 'Sports'],
+  const [categoryData, setCategoryData] = useState({
+    labels: ['No Products'],
     datasets: [
       {
-        data: [35, 25, 20, 15, 5],
-        backgroundColor: [
-          '#3B82F6',
-          '#10B981',
-          '#8B5CF6',
-          '#F59E0B',
-          '#EF4444',
-        ],
+        data: [0],
+        backgroundColor: ['rgba(156, 163, 175, 0.5)'],
       },
     ],
-  };
+  });
+
+  useEffect(() => {
+    async function loadDashboardData() {
+      setLoading(true);
+      try {
+        // 1. Fetch user stores
+        let storesList: any[] = [];
+        try {
+          const storeRes = await callApi(`http://${urls.store.getUserStores}`);
+          storesList = storeRes.stores || (Array.isArray(storeRes) ? storeRes : storeRes?.data || []);
+          usePageStore.getState().setUserStores(storesList);
+          if (storesList.length > 0) {
+            const activeStore = data?.store || storesList[0];
+            usePageStore.getState().setData({
+              ...usePageStore.getState().data,
+              store: activeStore,
+            });
+            setCurrentStore(activeStore);
+          }
+        } catch (err) {
+          console.warn('Could not load user stores in dashboard:', err);
+          storesList = usePageStore.getState().userStores || [];
+        }
+        setActiveStoresCount(storesList.length);
+
+        // 2. Fetch products if stores exist
+        let fetchedProducts: any[] = [];
+        if (storesList.length > 0) {
+          try {
+            const prodRes = await callApi(`http://${urls.products.getMyProducts}`);
+            fetchedProducts = prodRes.products || (Array.isArray(prodRes) ? prodRes : []);
+            setTotalProducts(prodRes.total !== undefined ? prodRes.total : fetchedProducts.length);
+          } catch (err) {
+            console.warn('Could not load products in dashboard:', err);
+          }
+        } else {
+          setTotalProducts(0);
+        }
+
+        // Compute Product Categories Distribution
+        if (fetchedProducts.length > 0) {
+          const catMap: { [key: string]: number } = {};
+          fetchedProducts.forEach((p) => {
+            const catName = p.category?.name || p.categoryName || 'Uncategorized';
+            catMap[catName] = (catMap[catName] || 0) + 1;
+          });
+
+          const catLabels = Object.keys(catMap);
+          const catCounts = Object.values(catMap);
+          const palette = [
+            '#3B82F6',
+            '#10B981',
+            '#8B5CF6',
+            '#F59E0B',
+            '#EF4444',
+            '#EC4899',
+            '#06B6D4',
+            '#6366F1',
+          ];
+
+          setCategoryData({
+            labels: catLabels,
+            datasets: [
+              {
+                data: catCounts,
+                backgroundColor: catLabels.map((_, i) => palette[i % palette.length]),
+              },
+            ],
+          });
+        } else {
+          setCategoryData({
+            labels: ['No Products'],
+            datasets: [
+              {
+                data: [1],
+                backgroundColor: ['rgba(209, 213, 219, 0.4)'],
+              },
+            ],
+          });
+        }
+
+        // 3. Fetch Orders
+        let fetchedOrders: any[] = [];
+        try {
+          const orderRes = await callApi(`http://${urls.orders.getAll}`);
+          fetchedOrders = orderRes.orders || (Array.isArray(orderRes) ? orderRes : []);
+          setTotalOrders(orderRes.pagination?.total !== undefined ? orderRes.pagination.total : fetchedOrders.length);
+        } catch (err) {
+          console.warn('Could not load orders in dashboard:', err);
+        }
+
+        // Compute Total Revenue
+        const revenue = fetchedOrders.reduce((sum: number, o: any) => {
+          const amount = Number(o.totalPrice ?? o.total_price ?? o.totalAmount ?? 0);
+          return sum + (isNaN(amount) ? 0 : amount);
+        }, 0);
+        setTotalRevenue(revenue);
+
+        // Compute Sales Trend (Last 6 Months)
+        const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const now = new Date();
+        const past6Months: { key: string; label: string; total: number }[] = [];
+
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          const key = `${d.getFullYear()}-${d.getMonth()}`;
+          const label = `${monthNames[d.getMonth()]} ${d.getFullYear() !== now.getFullYear() ? d.getFullYear() : ''}`.trim();
+          past6Months.push({ key, label, total: 0 });
+        }
+
+        fetchedOrders.forEach((o: any) => {
+          const dateStr = o.createdAt || o.created_at;
+          if (dateStr) {
+            const d = new Date(dateStr);
+            const key = `${d.getFullYear()}-${d.getMonth()}`;
+            const target = past6Months.find((m) => m.key === key);
+            if (target) {
+              const amount = Number(o.totalPrice ?? o.total_price ?? o.totalAmount ?? 0);
+              target.total += isNaN(amount) ? 0 : amount;
+            }
+          }
+        });
+
+        setSalesData({
+          labels: past6Months.map((m) => m.label),
+          datasets: [
+            {
+              label: 'Sales ($)',
+              data: past6Months.map((m) => m.total),
+              borderColor: 'rgb(59, 130, 246)',
+              backgroundColor: 'rgba(59, 130, 246, 0.1)',
+              tension: 0.4,
+              fill: true,
+            },
+          ],
+        });
+
+        // Compute Weekly Orders (Mon - Sun of current week)
+        const dayCounts = [0, 0, 0, 0, 0, 0, 0]; // Mon (0) to Sun (6)
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+        fetchedOrders.forEach((o: any) => {
+          const dateStr = o.createdAt || o.created_at;
+          if (dateStr) {
+            const d = new Date(dateStr);
+            if (d >= sevenDaysAgo) {
+              // getDay(): 0 is Sunday, 1 is Monday... 6 is Saturday
+              const dayIndex = (d.getDay() + 6) % 7; // Convert to Mon=0, Sun=6
+              dayCounts[dayIndex] += 1;
+            }
+          }
+        });
+
+        setOrdersData({
+          labels: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+          datasets: [
+            {
+              label: 'Orders',
+              data: dayCounts,
+              backgroundColor: [
+                'rgba(59, 130, 246, 0.8)',
+                'rgba(16, 185, 129, 0.8)',
+                'rgba(139, 92, 246, 0.8)',
+                'rgba(245, 101, 101, 0.8)',
+                'rgba(251, 191, 36, 0.8)',
+                'rgba(236, 72, 153, 0.8)',
+                'rgba(6, 182, 212, 0.8)',
+              ],
+            },
+          ],
+        });
+      } catch (err) {
+        console.error('Error fetching dashboard metrics:', err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadDashboardData();
+  }, []);
 
   return (
     <div className="p-6 space-y-6">
@@ -113,11 +268,14 @@ export default function DashboardPage() {
           <p className="text-gray-600 dark:text-gray-400 mt-1">
             {currentStore?.name || currentStore?.storeName
               ? "Here's what's happening with your business today"
-              : "Get started by creating your first store to manage products, orders, and payouts"}
+              : 'Get started by creating your first store to manage products, orders, and payouts'}
           </p>
         </div>
         <div className="mt-4 md:mt-0 flex items-center space-x-3">
-          <button className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center space-x-2">
+          <button
+            onClick={() => window.print()}
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center space-x-2"
+          >
             <Icons.DownloadIcon className="w-4 h-4" />
             <span>Export</span>
           </button>
@@ -125,7 +283,7 @@ export default function DashboardPage() {
       </motion.div>
 
       {/* No Store Banner */}
-      {!loadingStore && !currentStore && (
+      {!loading && !currentStore && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -151,43 +309,39 @@ export default function DashboardPage() {
         </motion.div>
       )}
 
-      {/* Stats Cards */}
+      {/* Stats Cards with Live Data */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <StatsCard
           title={t('totalOrders')}
-          value="1,234"
-          change={{ value: 12, type: 'increase' }}
+          value={totalOrders.toLocaleString()}
           icon="FileIcon"
           color="blue"
           delay={0.1}
         />
         <StatsCard
           title={t('totalProducts')}
-          value="567"
-          change={{ value: 8, type: 'increase' }}
+          value={totalProducts.toLocaleString()}
           icon="CubeIcon"
           color="green"
           delay={0.2}
         />
         <StatsCard
           title="Active Stores"
-          value={String(userStores?.length || (currentStore ? 1 : 0))}
-          change={{ value: 0, type: 'increase' }}
+          value={activeStoresCount.toString()}
           icon="HomeIcon"
           color="purple"
           delay={0.3}
         />
         <StatsCard
           title={t('revenue')}
-          value="$12,345"
-          change={{ value: 15, type: 'increase' }}
+          value={`$${totalRevenue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
           icon="BarChartIcon"
           color="orange"
           delay={0.4}
         />
       </div>
 
-      {/* Charts Section */}
+      {/* Charts Section with Dynamic Data */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <ChartCard
           title="Sales Trend"
@@ -279,24 +433,28 @@ export default function DashboardPage() {
               description: t('manageProductsDesc'),
               icon: 'CubeIcon',
               color: 'blue',
+              href: '/products',
             },
             {
               title: t('viewOrders'),
               description: t('viewOrdersDesc'),
               icon: 'FileIcon',
               color: 'green',
+              href: '/orders',
             },
             {
               title: 'Store Management',
               description: 'Manage store profiles and operations',
               icon: 'HomeIcon',
               color: 'purple',
+              href: '/stores',
             },
           ].map((action, index) => {
             const ActionIcon = Icons[action.icon as keyof typeof Icons];
             return (
               <motion.button
                 key={action.title}
+                onClick={() => router.push(action.href as any)}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3, delay: 1.0 + index * 0.1 }}
