@@ -62,8 +62,8 @@ infrastructure/kubernetes/secrets/
 tmp/
 temp/
 
-# Turbo cookies
-.turbo/cookies
+# Turbo cache
+.turbo/
 
 # TypeScript build info
 *.tsbuildinfo

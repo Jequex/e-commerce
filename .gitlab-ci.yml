@@ -7,6 +7,7 @@ stages:
 variables:
   NODE_VERSION: "18"
   DAST_WEBSITE: ${DAST_TARGET_URL:-"http://localhost:3000"}
+  SECURE_LOG_LEVEL: "info"
 
 # Include GitLab Native Security Templates
 include:
@@ -57,7 +58,7 @@ npm-audit-sca:
   stage: security
   image: node:18-alpine
   script:
-    - npm audit --audit-level=critical || true
+    - npm audit --audit-level=high
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
@@ -72,7 +73,6 @@ dast:
     DAST_FULL_SCAN_ENABLED: "false" # Baseline scan for fast MR feedback
   rules:
     - if: $CI_PIPELINE_SOURCE == "merge_request_event"
-      allow_failure: true
+      allow_failure: false
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
-      allow_failure: true
-
+      allow_failure: false

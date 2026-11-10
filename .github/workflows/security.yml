@@ -2,7 +2,7 @@ name: Security Scans (SAST, DAST, SCA)
 
 on:
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, staging]
     types: [opened, synchronize, reopened]
   push:
     branches: [main, develop]
@@ -36,6 +36,7 @@ jobs:
           config: >-
             p/security-audit
             p/owasp-top-ten
+            p/cwe-top-25
             p/javascript
             p/typescript
             p/react
@@ -97,19 +98,14 @@ jobs:
           node-version: '18'
           cache: 'npm'
 
-      - name: Run npm audit check
-        run: |
-          echo "Running monorepo npm audit check..."
-          npm audit --audit-level=critical || true
-
-      - name: Run Trivy SCA Scanner
+      - name: Run Trivy SCA Scanner (Generate SARIF)
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
           scan-ref: '.'
           format: 'sarif'
           output: 'trivy-sca-results.sarif'
-          severity: 'CRITICAL,HIGH,MEDIUM'
+          severity: 'CRITICAL,HIGH'
 
       - name: Upload Trivy SCA SARIF Report
         uses: github/codeql-action/upload-sarif@v3
@@ -117,6 +113,15 @@ jobs:
         with:
           sarif_file: 'trivy-sca-results.sarif'
           category: trivy-sca
+
+      - name: Enforce SCA Gate (Fail on CRITICAL or HIGH CVEs)
+        uses: aquasecurity/trivy-action@master
+        with:
+          scan-type: 'fs'
+          scan-ref: '.'
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1'
 
   # =========================================================================
   # 3. DAST (Dynamic Application Security Testing)
@@ -148,13 +153,13 @@ jobs:
           npx wait-on -t 60000 http://localhost:3000 || sleep 15
 
       - name: Run OWASP ZAP Baseline DAST Scan
-        uses: zaproxy/action-baseline@v0.14.0
+        uses: zaproxy/action-baseline@v0.15.0
         with:
           target: 'http://localhost:3000'
           rules_file_name: '.zap/rules.tsv'
           cmd_options: '-a'
           allow_issue_writing: false
-          fail_action: false
+          fail_action: true
 
       - name: Upload DAST Report Artifacts
         uses: actions/upload-artifact@v4

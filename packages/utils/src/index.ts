@@ -22,7 +22,7 @@ export const auth = {
   },
 
   generateToken: (payload: object, secret: string, expiresIn = '24h'): string => {
-    return jwt.sign(payload, secret, { expiresIn });
+    return jwt.sign(payload, secret, { expiresIn: expiresIn as any });
   },
 
   verifyToken: (token: string, secret: string): any => {
@@ -181,7 +181,7 @@ export const arrays = {
 
 // Object utilities
 export const objects = {
-  pick: <T, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> => {
+  pick: <T extends object, K extends keyof T>(obj: T, keys: K[]): Pick<T, K> => {
     const result = {} as Pick<T, K>;
     keys.forEach(key => {
       if (key in obj) {
@@ -191,7 +191,7 @@ export const objects = {
     return result;
   },
 
-  omit: <T, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
+  omit: <T extends object, K extends keyof T>(obj: T, keys: K[]): Omit<T, K> => {
     const result = { ...obj };
     keys.forEach(key => {
       delete result[key];
