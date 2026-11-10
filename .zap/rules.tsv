@@ -12,3 +12,4 @@
 10056	WARN	X-Debug-Token Information Disclosure
 10096	WARN	Timestamp Disclosure
 10202	WARN	Absence of Anti-CSRF Tokens
+

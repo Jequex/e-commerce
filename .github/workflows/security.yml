@@ -2,10 +2,10 @@ name: Security Scans (SAST, DAST, SCA)
 
 on:
   pull_request:
-    branches: [ main, develop ]
-    types: [ opened, synchronize, reopened ]
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
   push:
-    branches: [ main, develop ]
+    branches: [main, develop]
   workflow_dispatch:
 
 permissions:
@@ -41,7 +41,7 @@ jobs:
             p/react
             p/nodejsscan
             p/secrets
-          generateSarif: "1"
+          generateSarif: '1'
 
       - name: Upload Semgrep SARIF Report
         uses: github/codeql-action/upload-sarif@v3
@@ -79,7 +79,7 @@ jobs:
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
-          category: "/language:javascript-typescript"
+          category: '/language:javascript-typescript'
 
   # =========================================================================
   # 2. SCA (Software Composition Analysis)

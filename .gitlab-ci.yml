@@ -75,3 +75,4 @@ dast:
       allow_failure: true
     - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
       allow_failure: true
+

@@ -109,3 +109,4 @@ case "$MODE" in
 esac
 
 echo -e "\n${GREEN}Security scan finished successfully.${NC}"
+
