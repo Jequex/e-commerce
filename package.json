@@ -29,7 +29,11 @@
     "docker:down": "docker-compose down",
     "k8s:deploy": "kubectl apply -f infrastructure/kubernetes/",
     "services:start": "concurrently \"npm run dev --workspace=services/*\"",
-    "apps:start": "concurrently \"npm run dev --workspace=apps/*\""
+    "apps:start": "concurrently \"npm run dev --workspace=apps/*\"",
+    "security:scan": "bash scripts/security-scan.sh",
+    "security:sast": "bash scripts/security-scan.sh --sast",
+    "security:sca": "bash scripts/security-scan.sh --sca",
+    "security:dast": "bash scripts/security-scan.sh --dast"
   },
   "devDependencies": {
     "@turbo/gen": "^1.10.14",

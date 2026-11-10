@@ -1,0 +1,77 @@
+# GitLab CI/CD Pipeline - SAST, DAST, SCA for Merge Requests
+stages:
+  - test
+  - security
+  - dast
+
+variables:
+  NODE_VERSION: "18"
+  DAST_WEBSITE: ${DAST_TARGET_URL:-"http://localhost:3000"}
+
+# Include GitLab Native Security Templates
+include:
+  - template: Security/SAST.gitlab-ci.yml
+  - template: Security/Secret-Detection.gitlab-ci.yml
+  - template: Security/Dependency-Scanning.gitlab-ci.yml
+  - template: Security/DAST.gitlab-ci.yml
+
+# ----------------------------------------------------
+# 1. SAST (Static Application Security Testing)
+# ----------------------------------------------------
+sast:
+  stage: security
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+nodejs-scan-sast:
+  stage: security
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+semgrep-sast:
+  stage: security
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Secret Detection (SAST)
+secret_detection:
+  stage: security
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ----------------------------------------------------
+# 2. SCA (Software Composition Analysis / Dependency Scanning)
+# ----------------------------------------------------
+gemnasium-dependency_scanning:
+  stage: security
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# Monorepo npm audit check
+npm-audit-sca:
+  stage: security
+  image: node:18-alpine
+  script:
+    - npm audit --audit-level=critical || true
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+
+# ----------------------------------------------------
+# 3. DAST (Dynamic Application Security Testing)
+# ----------------------------------------------------
+dast:
+  stage: dast
+  variables:
+    DAST_WEBSITE: ${DAST_TARGET_URL:-"http://localhost:3000"}
+    DAST_FULL_SCAN_ENABLED: "false" # Baseline scan for fast MR feedback
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      allow_failure: true
+    - if: $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH
+      allow_failure: true

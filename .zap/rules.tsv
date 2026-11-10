@@ -1,0 +1,14 @@
+# OWASP ZAP Baseline Scan Rules
+# Format: <rule-id>\t<action>\t<comment>
+# Actions: IGNORE, WARN, FAIL
+
+10015	WARN	Re-examine Cache-Control Directives
+10020	WARN	Anti-CSRF Tokens Check
+10021	WARN	X-Content-Type-Options Header Missing
+10027	WARN	Information Disclosure - Suspicious Comments
+10038	WARN	Content Security Policy (CSP) Header Not Set
+10054	WARN	Cookie Without SameSite Attribute
+10055	WARN	CSP: Script-src Unsafe-Inline
+10056	WARN	X-Debug-Token Information Disclosure
+10096	WARN	Timestamp Disclosure
+10202	WARN	Absence of Anti-CSRF Tokens
